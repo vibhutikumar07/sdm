@@ -36,22 +36,14 @@
   </distributionManagement>
   <properties>
     <attachments_version>1.0.2</attachments_version>
-    <spring.security.version>5.7.12</spring.security.version>
-    <maven.compiler.source>17</maven.compiler.source>
-    <jackson.databind.version>2.13.4.2</jackson.databind.version>
-    <jacoco.version>0.8.7</jacoco.version>
-    <cds.install-cdsdk.version>7.6.0</cds.install-cdsdk.version>
-    <httpclient.version>4.5.14</httpclient.version>
     <lombok.version>1.18.30</lombok.version>
-    <sap.cloud.xsuaa.version>2.17.0</sap.cloud.xsuaa.version>
     <maven.compiler.target>17</maven.compiler.target>
     <generation-package>sdm.generated</generation-package>
-    <cloudfoundry.identity.client.lib.version>4.19.2</cloudfoundry.identity.client.lib.version>
-    <commons-codec.version>1.13</commons-codec.version>
-    <spring.security.oauth.version>2.5.2.RELEASE</spring.security.oauth.version>
+    <maven.compiler.source>17</maven.compiler.source>
     <packageName>sdm</packageName>
-    <spring.framework.version>5.3.31</spring.framework.version>
+    <jacoco.version>0.8.7</jacoco.version>
     <test-generation-folder>src/test/gen</test-generation-folder>
+    <cds.install-cdsdk.version>7.6.0</cds.install-cdsdk.version>
   </properties>
   <dependencies>
     <dependency>
@@ -59,85 +51,6 @@
       <artifactId>lombok</artifactId>
       <version>${lombok.version}</version>
       <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.security.oauth</groupId>
-      <artifactId>spring-security-oauth2</artifactId>
-      <version>${spring.security.oauth.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.springframework</groupId>
-          <artifactId>spring-web</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.springframework</groupId>
-          <artifactId>spring-webmvc</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.springframework.security</groupId>
-          <artifactId>spring-security-web</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.springframework.security</groupId>
-          <artifactId>spring-security-core</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.security</groupId>
-      <artifactId>spring-security-core</artifactId>
-      <version>${spring.security.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sap.cloud.security.xsuaa</groupId>
-      <artifactId>api</artifactId>
-      <version>${sap.cloud.xsuaa.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sap.cloud.security</groupId>
-      <artifactId>java-security</artifactId>
-      <version>${sap.cloud.xsuaa.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-      <version>${jackson.databind.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-core</artifactId>
-      <version>${spring.framework.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-expression</artifactId>
-      <version>${spring.framework.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-context</artifactId>
-      <version>${spring.framework.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-beans</artifactId>
-      <version>${spring.framework.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-      <version>${httpclient.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>commons-codec</groupId>
-          <artifactId>commons-codec</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>commons-codec</groupId>
-      <artifactId>commons-codec</artifactId>
-      <version>${commons-codec.version}</version>
     </dependency>
     <dependency>
       <groupId>com.sap.cds</groupId>
