@@ -15,7 +15,9 @@ annotate MediaData with @UI.MediaResource: {Stream: content} {
         Core.IsMediaType
     );
     fileName  @(title: '{i18n>attachment_fileName}');
+    status    @(title: '{i18n>attachment_status}');
     contentId @(UI.Hidden: true);
+    scannedAt @(UI.Hidden: true);
 }
 
 annotate Attachments with @UI: {
@@ -37,5 +39,6 @@ annotate Attachments with @UI: {
 }
 
 annotate Attachments with @Common: {SideEffects #ContentChanged: {
-    SourceProperties: [content]
+    SourceProperties: [content],
+    TargetProperties: ['status']
 }} {};

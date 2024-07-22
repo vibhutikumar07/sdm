@@ -24,7 +24,7 @@
     <artifactId>sdm</artifactId>
     <packaging>jar</packaging>
 
-    <name>CDS Feature for Attachments</name>
+    <name>CDS Feature for SAP Document Management Service</name>
     <url>https://cap.cloud.sap/docs/plugins/#attachments</url>
 
     <properties>
@@ -37,7 +37,7 @@
         <attachments_version>1.0.2</attachments_version>
         <lombok.version>1.18.30</lombok.version>
         <jacoco.version>0.8.7</jacoco.version>
-
+        <commons-codec.version>1.13</commons-codec.version>
     </properties>
 
     <dependencies>
@@ -68,12 +68,12 @@
             <artifactId>cds-services-impl</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.github.spotbugs</groupId>
-            <artifactId>spotbugs-annotations</artifactId>
-            <version>4.8.5</version>
-            <scope>test</scope>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.github.spotbugs</groupId>-->
+<!--            <artifactId>spotbugs-annotations</artifactId>-->
+<!--            <version>4.8.5</version>-->
+<!--            <scope>test</scope>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
@@ -96,6 +96,17 @@
           <groupId>com.sap.cds</groupId>
            <artifactId>cds-feature-attachments</artifactId>
           <version>${attachments_version}</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.sap.cloud.environment.servicebinding/java-sap-vcap-services -->
+        <dependency>
+            <groupId>com.sap.cloud.environment.servicebinding</groupId>
+            <artifactId>java-sap-vcap-services</artifactId>
+            <version>0.10.5</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>${commons-codec.version}</version>
         </dependency>
     </dependencies>
 

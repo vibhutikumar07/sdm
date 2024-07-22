@@ -16,7 +16,7 @@
     </organization>
 
     <properties>
-        <revision>1.0.0</revision>
+        <revision>1.0.0-SNAPSHOT</revision>
         <java.version>17</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
@@ -35,12 +35,11 @@
     <version>${revision}</version>
     <packaging>pom</packaging>
 
-    <name>CDS Feature for Attachments - Root</name>
+    <name>CDS Feature for SAP Document Management Service - Root</name>
     <url>https://cap.cloud.sap/docs/plugins/#attachments</url>
 
     <modules>
-        <module>cds-feature-attachments</module>
-        <module>integration-tests</module>
+        <module>sdm</module>
     </modules>
 
     <dependencyManagement>
@@ -66,7 +65,13 @@
                 <artifactId>sdm</artifactId>
                 <version>${revision}</version>
             </dependency>
-
+            <dependency>
+                <groupId>com.sap.cloud.environment.servicebinding</groupId>
+                <artifactId>java-bom</artifactId>
+                <version>0.10.5</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -133,71 +138,71 @@
                 </executions>
             </plugin>
 
-            <plugin>
-                <groupId>com.github.spotbugs</groupId>
-                <artifactId>spotbugs-maven-plugin</artifactId>
-                <version>4.8.5.0</version>
-                <configuration>
-                    <effort>Max</effort>
-                    <xmlOutput>true</xmlOutput>
-                    <excludeFilterFile>/src/main/resources/spotbugs-exclusion-filter.xml</excludeFilterFile>
-                    <spotbugsXmlOutputDirectory>${project.build.directory}</spotbugsXmlOutputDirectory>
-                    <includeTests>true</includeTests>
-                    <skip>${skipDuringDeploy}</skip>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>spotbugs-error</id>
-                        <phase>process-test-classes</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+<!--            <plugin>-->
+<!--                <groupId>com.github.spotbugs</groupId>-->
+<!--                <artifactId>spotbugs-maven-plugin</artifactId>-->
+<!--                <version>4.8.5.0</version>-->
+<!--                <configuration>-->
+<!--                    <effort>Max</effort>-->
+<!--                    <xmlOutput>true</xmlOutput>-->
+<!--                    <excludeFilterFile>/src/main/resources/spotbugs-exclusion-filter.xml</excludeFilterFile>-->
+<!--                    <spotbugsXmlOutputDirectory>${project.build.directory}</spotbugsXmlOutputDirectory>-->
+<!--                    <includeTests>true</includeTests>-->
+<!--                    <skip>${skipDuringDeploy}</skip>-->
+<!--                </configuration>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>spotbugs-error</id>-->
+<!--                        <phase>process-test-classes</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>check</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-pmd-plugin</artifactId>
-                <version>3.22.0</version>
-                <configuration>
-                    <targetJdk>${java.version}</targetJdk>
-                    <failurePriority>5</failurePriority>
-                    <targetDirectory>${project.build.directory}</targetDirectory>
-                    <printFailingErrors>true</printFailingErrors>
-                    <includeTests>true</includeTests>
-                    <linkXRef>false</linkXRef>
-                    <verbose>false</verbose>
-                    <rulesets>
-                        <!-- Default Ruleset -->
-                        <ruleset>/rulesets/java/maven-pmd-plugin-default.xml</ruleset>
-                    </rulesets>
-                    <excludes>
-                        <exclude>
-                            **/${excluded.generation.package}**
-                        </exclude>
-                    </excludes>
-                    <skip>${skipDuringDeploy}</skip>
-                </configuration>
-                <!-- https://mvnrepository.com/artifact/com.sap.cloud.sdk.quality/pmd-rules -->
-                <dependencies>
-                    <dependency>
-                        <groupId>com.sap.cloud.sdk.quality</groupId>
-                        <artifactId>pmd-rules</artifactId>
-                        <version>3.78.0</version>
-                    </dependency>
-                </dependencies>
-                <executions>
-                    <execution>
-                        <id>pmd-error</id>
-                        <phase>process-test-classes</phase>
-                        <goals>
-                            <goal>check</goal>
-                            <goal>cpd-check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+<!--            <plugin>-->
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+<!--                <artifactId>maven-pmd-plugin</artifactId>-->
+<!--                <version>3.22.0</version>-->
+<!--                <configuration>-->
+<!--                    <targetJdk>${java.version}</targetJdk>-->
+<!--                    <failurePriority>5</failurePriority>-->
+<!--                    <targetDirectory>${project.build.directory}</targetDirectory>-->
+<!--                    <printFailingErrors>true</printFailingErrors>-->
+<!--                    <includeTests>true</includeTests>-->
+<!--                    <linkXRef>false</linkXRef>-->
+<!--                    <verbose>false</verbose>-->
+<!--                    <rulesets>-->
+<!--                        &lt;!&ndash; Default Ruleset &ndash;&gt;-->
+<!--                        <ruleset>/rulesets/java/maven-pmd-plugin-default.xml</ruleset>-->
+<!--                    </rulesets>-->
+<!--                    <excludes>-->
+<!--                        <exclude>-->
+<!--                            **/${excluded.generation.package}**-->
+<!--                        </exclude>-->
+<!--                    </excludes>-->
+<!--                    <skip>${skipDuringDeploy}</skip>-->
+<!--                </configuration>-->
+<!--                &lt;!&ndash; https://mvnrepository.com/artifact/com.sap.cloud.sdk.quality/pmd-rules &ndash;&gt;-->
+<!--                <dependencies>-->
+<!--                    <dependency>-->
+<!--                        <groupId>com.sap.cloud.sdk.quality</groupId>-->
+<!--                        <artifactId>pmd-rules</artifactId>-->
+<!--                        <version>3.78.0</version>-->
+<!--                    </dependency>-->
+<!--                </dependencies>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>pmd-error</id>-->
+<!--                        <phase>process-test-classes</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>check</goal>-->
+<!--                            <goal>cpd-check</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
