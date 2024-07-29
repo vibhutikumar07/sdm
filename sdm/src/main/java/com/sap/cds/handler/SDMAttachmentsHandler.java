@@ -42,4 +42,8 @@ public class SDMAttachmentsHandler implements EventHandler {
     public void readAttachment(AttachmentReadEventContext context) {
     }
 
+    public String performAction() {
+        return "Action Performed";
+    }
+
 }
