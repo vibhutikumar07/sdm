@@ -1,4 +1,4 @@
-package com.sap.cds.model;
+package com.sap.cds.sdm.model;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
