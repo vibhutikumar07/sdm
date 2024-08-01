@@ -3,21 +3,10 @@ using {
     sap.attachments.Attachments
 } from './attachments';
 
-annotate MediaData with @UI.MediaResource: {Stream: content} {
-    content   @(
-        title                      : '{i18n>attachment_content}',
-        Core.MediaType             : mimeType,
-        ContentDisposition.Filename: fileName,
-        ContentDisposition.Type    : 'inline'
-    );
-    mimeType  @(
-        title: '{i18n>attachment_mimeType}',
-        Core.IsMediaType
-    );
-    fileName  @(title: '{i18n>attachment_fileName}');
-    status    @(title: '{i18n>attachment_status}');
-    contentId @(UI.Hidden: true);
-    scannedAt @(UI.Hidden: true);
+annotate MediaData with @UI.MediaResource: { Stream: content } {
+  content  @Core.MediaType: mimeType @odata.draft.skip;
+  mimeType @Core.IsMediaType;
+  status @readonly;
 }
 
 annotate Attachments with @UI: {
