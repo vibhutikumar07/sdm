@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.sap.cds.sdm.caching.CacheConfig;
+import com.sap.cds.sdm.caching.CacheKey;
 import com.sap.cds.sdm.constants.SDMConstants;
 import com.sap.cds.sdm.model.SDMCredentials;
 import com.sap.cds.sdm.service.handler.SDMAttachmentsServiceHandler;
@@ -75,106 +77,103 @@ public class TokenHandler {
     }
 
     public  static String getAccessToken(SDMCredentials sdmCredentials) throws IOException, ProtocolException {
-        String userCredentials = sdmCredentials.getClientId() + ":" + sdmCredentials.getClientSecret();
-        String authHeaderValue = "Basic " + Base64.encodeBase64String(toBytes(userCredentials));
-        String bodyParams = "grant_type=client_credentials";
-        byte[] postData = toBytes(bodyParams);
-        String authurl = sdmCredentials.getBaseTokenUrl() + "/oauth/token";
-        URL url = new URL(authurl);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestProperty("Authorization", authHeaderValue);
-        conn.setRequestMethod("POST");
-        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        conn.setRequestProperty("charset", "utf-8");
-        conn.setRequestProperty("Content-Length", "" + postData.length);
-        conn.setUseCaches(false);
-        conn.setDoInput(true);
-        conn.setDoOutput(true);
-        try (DataOutputStream os = new DataOutputStream(conn.getOutputStream())) {
-            os.write(postData);
+        //Fetch the token from Cache if present use it else generate and store
+        String cachedToken = CacheConfig.getClientCredentialsTokenCache().get("clientCredentialsToken");
+        if(cachedToken == null) {
+            String userCredentials = sdmCredentials.getClientId() + ":" + sdmCredentials.getClientSecret();
+            String authHeaderValue = "Basic " + Base64.encodeBase64String(toBytes(userCredentials));
+            String bodyParams = "grant_type=client_credentials";
+            byte[] postData = toBytes(bodyParams);
+            String authurl = sdmCredentials.getBaseTokenUrl() + "/oauth/token";
+            URL url = new URL(authurl);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestProperty("Authorization", authHeaderValue);
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            conn.setRequestProperty("charset", "utf-8");
+            conn.setRequestProperty("Content-Length", "" + postData.length);
+            conn.setUseCaches(false);
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
+            try (DataOutputStream os = new DataOutputStream(conn.getOutputStream())) {
+                os.write(postData);
+            }
+            String resp;
+            try (DataInputStream is = new DataInputStream(conn.getInputStream());
+                 BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
+                resp = br.lines().collect(Collectors.joining("\n"));
+            }
+            conn.disconnect();
+            cachedToken =  mapper.readValue(resp, JsonNode.class).get("access_token").asText();
+            CacheConfig.getClientCredentialsTokenCache().put("clientCredentialsToken", cachedToken);
         }
-        String resp;
-        try (DataInputStream is = new DataInputStream(conn.getInputStream());
-             BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
-            resp = br.lines().collect(Collectors.joining("\n"));
-        }
-        conn.disconnect();
-        return mapper.readValue(resp, JsonNode.class).get("access_token").asText();
+        return cachedToken;
     }
+    public static String getDIToken(String token,SDMCredentials sdmCredentials) throws OAuth2ServiceException {
+    JsonObject payloadObj = getTokenFields(token);
+    String email = payloadObj.get("email").getAsString();
+    String token_expiry = payloadObj.get("exp").getAsString();
+    CacheKey cacheKey = new CacheKey();
+    cacheKey.setEmail(email);
+    cacheKey.setExpiration(token_expiry);
+    String cachedToken = CacheConfig.getUserTokenCache().get(cacheKey);
+    if (cachedToken == null) {
+        cachedToken=  generateDITokenFromTokenExchange(token,sdmCredentials,payloadObj);
+    }
+    return cachedToken;
+}
 
-    public  static String getUserToken(SDMCredentials sdmCredentials) throws IOException, ProtocolException {
-        String userCredentials = sdmCredentials.getClientId() + ":" + sdmCredentials.getClientSecret();
-        String authHeaderValue = "Basic " + Base64.encodeBase64String(toBytes(userCredentials));
-        String bodyParams = "grant_type=client_credentials";
-        byte[] postData = toBytes(bodyParams);
-        String authurl = sdmCredentials.getBaseTokenUrl() + "/oauth/token";
-        URL url = new URL(authurl);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestProperty("Authorization", authHeaderValue);
-        conn.setRequestMethod("POST");
-        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        conn.setRequestProperty("charset", "utf-8");
-        conn.setRequestProperty("Content-Length", "" + postData.length);
-        conn.setUseCaches(false);
-        conn.setDoInput(true);
-        conn.setDoOutput(true);
-        try (DataOutputStream os = new DataOutputStream(conn.getOutputStream())) {
-            os.write(postData);
-        }
-        String resp;
-        try (DataInputStream is = new DataInputStream(conn.getInputStream());
-             BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
-            resp = br.lines().collect(Collectors.joining("\n"));
-        }
-        conn.disconnect();
-        return mapper.readValue(resp, JsonNode.class).get("access_token").asText();
-    }
-    public static String generateDITokenFromTokenExchange(String token,SDMCredentials sdmCredentials)
+    private static String generateDITokenFromTokenExchange(String token,SDMCredentials sdmCredentials,JsonObject payloadObj)
             throws OAuth2ServiceException {
-        CloseableHttpClient httpClient = null;
-        String cachedToken = null;
-        try {
-            httpClient = HttpClients.createDefault();
-            if (sdmCredentials.getClientId() == null) {
-                throw new IOException("No SDM binding found");
-            }
-            Map<String, String> parameters = fillTokenExchangeBody(token, sdmCredentials);
-            HttpPost httpPost = new HttpPost(sdmCredentials.getBaseTokenUrl() + "/oauth/token");
-            httpPost.setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON.value());
-            httpPost.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED.value());
-            httpPost.setHeader(SDMConstants.TENANT_ID, getTenantId(token));
+           String cachedToken =null;
+            CloseableHttpClient httpClient = null;
+            try {
+                httpClient = HttpClients.createDefault();
+                if (sdmCredentials.getClientId() == null) {
+                    throw new IOException("No SDM binding found");
+                }
+                Map<String, String> parameters = fillTokenExchangeBody(token, sdmCredentials);
+                HttpPost httpPost = new HttpPost(sdmCredentials.getBaseTokenUrl() + "/oauth/token");
+                httpPost.setHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON.value());
+                httpPost.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED.value());
+                httpPost.setHeader(SDMConstants.TENANT_ID, getTokenFields(token).get("zid").getAsString());
 
-            List<BasicNameValuePair> basicNameValuePairs =
-                    parameters.entrySet().stream()
-                            .map(entry -> new BasicNameValuePair(entry.getKey(), entry.getValue()))
-                            .collect(Collectors.toList());
-            httpPost.setEntity(new UrlEncodedFormEntity(basicNameValuePairs));
-            HttpResponse response = httpClient.execute(httpPost);
-            String responseBody = extractResponseBodyAsString(response);
-            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-                logger.error("Error fetching token with JWT bearer : " + responseBody);
+                List<BasicNameValuePair> basicNameValuePairs =
+                        parameters.entrySet().stream()
+                                .map(entry -> new BasicNameValuePair(entry.getKey(), entry.getValue()))
+                                .collect(Collectors.toList());
+                httpPost.setEntity(new UrlEncodedFormEntity(basicNameValuePairs));
+                HttpResponse response = httpClient.execute(httpPost);
+                String responseBody = extractResponseBodyAsString(response);
+                if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                    logger.error("Error fetching token with JWT bearer : " + responseBody);
+                }
+                Map<String, Object> accessTokenMap = new JSONObject(responseBody).toMap();
+                cachedToken = String.valueOf(accessTokenMap.get("access_token"));
+                String token_expiry = payloadObj.get("exp").getAsString();
+                CacheKey cacheKey = new CacheKey();
+                cacheKey.setEmail(payloadObj.get("email").getAsString());
+                cacheKey.setExpiration(token_expiry);
+                CacheConfig.getUserTokenCache().put(cacheKey, cachedToken);
+            } catch (UnsupportedEncodingException e) {
+                throw new OAuth2ServiceException("Unexpected error parsing URI: " + e.getMessage());
+            } catch (ClientProtocolException e) {
+                throw new OAuth2ServiceException(
+                        "Unexpected error while fetching client protocol: " + e.getMessage());
+            } catch (IOException e) {
+                logger.error("Error in POST request while fetching token with JWT bearer", e.getMessage());
+            } finally {
+                safeClose(httpClient);
             }
-            Map<String, Object> accessTokenMap = new JSONObject(responseBody).toMap();
-            return  String.valueOf(accessTokenMap.get("access_token"));
-        } catch (UnsupportedEncodingException e) {
-            throw new OAuth2ServiceException("Unexpected error parsing URI: " + e.getMessage());
-        } catch (ClientProtocolException e) {
-            throw new OAuth2ServiceException(
-                    "Unexpected error while fetching client protocol: " + e.getMessage());
-        } catch (IOException e) {
-            logger.error("Error in POST request while fetching token with JWT bearer", e.getMessage());
-        } finally {
-            safeClose(httpClient);
-        }
-        return null;
+        return cachedToken;
     }
 
-    public static String getTenantId(String token) {
+    public static JsonObject getTokenFields(String token) {
         String[] chunks = token.split("\\.");
         java.util.Base64.Decoder decoder = java.util.Base64.getUrlDecoder();
         String payload = new String(decoder.decode(chunks[1]));
         JsonElement jelement = new JsonParser().parse(payload);
-        return jelement.getAsJsonObject().get("zid").getAsString();
+        return jelement.getAsJsonObject();
     }
     private static Map<String, String> fillTokenExchangeBody(String token, SDMCredentials sdmEnv) {
         Map<String, String> parameters = new HashMap<>();

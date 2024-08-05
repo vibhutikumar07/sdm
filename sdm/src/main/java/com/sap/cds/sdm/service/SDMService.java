@@ -11,4 +11,5 @@ public interface SDMService {
     public String createDocument(CmisDocument cmisDocument, String jwtToken) throws IOException;
     public void readDocument();
     public void deleteDocument();
+    public String createFolder();
 }

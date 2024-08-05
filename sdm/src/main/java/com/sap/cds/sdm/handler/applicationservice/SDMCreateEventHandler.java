@@ -65,9 +65,6 @@ public class SDMCreateEventHandler implements EventHandler {
         AuthenticationInfo authInfo = context.getAuthenticationInfo();
         JwtTokenAuthenticationInfo jwtTokenInfo = authInfo.as(JwtTokenAuthenticationInfo.class);
         String jwtToken = jwtTokenInfo.getToken();
-        logger.info("JWT TOKEN  " + jwtToken);
-        logger.info("User info " + context.getUserInfo());
-
         createDocument(data, jwtToken);
         if (ApplicationHandlerHelper.noContentFieldInData(context.getTarget(), data)) {
             return;

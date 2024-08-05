@@ -7,6 +7,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 
+import com.sap.cds.sdm.caching.CacheConfig;
 import com.sap.cds.sdm.handler.applicationservice.SDMCreateEventHandler;
 import com.sap.cds.sdm.service.SDMAttachmentsService;
 import com.sap.cds.sdm.service.handler.SDMAttachmentsServiceHandler;
@@ -71,50 +72,32 @@ public class Registration implements CdsRuntimeConfiguration {
 	@Override
 	public void eventHandlers(CdsRuntimeConfigurer configurer) {
 		logger.info(marker, "Registering event handler for attachment service");
-
-		var persistenceService = configurer.getCdsRuntime().getServiceCatalog().getService(PersistenceService.class,
-				PersistenceService.DEFAULT_NAME);
+		CacheConfig.initializeCache();
 		var attachmentService = configurer.getCdsRuntime().getServiceCatalog().getService(AttachmentService.class,
 				AttachmentService.DEFAULT_NAME);
 		var outbox = configurer.getCdsRuntime().getServiceCatalog().getService(OutboxService.class,
 				OutboxService.PERSISTENT_UNORDERED_NAME);//need to check if required
 		var outboxedAttachmentService = outbox.outboxed(attachmentService);
 
-		List<ServiceBinding> bindings = configurer.getCdsRuntime().getEnvironment().getServiceBindings().filter(
-				b -> ServiceBindingUtils.matches(b, MalwareScanConstants.MALWARE_SCAN_SERVICE_LABEL)).toList();
-		var binding = !bindings.isEmpty() ? bindings.get(0) : null;
-		var connectionPoll = new ConnectionPool(Duration.ofSeconds(60), 2, 20);
-		var clientProviderFactory = new MalwareScanClientProviderFactory(binding, configurer.getCdsRuntime(), connectionPoll);
-		var malwareStatusMapper = new DefaultMalwareClientStatusMapper();
-		var malwareScanner = new DefaultAttachmentMalwareScanner(persistenceService, attachmentService,
-				new DefaultMalwareScanClient(clientProviderFactory), malwareStatusMapper, Objects.nonNull(binding));
-		var malwareScanEndTransactionListener = createEndTransactionMalwareScanListener(malwareScanner);
 		configurer.eventHandler(new SDMAttachmentsServiceHandler());
 
 		var deleteContentEvent = new MarkAsDeletedAttachmentEvent(outboxedAttachmentService);
 		var eventFactory = buildAttachmentEventFactory(attachmentService, deleteContentEvent, outboxedAttachmentService);
-		var attachmentsReader = buildAttachmentsReader(persistenceService);
 		ThreadLocalDataStorage storage = new ThreadLocalDataStorage();
 
 		configurer.eventHandler(buildCreateHandler(eventFactory, storage));
-		configurer.eventHandler(buildUpdateHandler(eventFactory, attachmentsReader, outboxedAttachmentService, storage));
-		configurer.eventHandler(buildDeleteHandler(attachmentsReader, deleteContentEvent));
-		configurer.eventHandler(
-				buildReadHandler(attachmentService, new EndTransactionMalwareScanRunner(null, null, malwareScanner)));
-		configurer.eventHandler(new DraftPatchAttachmentsHandler(persistenceService, eventFactory));
-		configurer.eventHandler(
-				new DraftCancelAttachmentsHandler(attachmentsReader, deleteContentEvent, ActiveEntityModifier::new));
-		//configurer.eventHandler(new DraftActiveAttachmentsHandler(storage));
+//		configurer.eventHandler(buildUpdateHandler(eventFactory, attachmentsReader, outboxedAttachmentService, storage));
+//		configurer.eventHandler(buildDeleteHandler(attachmentsReader, deleteContentEvent));
+//		configurer.eventHandler(
+//				buildReadHandler(attachmentService, new EndTransactionMalwareScanRunner(null, null, malwareScanner)));
+//		configurer.eventHandler(new DraftPatchAttachmentsHandler(persistenceService, eventFactory));
+//		configurer.eventHandler(
+//				new DraftCancelAttachmentsHandler(attachmentsReader, deleteContentEvent, ActiveEntityModifier::new));
 	}
 
-	private EndTransactionMalwareScanProvider createEndTransactionMalwareScanListener(
-			DefaultAttachmentMalwareScanner malwareScanner) {
-		return (attachmentEntity, contentId) -> new EndTransactionMalwareScanRunner(attachmentEntity, contentId,
-				malwareScanner);
-	}
+
 
 	private AttachmentService buildAttachmentService() {
-		logger.info( "Registering SDM attachment service****");
 		logger.info(marker, "Registering SDM attachment service");
 
 		return new SDMAttachmentsService();
@@ -139,26 +122,6 @@ public class Registration implements CdsRuntimeConfiguration {
 		return new SDMCreateEventHandler(factory, storage);
 	}
 
-	protected EventHandler buildDeleteHandler(AttachmentsReader attachmentsReader,
-											  ModifyAttachmentEvent deleteContentEvent) {
-		return new DeleteAttachmentsHandler(attachmentsReader, deleteContentEvent);
-	}
 
-	protected EventHandler buildReadHandler(AttachmentService attachmentService,
-											AsyncMalwareScanExecutor asyncMalwareScanExecutor) {
-		var statusValidator = new DefaultAttachmentStatusValidator();
-		return new ReadAttachmentsHandler(attachmentService, BeforeReadItemsModifier::new, statusValidator,
-				asyncMalwareScanExecutor);
-	}
-
-	protected EventHandler buildUpdateHandler(ModifyAttachmentEventFactory factory, AttachmentsReader attachmentsReader,
-											  AttachmentService outboxedAttachmentService, ThreadLocalDataStorage storage) {
-		return new UpdateAttachmentsHandler(factory, attachmentsReader, outboxedAttachmentService, storage);
-	}
-
-	protected AttachmentsReader buildAttachmentsReader(PersistenceService persistenceService) {
-		var cascader = new DefaultAssociationCascader();
-		return new DefaultAttachmentsReader(cascader, persistenceService);
-	}
 
 }
