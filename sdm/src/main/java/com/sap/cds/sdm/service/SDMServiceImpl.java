@@ -1,5 +1,6 @@
 package com.sap.cds.sdm.service;
 
+import com.sap.cds.sdm.constants.SDMConstants;
 import com.sap.cds.sdm.handler.TokenHandler;
 import com.sap.cds.sdm.model.CmisDocument;
 import com.sap.cds.sdm.model.SDMCredentials;
@@ -14,7 +15,7 @@ public class SDMServiceImpl implements  SDMService{
         OkHttpClient client = new OkHttpClient();
         SDMCredentials sdmCredentials =  TokenHandler.getSDMCredentials();
         String accessToken = TokenHandler.getDIToken(jwtToken,sdmCredentials);
-        String sdmUrl = sdmCredentials.getUrl()+"browser/b490f13f-f02e-4ef4-9fde-dc7e9dfda59a/root";
+        String sdmUrl = sdmCredentials.getUrl()+"browser/"+ SDMConstants.REPOSITORY_ID+"/root";
 
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
