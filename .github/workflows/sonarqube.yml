@@ -49,6 +49,7 @@ jobs:
             -Dsonar.projectKey=cap-java-sdm \
             -Dsonar.sources=sdm/src/main/java \
             -Dsonar.java.binaries=sdm/target/classes \
+            -Dsonar.java.libraries=sdm/target/*.jar \
             -Dsonar.inclusions=**/*.java \
             -Dsonar.exclusions=**/target/**,**/node_modules/**,sdm/src/main/test/**,cap-notebook/*.capnb \
             -Dsonar.java.file.suffixes=.java \
