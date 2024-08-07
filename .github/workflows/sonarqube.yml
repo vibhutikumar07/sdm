@@ -32,7 +32,7 @@ jobs:
 
       - name: Install dependencies and run tests
         run: |
-         mvn install -DskipTests
+         mvn clean install -DskipTests
 
       - name: Install SonarQube Scanner
         run: |
@@ -49,8 +49,6 @@ jobs:
             -Dsonar.projectKey=cap-java-sdm \
             -Dsonar.sources=sdm/src/main/java \
             -Dsonar.java.binaries=sdm/target/classes \
-            -Dsonar.junit.reportPaths=sdm/target/surefire-reports \
-            -Dsonar.jacoco.reportPaths=sdm/target/jacoco.exec \
             -Dsonar.inclusions=**/*.java \
             -Dsonar.exclusions=**/target/**,**/node_modules/**,sdm/src/main/test/**,cap-notebook/*.capnb \
             -Dsonar.java.file.suffixes=.java \
