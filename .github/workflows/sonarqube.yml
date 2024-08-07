@@ -14,7 +14,7 @@ permissions:
   pull-requests: read  # allows SonarQube to decorate PRs with analysis results
 
 jobs:
-  build:
+  sonar-scan:
     runs-on: cap-java
 
     steps:
