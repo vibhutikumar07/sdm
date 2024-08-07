@@ -57,7 +57,7 @@ jobs:
             -Dsonar.java.file.suffixes=.java \
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
-            -Dsonar.verbose=true  # Increase verbosity for debugging
+            
 
       - name: Quality Gate Check
         id: sonarqube-quality-gate
