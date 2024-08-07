@@ -42,14 +42,10 @@ jobs:
             sudo mv sonar-scanner-4.7.0.2747-linux /opt/sonar-scanner
             sudo ln -s /opt/sonar-scanner/bin/sonar-scanner /usr/local/bin/sonar-scanner
           fi
-      - name: Analyze with SonarQube
-        uses: sonarsource/sonarqube-scan-action@master
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        with:
-          # Additional arguments for the sonarcloud scanner
-          args:
+
+      - name: Run SonarQube analysis
+        run: |
+          sonar-scanner \
             -Dsonar.projectKey=cap-java-sdm \
             -Dsonar.sources=sdm/src/main/java \
             -Dsonar.java.binaries=sdm/target/classes \
@@ -59,7 +55,9 @@ jobs:
             -Dsonar.inclusions=**/*.java \
             -Dsonar.exclusions=**/target/**,**/node_modules/**,sdm/src/main/test/**,cap-notebook/*.capnb \
             -Dsonar.java.file.suffixes=.java \
-            -Dsonar.verbose=false
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+            -Dsonar.verbose=false  # Increase verbosity for debugging
 
       - name: Quality Gate Check
         id: sonarqube-quality-gate
