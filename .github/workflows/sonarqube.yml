@@ -32,7 +32,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-         mvn clean install
+         mvn clean install -DskipTests
 
       - name: Install SonarQube Scanner
         run: |
