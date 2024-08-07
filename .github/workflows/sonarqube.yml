@@ -30,9 +30,9 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Install dependencies and run tests
+      - name: Install dependencies
         run: |
-         mvn clean install -DskipTests
+         mvn clean install
 
       - name: Install SonarQube Scanner
         run: |
@@ -49,12 +49,15 @@ jobs:
             -Dsonar.projectKey=cap-java-sdm \
             -Dsonar.sources=sdm/src/main/java \
             -Dsonar.java.binaries=sdm/target/classes \
-            -Dsonar.java.libraries=sdm/target/*.jar \
+            -Dsonar.java.libraries=sdm/target/sdm.jar \
+            -Dsonar.junit.reportPaths=sdm/target/surefire-reports \
+            -Dsonar.coverage.jacoco.xmlReportPaths=sdm/target/site/jacoco/jacoco.xml \
             -Dsonar.inclusions=**/*.java \
             -Dsonar.exclusions=**/target/**,**/node_modules/**,sdm/src/main/test/**,cap-notebook/*.capnb \
             -Dsonar.java.file.suffixes=.java \
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+            -Dsonar.verbose=true  # Increase verbosity for debugging
 
       - name: Quality Gate Check
         id: sonarqube-quality-gate
