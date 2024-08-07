@@ -57,7 +57,7 @@ jobs:
             -Dsonar.java.file.suffixes=.java \
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
-            -Dsonar.verbose=true  # Increase verbosity for debugging
+            -Dsonar.verbose=false  # Increase verbosity for debugging
             -Dsonar.pullrequest.key=${{ github.event.pull_request.number }}
             -Dsonar.pullrequest.branch=${{ github.head_ref }}
             -Dsonar.pullrequest.base=${{ github.base_ref }}
