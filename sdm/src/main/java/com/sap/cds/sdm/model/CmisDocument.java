@@ -1,6 +1,7 @@
-package com.sap.cds.model;
+package com.sap.cds.sdm.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.io.InputStream;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,13 +12,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SDMCredentials {
-
-  private String url;
-
-  private String baseTokenUrl;
-
-  private String clientId;
-
-  private String clientSecret;
+public class CmisDocument {
+  private String fileName;
+  private InputStream content;
+  private String parentId;
 }
