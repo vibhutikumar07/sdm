@@ -46,6 +46,10 @@ public class TokenHandler {
   private static Map<String, Object> uaa;
   private static final ObjectMapper mapper = new ObjectMapper();
 
+  private TokenHandler() {
+    throw new IllegalStateException("TokenHandler class");
+  }
+
   public static byte[] toBytes(String str) {
     return requireNonNull(str).getBytes(StandardCharsets.UTF_8);
   }
@@ -189,10 +193,11 @@ public class TokenHandler {
   }
 
   private static String extractResponseBodyAsString(HttpResponse response) throws IOException {
-    return (String)
-        (new BufferedReader(new InputStreamReader(response.getEntity().getContent())))
-            .lines()
-            .collect(Collectors.joining(System.lineSeparator()));
+    // Ensure that InputStream and BufferedReader are automatically closed
+    try (InputStream inputStream = response.getEntity().getContent();
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
+      return bufferedReader.lines().collect(Collectors.joining(System.lineSeparator()));
+    }
   }
 
   private static void safeClose(CloseableHttpClient httpClient) {

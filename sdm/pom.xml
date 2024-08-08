@@ -30,7 +30,7 @@
     <properties>
         <packageName>sdm</packageName>
         <cds.install-cdsdk.version>7.6.0</cds.install-cdsdk.version>
-        <generation-package>sdm.generated</generation-package>
+        <generation-package>com.sap.cds.sdm.generated</generation-package>
         <test-generation-folder>src/test/gen</test-generation-folder>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>

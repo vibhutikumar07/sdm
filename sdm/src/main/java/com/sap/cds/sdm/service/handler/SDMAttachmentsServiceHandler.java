@@ -20,7 +20,6 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
   @On(event = AttachmentService.EVENT_CREATE_ATTACHMENT)
   public void createAttachment(AttachmentCreateEventContext context) throws IOException {
     var contentId = (String) context.getAttachmentIds().get(Attachments.ID);
-
     context.setIsInternalStored(true);
     context.setContentId(contentId);
     context.setCompleted();

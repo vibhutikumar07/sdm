@@ -28,12 +28,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @ServiceName(value = "*", type = ApplicationService.class)
 public class SDMCreateEventHandler implements EventHandler {
-  private static final Logger logger = LoggerFactory.getLogger(SDMCreateEventHandler.class);
 
   private final ModifyAttachmentEventFactory eventFactory;
   private final ThreadDataStorageReader storageReader;
@@ -62,6 +59,7 @@ public class SDMCreateEventHandler implements EventHandler {
     JwtTokenAuthenticationInfo jwtTokenInfo = authInfo.as(JwtTokenAuthenticationInfo.class);
     String jwtToken = jwtTokenInfo.getToken();
     createDocument(data, jwtToken);
+
     if (ApplicationHandlerHelper.noContentFieldInData(context.getTarget(), data)) {
       return;
     }
