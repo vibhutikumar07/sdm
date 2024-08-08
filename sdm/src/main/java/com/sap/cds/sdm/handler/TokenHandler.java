@@ -20,7 +20,6 @@ import com.sap.cloud.security.xsuaa.http.HttpHeaders;
 import com.sap.cloud.security.xsuaa.http.MediaType;
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -42,8 +41,7 @@ import org.slf4j.LoggerFactory;
 
 public class TokenHandler {
   private static final Logger logger = LoggerFactory.getLogger(TokenHandler.class);
-  private static Map<String, Object> uaaCredentials;
-  private static Map<String, Object> uaa;
+
   private static final ObjectMapper mapper = new ObjectMapper();
 
   private TokenHandler() {
@@ -68,8 +66,8 @@ public class TokenHandler {
             .findFirst()
             .get();
     SDMCredentials sdmCredentials = new SDMCredentials();
-    uaaCredentials = sdmBinding.getCredentials();
-    uaa = (Map<String, Object>) uaaCredentials.get("uaa");
+    Map<String, Object> uaaCredentials = sdmBinding.getCredentials();
+    Map<String, Object> uaa = (Map<String, Object>) uaaCredentials.get("uaa");
 
     sdmCredentials.setBaseTokenUrl(uaa.get("url").toString());
     sdmCredentials.setUrl(sdmBinding.getCredentials().get("uri").toString());
@@ -78,8 +76,7 @@ public class TokenHandler {
     return sdmCredentials;
   }
 
-  public static String getAccessToken(SDMCredentials sdmCredentials)
-      throws IOException, ProtocolException {
+  public static String getAccessToken(SDMCredentials sdmCredentials) throws IOException {
     // Fetch the token from Cache if present use it else generate and store
     String cachedToken = CacheConfig.getClientCredentialsTokenCache().get("clientCredentialsToken");
     if (cachedToken == null) {
@@ -157,10 +154,10 @@ public class TokenHandler {
       }
       Map<String, Object> accessTokenMap = new JSONObject(responseBody).toMap();
       cachedToken = String.valueOf(accessTokenMap.get("access_token"));
-      String token_expiry = payloadObj.get("exp").getAsString();
+      String expiryTime = payloadObj.get("exp").getAsString();
       CacheKey cacheKey = new CacheKey();
       cacheKey.setEmail(payloadObj.get("email").getAsString());
-      cacheKey.setExpiration(token_expiry);
+      cacheKey.setExpiration(expiryTime);
       CacheConfig.getUserTokenCache().put(cacheKey, cachedToken);
     } catch (UnsupportedEncodingException e) {
       throw new OAuth2ServiceException("Unexpected error parsing URI: " + e.getMessage());

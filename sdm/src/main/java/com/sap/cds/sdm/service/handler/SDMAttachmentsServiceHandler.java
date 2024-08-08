@@ -10,12 +10,9 @@ import com.sap.cds.services.handler.EventHandler;
 import com.sap.cds.services.handler.annotations.On;
 import com.sap.cds.services.handler.annotations.ServiceName;
 import java.io.IOException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @ServiceName(value = "*", type = AttachmentService.class)
 public class SDMAttachmentsServiceHandler implements EventHandler {
-  private static final Logger logger = LoggerFactory.getLogger(SDMAttachmentsServiceHandler.class);
 
   @On(event = AttachmentService.EVENT_CREATE_ATTACHMENT)
   public void createAttachment(AttachmentCreateEventContext context) throws IOException {
