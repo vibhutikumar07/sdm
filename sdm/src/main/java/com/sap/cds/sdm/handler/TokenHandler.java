@@ -109,7 +109,7 @@ public class TokenHandler {
         }
         return cachedToken;
     }
-    public static String getDIToken(String token,SDMCredentials sdmCredentials) throws OAuth2ServiceException {
+    public static String getDIToken(String token, SDMCredentials sdmCredentials) throws OAuth2ServiceException {
     JsonObject payloadObj = getTokenFields(token);
     String email = payloadObj.get("email").getAsString();
     String token_expiry = payloadObj.get("exp").getAsString();
@@ -123,10 +123,10 @@ public class TokenHandler {
     return cachedToken;
 }
 
-    private static String generateDITokenFromTokenExchange(String token,SDMCredentials sdmCredentials,JsonObject payloadObj)
+    private static String generateDITokenFromTokenExchange(String token, SDMCredentials sdmCredentials, JsonObject payloadObj)
             throws OAuth2ServiceException {
            String cachedToken =null;
-            CloseableHttpClient httpClient = null;
+           CloseableHttpClient httpClient = null;
             try {
                 httpClient = HttpClients.createDefault();
                 if (sdmCredentials.getClientId() == null) {
