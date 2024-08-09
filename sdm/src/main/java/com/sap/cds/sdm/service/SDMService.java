@@ -8,8 +8,10 @@ import java.io.IOException;
 import java.util.List;
 
 public interface SDMService {
-    public String createDocument(CmisDocument cmisDocument, String jwtToken) throws IOException;
+    public String createDocument(CmisDocument cmisDocument, String jwtToken, String folderId, String repositoryId) throws IOException;
+    public String createFolder(String parentId, String jwtToken, String repositoryId) throws IOException;
+    public String getFolderId(String parentId, String jwtToken, String repositoryId) throws IOException;
+    public String getFolderIdByPath(String parentId, String jwtToken, String repositoryId) throws IOException;
     public void readDocument();
     public void deleteDocument();
-    public String createFolder();
 }

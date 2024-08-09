@@ -13,7 +13,9 @@ import java.io.InputStream;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CmisDocument {
+    private String objectId;
     private String fileName;
     private InputStream content;
     private String parentId;
+    private String folderId;
 }

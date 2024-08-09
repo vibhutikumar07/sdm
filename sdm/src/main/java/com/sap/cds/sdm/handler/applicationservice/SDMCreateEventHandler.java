@@ -12,6 +12,7 @@ import com.sap.cds.feature.attachments.handler.common.ApplicationHandlerHelper;
 import com.sap.cds.feature.attachments.utilities.LoggingMarker;
 import com.sap.cds.reflect.CdsBaseType;
 import com.sap.cds.reflect.CdsEntity;
+import com.sap.cds.sdm.constants.SDMConstants;
 import com.sap.cds.sdm.model.CmisDocument;
 import com.sap.cds.sdm.service.SDMService;
 import com.sap.cds.sdm.service.SDMServiceImpl;
@@ -58,6 +59,7 @@ public class SDMCreateEventHandler implements EventHandler {
     @Before(event = CqnService.EVENT_CREATE)
     @HandlerOrder(HandlerOrder.LATE)
     public void processBefore(CdsCreateEventContext context, List<CdsData> data) throws IOException {
+        System.out.println("fn called");
         doCreate(context, data);
     }
 
@@ -81,21 +83,28 @@ public class SDMCreateEventHandler implements EventHandler {
                 (path, element, isNull) -> UUID.randomUUID().toString()).process(data, entity);
     }
 
-    private void  createDocument(List<CdsData> data, String jwtToken) throws IOException {
+    private void createDocument(List<CdsData> data, String jwtToken) throws IOException {
+        String repositoryId = SDMConstants.REPOSITORY_ID;
         for (Map<String, Object> entity : data) {
             // Handle attachments if present
             List<Map<String, Object>> attachments = (List<Map<String, Object>>) entity.get("attachments");
             if (attachments != null) {
+                Map<String, Object> firstAttachment = attachments.get(0);
+                String parentId = firstAttachment.get("up__ID").toString();
                 for (Map<String, Object> attachment : attachments) {
                     CmisDocument cmisDocument = new CmisDocument();
                     cmisDocument.setFileName(attachment.get("fileName").toString());
                     InputStream contentStream = (InputStream) attachment.get("content");
                     cmisDocument.setContent(contentStream);
-                    cmisDocument.setParentId(attachment.get("up__ID").toString());
+                    cmisDocument.setParentId(parentId);
 
                     SDMService sdmService = new SDMServiceImpl();
-                    sdmService.createDocument(cmisDocument, jwtToken);
-
+                    String folderId = sdmService.getFolderId(parentId, jwtToken, repositoryId);
+                   //Query the database and check if some attachment entries exist for theup__ID if exits cmisDocument.setFolderId(fetchedvalue)
+                    //else getFolderByPath/
+                    //create folder
+                    cmisDocument.setFolderId(folderId);
+                    sdmService.createDocument(cmisDocument, jwtToken, folderId, repositoryId);
                 }
             }
         }

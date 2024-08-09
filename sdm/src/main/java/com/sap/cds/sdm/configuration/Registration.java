@@ -60,6 +60,7 @@ public class Registration implements CdsRuntimeConfiguration {
 		ThreadLocalDataStorage storage = new ThreadLocalDataStorage();
 
 		configurer.eventHandler(buildCreateHandler(eventFactory, storage));
+		configurer.eventHandler(buildUpdateHandler(eventFactory, attachmentsReader, outboxedAttachmentService, storage));
 
 	}
 
