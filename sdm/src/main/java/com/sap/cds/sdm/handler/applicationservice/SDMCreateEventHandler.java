@@ -12,6 +12,7 @@ import com.sap.cds.feature.attachments.handler.common.ApplicationHandlerHelper;
 import com.sap.cds.feature.attachments.utilities.LoggingMarker;
 import com.sap.cds.reflect.CdsBaseType;
 import com.sap.cds.reflect.CdsEntity;
+import com.sap.cds.reflect.CdsModel;
 import com.sap.cds.sdm.constants.SDMConstants;
 import com.sap.cds.sdm.model.CmisDocument;
 import com.sap.cds.sdm.service.SDMService;
@@ -25,6 +26,7 @@ import com.sap.cds.services.handler.EventHandler;
 import com.sap.cds.services.handler.annotations.Before;
 import com.sap.cds.services.handler.annotations.HandlerOrder;
 import com.sap.cds.services.handler.annotations.ServiceName;
+import com.sap.cds.services.persistence.PersistenceService;
 import com.sap.cds.services.utils.OrderConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,10 +34,7 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @ServiceName(value = "*", type = ApplicationService.class)
 public class SDMCreateEventHandler implements EventHandler {
@@ -43,11 +42,13 @@ public class SDMCreateEventHandler implements EventHandler {
 
     private final ModifyAttachmentEventFactory eventFactory;
     private final ThreadDataStorageReader storageReader;
+    private final PersistenceService persistenceService;
     private final CdsDataProcessor processor = CdsDataProcessor.create();
 
-    public SDMCreateEventHandler(ModifyAttachmentEventFactory eventFactory, ThreadDataStorageReader storageReader) {
+    public SDMCreateEventHandler(ModifyAttachmentEventFactory eventFactory, ThreadDataStorageReader storageReader,PersistenceService persistenceService) {
         this.eventFactory = eventFactory;
         this.storageReader = storageReader;
+        this.persistenceService =persistenceService;
     }
 
     @Before(event = CqnService.EVENT_CREATE)
@@ -67,7 +68,7 @@ public class SDMCreateEventHandler implements EventHandler {
         AuthenticationInfo authInfo = context.getAuthenticationInfo();
         JwtTokenAuthenticationInfo jwtTokenInfo = authInfo.as(JwtTokenAuthenticationInfo.class);
         String jwtToken = jwtTokenInfo.getToken();
-        List<CmisDocument> cmisDocuments =createDocument(data, jwtToken);
+        List<CmisDocument> cmisDocuments =createDocument(data, jwtToken,context);
         if (ApplicationHandlerHelper.noContentFieldInData(context.getTarget(), data)) {
             return;
         }
@@ -83,7 +84,7 @@ public class SDMCreateEventHandler implements EventHandler {
                 (path, element, isNull) -> UUID.randomUUID().toString()).process(data, entity);
     }
 
-    private List<CmisDocument> createDocument(List<CdsData> data, String jwtToken) throws IOException {
+    private List<CmisDocument> createDocument(List<CdsData> data, String jwtToken,CdsCreateEventContext context) throws IOException {
         String repositoryId = SDMConstants.REPOSITORY_ID;
         List<CmisDocument> cmisDocuments =  new ArrayList<>();
         for (Map<String, Object> entity : data) {
@@ -100,12 +101,17 @@ public class SDMCreateEventHandler implements EventHandler {
                     cmisDocument.setParentId(parentId);
 
                     SDMService sdmService = new SDMServiceImpl();
-                    String folderId = sdmService.getFolderId(parentId, jwtToken, repositoryId);
+                    CdsModel model = context.getModel();
+                    Optional<CdsEntity> attachmentEntity =
+                            model.findEntity(context.getTarget().getQualifiedName() + ".attachments");
+
+                    cmisDocument.setRepositoryId(repositoryId);
+                    String folderId = sdmService.getFolderId(jwtToken,attachmentEntity.get(),persistenceService,cmisDocument);
                    //Query the database and check if some attachment entries exist for theup__ID if exits cmisDocument.setFolderId(fetchedvalue)
                     //else getFolderByPath/
                     //create folder
                     cmisDocument.setFolderId(folderId);
-                    String objectId = sdmService.createDocument(cmisDocument, jwtToken, folderId, repositoryId);
+                    String objectId = sdmService.createDocument(cmisDocument, jwtToken);
                     cmisDocument.setObjectId(objectId);
                 }
             }

@@ -65,6 +65,7 @@ public class Registration implements CdsRuntimeConfiguration {
 		var deleteContentEvent = new MarkAsDeletedAttachmentEvent(outboxedAttachmentService);
 		var eventFactory = buildAttachmentEventFactory(attachmentService, deleteContentEvent, outboxedAttachmentService);
 		ThreadLocalDataStorage storage = new ThreadLocalDataStorage();
+		configurer.eventHandler(buildCreateHandler(eventFactory, storage,persistenceService));
 		configurer.eventHandler(buildUpdateHandler(eventFactory,attachmentsReader, storage,persistenceService));
 	}
 
@@ -91,8 +92,8 @@ public class Registration implements CdsRuntimeConfiguration {
 		return (contentId, cdsRuntime) -> new CreationChangeSetListener(contentId, cdsRuntime, outboxedAttachmentService);
 	}
 
-	protected EventHandler buildCreateHandler(ModifyAttachmentEventFactory factory, ThreadLocalDataStorage storage) {
-		return new SDMCreateEventHandler(factory, storage);
+	protected EventHandler buildCreateHandler(ModifyAttachmentEventFactory factory, ThreadLocalDataStorage storage,PersistenceService persistenceService) {
+		return new SDMCreateEventHandler(factory, storage,persistenceService);
 	}
 
 	protected EventHandler buildUpdateHandler(ModifyAttachmentEventFactory factory, AttachmentsReader attachmentsReader,

@@ -10,6 +10,7 @@ import com.sap.cds.ql.cqn.CqnSelect;
 import com.sap.cds.reflect.CdsModel;
 import com.sap.cds.sdm.constants.SDMConstants;
 import com.sap.cds.sdm.model.CmisDocument;
+import com.sap.cds.sdm.persistence.DBQuery;
 import com.sap.cds.sdm.service.SDMService;
 import com.sap.cds.sdm.service.SDMServiceImpl;
 import com.sap.cds.services.authentication.AuthenticationInfo;
@@ -140,13 +141,9 @@ public class SDMUpdateEventHandler implements EventHandler {
                     CdsModel model = context.getModel();
                     Optional<CdsEntity> attachmentEntity =
                             model.findEntity(context.getTarget().getQualifiedName() + ".attachments");
-                    System.out.println(
-                            "Get Attachment Entity " + attachmentEntity.isPresent() + ":" + attachmentEntity.get());
-                    CqnSelect q = Select.from(attachmentEntity.get()).columns("fileName", "ID","IsActiveEntity").where(doc -> doc.get("up__ID").eq(attachment.get("up__ID")));
-                    Result result = persistenceService.run(q);
+                    Result  result = DBQuery.getAttachmentsForUP__ID(attachmentEntity.get(),persistenceService,attachment.get("up__ID").toString());
                     System.out.println("Result  " + result);
                     ObjectMapper objectMapper = new ObjectMapper();
-
                     // Deserialize JSON string into a List of Maps
                     List<Map<String, Object>> resultList = objectMapper.readValue((JsonParser) result, new TypeReference<List<Map<String, Object>>>(){});
 
@@ -163,9 +160,9 @@ public class SDMUpdateEventHandler implements EventHandler {
                             cmisDocument.setParentId(attachment.get("up__ID").toString());
                             System.out.println("COBTENT " + contentStream);
                             SDMService sdmService = new SDMServiceImpl();
-                            String folderId = sdmService.getFolderId(cmisDocument.getParentId(), jwtToken, repositoryId);
+                            String folderId = sdmService.getFolderId(jwtToken,attachmentEntity.get(),persistenceService,cmisDocument);
                             cmisDocument.setFolderId(folderId);
-                            String objectId = sdmService.createDocument(cmisDocument, jwtToken, folderId, repositoryId);
+                            String objectId = sdmService.createDocument(cmisDocument, jwtToken);
                             cmisDocument.setObjectId(objectId);
                             cmisDocuments.add(cmisDocument);
                         }

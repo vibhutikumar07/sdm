@@ -1,21 +1,28 @@
 package com.sap.cds.sdm.service;
 
 import com.sap.cds.CdsData;
+import com.sap.cds.Result;
+import com.sap.cds.reflect.CdsEntity;
+import com.sap.cds.reflect.CdsModel;
 import com.sap.cds.sdm.constants.SDMConstants;
 import com.sap.cds.sdm.handler.TokenHandler;
 import com.sap.cds.sdm.model.CmisDocument;
 import com.sap.cds.sdm.model.SDMCredentials;
+import com.sap.cds.sdm.persistence.DBQuery;
+import com.sap.cds.services.persistence.PersistenceService;
 import okhttp3.*;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
+
 import org.json.JSONObject;
 
 public class SDMServiceImpl implements SDMService{
 
     @Override
-    public String createDocument(CmisDocument cmisDocument, String jwtToken, String folderId, String repositoryId) {
+    public String createDocument(CmisDocument cmisDocument, String jwtToken) {
         String failedDocument = "";
         String accessToken;
 
@@ -28,7 +35,7 @@ public class SDMServiceImpl implements SDMService{
             throw new RuntimeException();
         }
 
-        String sdmUrl = sdmCredentials.getUrl() + "browser/" + repositoryId + "/root";
+        String sdmUrl = sdmCredentials.getUrl() + "browser/" + cmisDocument.getRepositoryId() + "/root";
 
         try {
             byte[] fileContent = IOUtils.toByteArray(cmisDocument.getContent());
@@ -37,7 +44,7 @@ public class SDMServiceImpl implements SDMService{
             RequestBody requestBody = new MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
                     .addFormDataPart("cmisaction", "createDocument")
-                    .addFormDataPart("objectId", folderId) // Note: removed quotes from folderId
+                    .addFormDataPart("objectId", cmisDocument.getFolderId()) // Note: removed quotes from folderId
                     .addFormDataPart("propertyId[0]", "cmis:name")
                     .addFormDataPart("propertyValue[0]", cmisDocument.getFileName())
                     .addFormDataPart("propertyId[1]", "cmis:objectTypeId")
@@ -76,14 +83,16 @@ public class SDMServiceImpl implements SDMService{
     }
 
     @Override
-    public String getFolderId(String parentId, String jwtToken, String repositoryId) throws IOException {
+    public String getFolderId(String jwtToken, CdsEntity attachmentEntity, PersistenceService persistenceService, CmisDocument cmisDocument) throws IOException {
         String[] folderIds = {}; // getFolderIdForEntity
+          Result result = DBQuery.getAttachmentsForUP__ID(attachmentEntity,persistenceService,cmisDocument.getParentId());
+
         String folderId = null;
 
         if (folderIds == null || folderIds.length == 0) {
-            folderId = getFolderIdByPath(parentId, jwtToken, repositoryId);
+            folderId = getFolderIdByPath(cmisDocument.getParentId(), jwtToken, cmisDocument.getRepositoryId());
             if (folderId == null) {
-                folderId = createFolder(parentId, jwtToken, repositoryId);
+                folderId = createFolder(cmisDocument.getParentId(), jwtToken, cmisDocument.getRepositoryId());
             } else {
                 folderId = folderIds[0];
             }

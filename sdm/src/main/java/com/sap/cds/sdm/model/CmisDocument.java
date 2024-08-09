@@ -18,4 +18,5 @@ public class CmisDocument {
     private InputStream content;
     private String parentId;
     private String folderId;
+    private String repositoryId;
 }
