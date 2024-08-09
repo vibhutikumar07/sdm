@@ -2,10 +2,15 @@
 package com.sap.cds.sdm.configuration;
 
 
+import com.sap.cds.feature.attachments.handler.common.AttachmentsReader;
+import com.sap.cds.feature.attachments.handler.common.DefaultAssociationCascader;
+import com.sap.cds.feature.attachments.handler.common.DefaultAttachmentsReader;
 import com.sap.cds.sdm.caching.CacheConfig;
 import com.sap.cds.sdm.handler.applicationservice.SDMCreateEventHandler;
+import com.sap.cds.sdm.handler.applicationservice.SDMUpdateEventHandler;
 import com.sap.cds.sdm.service.SDMAttachmentsService;
 import com.sap.cds.sdm.service.handler.SDMAttachmentsServiceHandler;
+import com.sap.cds.services.persistence.PersistenceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -47,6 +52,8 @@ public class Registration implements CdsRuntimeConfiguration {
 	public void eventHandlers(CdsRuntimeConfigurer configurer) {
 		logger.info(marker, "Registering event handler for attachment service");
 		CacheConfig.initializeCache();
+		var persistenceService = configurer.getCdsRuntime().getServiceCatalog().getService(PersistenceService.class,
+				PersistenceService.DEFAULT_NAME);
 		var attachmentService = configurer.getCdsRuntime().getServiceCatalog().getService(AttachmentService.class,
 				AttachmentService.DEFAULT_NAME);
 		var outbox = configurer.getCdsRuntime().getServiceCatalog().getService(OutboxService.class,
@@ -54,14 +61,11 @@ public class Registration implements CdsRuntimeConfiguration {
 		var outboxedAttachmentService = outbox.outboxed(attachmentService);
 
 		configurer.eventHandler(new SDMAttachmentsServiceHandler());
-
+		var attachmentsReader = buildAttachmentsReader(persistenceService);
 		var deleteContentEvent = new MarkAsDeletedAttachmentEvent(outboxedAttachmentService);
 		var eventFactory = buildAttachmentEventFactory(attachmentService, deleteContentEvent, outboxedAttachmentService);
 		ThreadLocalDataStorage storage = new ThreadLocalDataStorage();
-
-		configurer.eventHandler(buildCreateHandler(eventFactory, storage));
-		configurer.eventHandler(buildUpdateHandler(eventFactory, attachmentsReader, outboxedAttachmentService, storage));
-
+		configurer.eventHandler(buildUpdateHandler(eventFactory,attachmentsReader, storage,persistenceService));
 	}
 
 
@@ -91,6 +95,13 @@ public class Registration implements CdsRuntimeConfiguration {
 		return new SDMCreateEventHandler(factory, storage);
 	}
 
-
+	protected EventHandler buildUpdateHandler(ModifyAttachmentEventFactory factory, AttachmentsReader attachmentsReader,
+											  ThreadLocalDataStorage storage,PersistenceService persistenceService) {
+		return new SDMUpdateEventHandler(factory,attachmentsReader, storage,persistenceService);
+	}
+	protected AttachmentsReader buildAttachmentsReader(PersistenceService persistenceService) {
+		var cascader = new DefaultAssociationCascader();
+		return new DefaultAttachmentsReader(cascader, persistenceService);
+	}
 
 }

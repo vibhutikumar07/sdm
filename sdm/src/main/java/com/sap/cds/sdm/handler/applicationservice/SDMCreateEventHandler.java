@@ -67,7 +67,7 @@ public class SDMCreateEventHandler implements EventHandler {
         AuthenticationInfo authInfo = context.getAuthenticationInfo();
         JwtTokenAuthenticationInfo jwtTokenInfo = authInfo.as(JwtTokenAuthenticationInfo.class);
         String jwtToken = jwtTokenInfo.getToken();
-        createDocument(data, jwtToken);
+        List<CmisDocument> cmisDocuments =createDocument(data, jwtToken);
         if (ApplicationHandlerHelper.noContentFieldInData(context.getTarget(), data)) {
             return;
         }
@@ -83,8 +83,9 @@ public class SDMCreateEventHandler implements EventHandler {
                 (path, element, isNull) -> UUID.randomUUID().toString()).process(data, entity);
     }
 
-    private void createDocument(List<CdsData> data, String jwtToken) throws IOException {
+    private List<CmisDocument> createDocument(List<CdsData> data, String jwtToken) throws IOException {
         String repositoryId = SDMConstants.REPOSITORY_ID;
+        List<CmisDocument> cmisDocuments =  new ArrayList<>();
         for (Map<String, Object> entity : data) {
             // Handle attachments if present
             List<Map<String, Object>> attachments = (List<Map<String, Object>>) entity.get("attachments");
@@ -104,10 +105,12 @@ public class SDMCreateEventHandler implements EventHandler {
                     //else getFolderByPath/
                     //create folder
                     cmisDocument.setFolderId(folderId);
-                    sdmService.createDocument(cmisDocument, jwtToken, folderId, repositoryId);
+                    String objectId = sdmService.createDocument(cmisDocument, jwtToken, folderId, repositoryId);
+                    cmisDocument.setObjectId(objectId);
                 }
             }
         }
+        return cmisDocuments;
     }
 
 
