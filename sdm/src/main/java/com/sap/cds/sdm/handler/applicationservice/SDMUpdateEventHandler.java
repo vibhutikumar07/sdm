@@ -153,6 +153,11 @@ public class SDMUpdateEventHandler implements EventHandler {
                 model.findEntity(context.getTarget().getQualifiedName() + ".attachments");
         Result  result = DBQuery.getAttachmentsForUP__ID(attachmentEntity.get(),persistenceService,up__ID);
         System.out.println("Result  " + result);
+        List<String> idsToRemove = new ArrayList<>();
+        for (Row row : result.list()) {
+            String id = row.get("ID").toString();
+            idsToRemove.add(id);
+        }
         SDMService sdmService = new SDMServiceImpl();
         String folderId = sdmService.getFolderId(jwtToken, attachmentEntity.get(), persistenceService, up__ID);
 
@@ -160,11 +165,15 @@ public class SDMUpdateEventHandler implements EventHandler {
 
             // Handle attachments if present
             List<Map<String, Object>> attachments = (List<Map<String, Object>>) entity.get("attachments");
-            attachments.removeAll(result.list());
+
+
             System.out.println("Attachments "+attachments);
             if (attachments != null) {
                 for (Map<String, Object> attachment : attachments) {
-
+                    if (idsToRemove.contains(attachment.get("ID").toString())) {
+                        attachments.remove(attachment);
+                    }
+                    System.out.println("ATT  " + attachment);
                                 CmisDocument cmisDocument = new CmisDocument();
                                 cmisDocument.setFileName(attachment.get("fileName").toString());
                                 InputStream contentStream = (InputStream) attachment.get("content");
