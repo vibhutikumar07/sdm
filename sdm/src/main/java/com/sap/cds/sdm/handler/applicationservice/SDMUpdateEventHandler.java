@@ -151,13 +151,6 @@ public class SDMUpdateEventHandler implements EventHandler {
         CdsModel model = context.getModel();
         Optional<CdsEntity> attachmentEntity =
                 model.findEntity(context.getTarget().getQualifiedName() + ".attachments");
-        Result  result = DBQuery.getAttachmentsForUP__ID(attachmentEntity.get(),persistenceService,up__ID);
-        System.out.println("Result  " + result);
-        List<String> idsToRemove = new ArrayList<>();
-        for (Row row : result.list()) {
-            String id = row.get("ID").toString();
-            idsToRemove.add(id);
-        }
         SDMService sdmService = new SDMServiceImpl();
         String folderId = sdmService.getFolderId(jwtToken, attachmentEntity.get(), persistenceService, up__ID);
 
@@ -170,10 +163,7 @@ public class SDMUpdateEventHandler implements EventHandler {
             System.out.println("Attachments "+attachments);
             if (attachments != null) {
                 for (Map<String, Object> attachment : attachments) {
-                    if (idsToRemove.contains(attachment.get("ID").toString())) {
-                        attachments.remove(attachment);
-                    }
-                    System.out.println("ATT  " + attachment);
+                               attachment.remove("DRAFT_READONLY_CONTEXT");
                                 CmisDocument cmisDocument = new CmisDocument();
                                 cmisDocument.setFileName(attachment.get("fileName").toString());
                                 InputStream contentStream = (InputStream) attachment.get("content");
@@ -185,12 +175,14 @@ public class SDMUpdateEventHandler implements EventHandler {
                                 System.out.println("COBTENT " + contentStream);
 
                                 cmisDocument.setFolderId(folderId);
-                                String objectId = sdmService.createDocument(cmisDocument, jwtToken);
-                    attachment.put("folderId",folderId);
-                    attachment.put("repositoryId",repositoryId);
-                    attachment.put("url",objectId);
-                                cmisDocument.setObjectId(objectId);
-                                cmisDocuments.add(cmisDocument);
+                                if(contentStream != null) {
+                                    String objectId = sdmService.createDocument(cmisDocument, jwtToken);
+                                    attachment.put("folderId", folderId);
+                                    attachment.put("repositoryId", repositoryId);
+                                    attachment.put("url", objectId);
+                                    cmisDocument.setObjectId(objectId);
+                                    cmisDocuments.add(cmisDocument);
+                                }
 
                 }
             }
