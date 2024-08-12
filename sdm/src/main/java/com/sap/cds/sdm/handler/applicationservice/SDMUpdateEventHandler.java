@@ -14,6 +14,7 @@ import com.sap.cds.sdm.model.CmisDocument;
 import com.sap.cds.sdm.persistence.DBQuery;
 import com.sap.cds.sdm.service.SDMService;
 import com.sap.cds.sdm.service.SDMServiceImpl;
+import com.sap.cds.services.ServiceException;
 import com.sap.cds.services.authentication.AuthenticationInfo;
 import com.sap.cds.services.authentication.JwtTokenAuthenticationInfo;
 import com.sap.cds.services.cds.ApplicationService;
@@ -80,15 +81,12 @@ public class SDMUpdateEventHandler implements EventHandler {
     }
 
     private void doUpdate(CdsUpdateEventContext context, List<CdsData> data) throws IOException {
-        logger.info("In update event handler sdm"+data);
-        System.out.println("In update event handler sdm"+data);
         AuthenticationInfo authInfo = context.getAuthenticationInfo();
         JwtTokenAuthenticationInfo jwtTokenInfo = authInfo.as(JwtTokenAuthenticationInfo.class);
         String jwtToken = jwtTokenInfo.getToken();
-        logger.info("SDM token "+jwtToken);
-        logger.info("PK "+context.getTarget());
         String up__ID=getUP__ID(data);
         List<CmisDocument> cmisDocuments = createDocument(data, jwtToken,context,up__ID);
+
         System.out.println("DONE");
         var target = context.getTarget();
         var noContentInData = ApplicationHandlerHelper.noContentFieldInData(target, data);
@@ -159,8 +157,6 @@ public class SDMUpdateEventHandler implements EventHandler {
             // Handle attachments if present
             List<Map<String, Object>> attachments = (List<Map<String, Object>>) entity.get("attachments");
 
-
-            System.out.println("Attachments "+attachments);
             if (attachments != null) {
                 for (Map<String, Object> attachment : attachments) {
                                attachment.remove("DRAFT_READONLY_CONTEXT");
@@ -172,11 +168,10 @@ public class SDMUpdateEventHandler implements EventHandler {
 
 
                                 cmisDocument.setParentId(attachment.get("up__ID").toString());
-                                System.out.println("COBTENT " + contentStream);
-
                                 cmisDocument.setFolderId(folderId);
                                 if(contentStream != null) {
                                     String objectId = sdmService.createDocument(cmisDocument, jwtToken);
+
                                     attachment.put("folderId", folderId);
                                     attachment.put("repositoryId", repositoryId);
                                     attachment.put("url", objectId);

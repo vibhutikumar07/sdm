@@ -60,7 +60,6 @@ public class SDMCreateEventHandler implements EventHandler {
     @Before(event = CqnService.EVENT_CREATE)
     @HandlerOrder(HandlerOrder.LATE)
     public void processBefore(CdsCreateEventContext context, List<CdsData> data) throws IOException {
-        System.out.println("fn called");
         doCreate(context, data);
     }
 
@@ -69,7 +68,6 @@ public class SDMCreateEventHandler implements EventHandler {
         JwtTokenAuthenticationInfo jwtTokenInfo = authInfo.as(JwtTokenAuthenticationInfo.class);
         String jwtToken = jwtTokenInfo.getToken();
         String up__ID= getUP__ID(data);
-        logger.info("PK "+context.getTarget().getKey());
         List<CmisDocument> cmisDocuments =createDocument(data, jwtToken,context,up__ID);
         if (ApplicationHandlerHelper.noContentFieldInData(context.getTarget(), data)) {
             return;
