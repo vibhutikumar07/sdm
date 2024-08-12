@@ -2,6 +2,7 @@ package com.sap.cds.sdm.service;
 
 import com.sap.cds.CdsData;
 import com.sap.cds.Result;
+import com.sap.cds.Row;
 import com.sap.cds.reflect.CdsEntity;
 import com.sap.cds.reflect.CdsModel;
 import com.sap.cds.sdm.constants.SDMConstants;
@@ -86,10 +87,11 @@ public class SDMServiceImpl implements SDMService{
     public String getFolderId(String jwtToken, CdsEntity attachmentEntity, PersistenceService persistenceService, CmisDocument cmisDocument) throws IOException {
         String[] folderIds = {}; // getFolderIdForEntity
           Result result = DBQuery.getAttachmentsForUP__ID(attachmentEntity,persistenceService,cmisDocument.getParentId());
+          System.out.println("Ress "+result);
+          List<Row> rows = result.list();
+         String folderId = null;
 
-        String folderId = null;
-
-        if (folderIds == null || folderIds.length == 0) {
+        if (rows.size() ==0) {
             folderId = getFolderIdByPath(cmisDocument.getParentId(), jwtToken, cmisDocument.getRepositoryId());
             if (folderId == null) {
                 folderId = createFolder(cmisDocument.getParentId(), jwtToken, cmisDocument.getRepositoryId());

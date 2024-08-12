@@ -4,9 +4,10 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sap.cds.Result;
+import com.sap.cds.Row;
 import com.sap.cds.feature.attachments.handler.applicationservice.processor.modifyevents.ModifyAttachmentEventFactory;
 import com.sap.cds.ql.Select;
-import com.sap.cds.ql.cqn.CqnSelect;
+import com.sap.cds.ql.cqn.*;
 import com.sap.cds.reflect.CdsModel;
 import com.sap.cds.sdm.constants.SDMConstants;
 import com.sap.cds.sdm.model.CmisDocument;
@@ -33,8 +34,6 @@ import com.sap.cds.feature.attachments.handler.common.ApplicationHandlerHelper;
 import com.sap.cds.feature.attachments.handler.common.AttachmentsReader;
 import com.sap.cds.feature.attachments.service.AttachmentService;
 import com.sap.cds.feature.attachments.utilities.LoggingMarker;
-import com.sap.cds.ql.cqn.CqnFilterableStatement;
-import com.sap.cds.ql.cqn.CqnUpdate;
 import com.sap.cds.reflect.CdsEntity;
 import com.sap.cds.services.cds.CdsUpdateEventContext;
 import com.sap.cds.services.cds.CqnService;
@@ -87,9 +86,10 @@ public class SDMUpdateEventHandler implements EventHandler {
         JwtTokenAuthenticationInfo jwtTokenInfo = authInfo.as(JwtTokenAuthenticationInfo.class);
         String jwtToken = jwtTokenInfo.getToken();
         logger.info("SDM token "+jwtToken);
-        List<CmisDocument> cmisDocuments = createDocument(data, jwtToken,context);
+        logger.info("PK "+context.getTarget());
+        String up__ID=getUP__ID(context);
+        List<CmisDocument> cmisDocuments = createDocument(data, jwtToken,context,up__ID);
         System.out.println("DONE");
-
         var target = context.getTarget();
         var noContentInData = ApplicationHandlerHelper.noContentFieldInData(target, data);
         var associationsAreUnchanged = associationsAreUnchanged(target, data);
@@ -108,6 +108,13 @@ public class SDMUpdateEventHandler implements EventHandler {
         if (!associationsAreUnchanged) {
             deleteRemovedAttachments(attachments, data, target);
         }
+    }
+
+    private String getUP__ID(CdsUpdateEventContext context) {
+        System.out.println("ENTRIES"+context.getCqn().entries());
+        
+        return null;
+
     }
 
     private boolean associationsAreUnchanged(CdsEntity entity, List<CdsData> data) {
@@ -130,43 +137,41 @@ public class SDMUpdateEventHandler implements EventHandler {
         };
         ApplicationHandlerHelper.callValidator(entity, exitingDataList, filter, validator);
     }
-    private List<CmisDocument>  createDocument(List<CdsData> data, String jwtToken,CdsUpdateEventContext context) throws IOException {
+    private List<CmisDocument>  createDocument(List<CdsData> data, String jwtToken,CdsUpdateEventContext context,String up__ID) throws IOException {
         String repositoryId = SDMConstants.REPOSITORY_ID;
         List<CmisDocument> cmisDocuments =  new ArrayList<>();
+        CdsModel model = context.getModel();
+        Optional<CdsEntity> attachmentEntity =
+                model.findEntity(context.getTarget().getQualifiedName() + ".attachments");
+        Result  result = DBQuery.getAttachmentsForUP__ID(attachmentEntity.get(),persistenceService,up__ID);
+        System.out.println("Result  " + result);
+
         for (Map<String, Object> entity : data) {
+
             // Handle attachments if present
             List<Map<String, Object>> attachments = (List<Map<String, Object>>) entity.get("attachments");
+            attachments.removeAll(result.list());
+            System.out.println("Attachments "+attachments);
             if (attachments != null) {
                 for (Map<String, Object> attachment : attachments) {
-                    CdsModel model = context.getModel();
-                    Optional<CdsEntity> attachmentEntity =
-                            model.findEntity(context.getTarget().getQualifiedName() + ".attachments");
-                    Result  result = DBQuery.getAttachmentsForUP__ID(attachmentEntity.get(),persistenceService,attachment.get("up__ID").toString());
-                    System.out.println("Result  " + result);
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    // Deserialize JSON string into a List of Maps
-                    List<Map<String, Object>> resultList = objectMapper.readValue((JsonParser) result, new TypeReference<List<Map<String, Object>>>(){});
 
-                    // Iterate over the list
-                    for (Map<String, Object> eachResult : resultList) {
-                        Boolean isActiveEntity = (Boolean) eachResult.get("IsActiveEntity");
-                        if(!isActiveEntity) {
-                            CmisDocument cmisDocument = new CmisDocument();
-                            cmisDocument.setFileName(attachment.get("fileName").toString());
-                            InputStream contentStream = (InputStream) attachment.get("content");
-                            cmisDocument.setContent(contentStream);
+                                CmisDocument cmisDocument = new CmisDocument();
+                                cmisDocument.setFileName(attachment.get("fileName").toString());
+                                InputStream contentStream = (InputStream) attachment.get("content");
+                                cmisDocument.setContent(contentStream);
+                                cmisDocument.setRepositoryId(repositoryId);
 
 
-                            cmisDocument.setParentId(attachment.get("up__ID").toString());
-                            System.out.println("COBTENT " + contentStream);
-                            SDMService sdmService = new SDMServiceImpl();
-                            String folderId = sdmService.getFolderId(jwtToken,attachmentEntity.get(),persistenceService,cmisDocument);
-                            cmisDocument.setFolderId(folderId);
-                            String objectId = sdmService.createDocument(cmisDocument, jwtToken);
-                            cmisDocument.setObjectId(objectId);
-                            cmisDocuments.add(cmisDocument);
-                        }
-                    }
+                                cmisDocument.setParentId(attachment.get("up__ID").toString());
+                                System.out.println("COBTENT " + contentStream);
+                                SDMService sdmService = new SDMServiceImpl();
+                                String folderId = sdmService.getFolderId(jwtToken, attachmentEntity.get(), persistenceService, cmisDocument);
+                                cmisDocument.setFolderId(folderId);
+                                String objectId = sdmService.createDocument(cmisDocument, jwtToken);
+                                cmisDocument.setObjectId(objectId);
+                                cmisDocuments.add(cmisDocument);
+
+
                 }
             }
 
