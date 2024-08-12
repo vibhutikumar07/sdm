@@ -95,13 +95,17 @@ public class SDMServiceImpl implements SDMService{
             folderId = getFolderIdByPath(up__ID, jwtToken, SDMConstants.REPOSITORY_ID);
             if (folderId == null) {
                 folderId = createFolder(up__ID, jwtToken, SDMConstants.REPOSITORY_ID);
+                JSONObject jsonObject = new JSONObject(folderId);
+                JSONObject succinctProperties = jsonObject.getJSONObject("succinctProperties");
+                folderId = succinctProperties.getString("cmis:objectId");
             } else {
                 folderId = folderIds[0];
             }
+        }else{
+            folderId = rows.get(0).get("folderId").toString();
+            System.out.println("folderId "+folderId);
         }
-        JSONObject jsonObject = new JSONObject(folderId);
-        JSONObject succinctProperties = jsonObject.getJSONObject("succinctProperties");
-        folderId = succinctProperties.getString("cmis:objectId");
+
         return folderId;
     }
 
