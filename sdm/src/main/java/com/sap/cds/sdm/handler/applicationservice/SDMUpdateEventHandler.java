@@ -87,7 +87,7 @@ public class SDMUpdateEventHandler implements EventHandler {
         String jwtToken = jwtTokenInfo.getToken();
         logger.info("SDM token "+jwtToken);
         logger.info("PK "+context.getTarget());
-        String up__ID=getUP__ID(context);
+        String up__ID=getUP__ID(data);
         List<CmisDocument> cmisDocuments = createDocument(data, jwtToken,context,up__ID);
         System.out.println("DONE");
         var target = context.getTarget();
@@ -110,11 +110,19 @@ public class SDMUpdateEventHandler implements EventHandler {
         }
     }
 
-    private String getUP__ID(CdsUpdateEventContext context) {
-        System.out.println("ENTRIES"+context.getCqn().entries());
-        
-        return null;
+    private String getUP__ID(List<CdsData> data) {
+        for (Map<String, Object> entity : data) {
 
+            // Handle attachments if present
+            List<Map<String, Object>> attachments = (List<Map<String, Object>>) entity.get("attachments");
+            if (attachments != null) {
+                for (Map<String, Object> attachment : attachments) {
+                    return attachment.get("up__ID").toString();
+                }
+
+            }
+        }
+        return null;
     }
 
     private boolean associationsAreUnchanged(CdsEntity entity, List<CdsData> data) {
@@ -145,6 +153,8 @@ public class SDMUpdateEventHandler implements EventHandler {
                 model.findEntity(context.getTarget().getQualifiedName() + ".attachments");
         Result  result = DBQuery.getAttachmentsForUP__ID(attachmentEntity.get(),persistenceService,up__ID);
         System.out.println("Result  " + result);
+        SDMService sdmService = new SDMServiceImpl();
+        String folderId = sdmService.getFolderId(jwtToken, attachmentEntity.get(), persistenceService, up__ID);
 
         for (Map<String, Object> entity : data) {
 
@@ -164,13 +174,14 @@ public class SDMUpdateEventHandler implements EventHandler {
 
                                 cmisDocument.setParentId(attachment.get("up__ID").toString());
                                 System.out.println("COBTENT " + contentStream);
-                                SDMService sdmService = new SDMServiceImpl();
-                                String folderId = sdmService.getFolderId(jwtToken, attachmentEntity.get(), persistenceService, cmisDocument);
+
                                 cmisDocument.setFolderId(folderId);
                                 String objectId = sdmService.createDocument(cmisDocument, jwtToken);
+                    attachment.put("folderId",folderId);
+                    attachment.put("repositoryId",repositoryId);
+                    attachment.put("url",objectId);
                                 cmisDocument.setObjectId(objectId);
                                 cmisDocuments.add(cmisDocument);
-
 
                 }
             }

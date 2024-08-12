@@ -68,8 +68,9 @@ public class SDMCreateEventHandler implements EventHandler {
         AuthenticationInfo authInfo = context.getAuthenticationInfo();
         JwtTokenAuthenticationInfo jwtTokenInfo = authInfo.as(JwtTokenAuthenticationInfo.class);
         String jwtToken = jwtTokenInfo.getToken();
+        String up__ID= getUP__ID(data);
         logger.info("PK "+context.getTarget().getKey());
-        List<CmisDocument> cmisDocuments =createDocument(data, jwtToken,context);
+        List<CmisDocument> cmisDocuments =createDocument(data, jwtToken,context,up__ID);
         if (ApplicationHandlerHelper.noContentFieldInData(context.getTarget(), data)) {
             return;
         }
@@ -85,9 +86,16 @@ public class SDMCreateEventHandler implements EventHandler {
                 (path, element, isNull) -> UUID.randomUUID().toString()).process(data, entity);
     }
 
-    private List<CmisDocument> createDocument(List<CdsData> data, String jwtToken,CdsCreateEventContext context) throws IOException {
+    private List<CmisDocument> createDocument(List<CdsData> data, String jwtToken,CdsCreateEventContext context,String up__ID) throws IOException {
         String repositoryId = SDMConstants.REPOSITORY_ID;
         List<CmisDocument> cmisDocuments =  new ArrayList<>();
+        SDMService sdmService = new SDMServiceImpl();
+        CdsModel model = context.getModel();
+        Optional<CdsEntity> attachmentEntity =
+                model.findEntity(context.getTarget().getQualifiedName() + ".attachments");
+
+        String folderId = sdmService.getFolderId(jwtToken,attachmentEntity.get(),persistenceService,up__ID);
+
         for (Map<String, Object> entity : data) {
             // Handle attachments if present
             List<Map<String, Object>> attachments = (List<Map<String, Object>>) entity.get("attachments");
@@ -100,25 +108,32 @@ public class SDMCreateEventHandler implements EventHandler {
                     InputStream contentStream = (InputStream) attachment.get("content");
                     cmisDocument.setContent(contentStream);
                     cmisDocument.setParentId(parentId);
-
-                    SDMService sdmService = new SDMServiceImpl();
-                    CdsModel model = context.getModel();
-                    Optional<CdsEntity> attachmentEntity =
-                            model.findEntity(context.getTarget().getQualifiedName() + ".attachments");
-
                     cmisDocument.setRepositoryId(repositoryId);
-                    String folderId = sdmService.getFolderId(jwtToken,attachmentEntity.get(),persistenceService,cmisDocument);
-                   //Query the database and check if some attachment entries exist for theup__ID if exits cmisDocument.setFolderId(fetchedvalue)
-                    //else getFolderByPath/
-                    //create folder
                     cmisDocument.setFolderId(folderId);
+
                     String objectId = sdmService.createDocument(cmisDocument, jwtToken);
+                    attachment.put("folderId",folderId);
+                    attachment.put("repositoryId",repositoryId);
+                    attachment.put("url",objectId);
                     cmisDocument.setObjectId(objectId);
                 }
             }
         }
         return cmisDocuments;
     }
+    private String getUP__ID(List<CdsData> data) {
+        for (Map<String, Object> entity : data) {
 
+            // Handle attachments if present
+            List<Map<String, Object>> attachments = (List<Map<String, Object>>) entity.get("attachments");
+            if (attachments != null) {
+                for (Map<String, Object> attachment : attachments) {
+                    return attachment.get("up__ID").toString();
+                }
+
+            }
+        }
+        return null;
+    }
 
 }

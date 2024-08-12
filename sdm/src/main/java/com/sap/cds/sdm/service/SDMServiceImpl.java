@@ -84,17 +84,17 @@ public class SDMServiceImpl implements SDMService{
     }
 
     @Override
-    public String getFolderId(String jwtToken, CdsEntity attachmentEntity, PersistenceService persistenceService, CmisDocument cmisDocument) throws IOException {
+    public String getFolderId(String jwtToken, CdsEntity attachmentEntity, PersistenceService persistenceService,String up__ID) throws IOException {
         String[] folderIds = {}; // getFolderIdForEntity
-          Result result = DBQuery.getAttachmentsForUP__ID(attachmentEntity,persistenceService,cmisDocument.getParentId());
+          Result result = DBQuery.getAttachmentsForUP__ID(attachmentEntity,persistenceService,up__ID);
           System.out.println("Ress "+result);
           List<Row> rows = result.list();
          String folderId = null;
 
         if (rows.size() ==0) {
-            folderId = getFolderIdByPath(cmisDocument.getParentId(), jwtToken, cmisDocument.getRepositoryId());
+            folderId = getFolderIdByPath(up__ID, jwtToken, SDMConstants.REPOSITORY_ID);
             if (folderId == null) {
-                folderId = createFolder(cmisDocument.getParentId(), jwtToken, cmisDocument.getRepositoryId());
+                folderId = createFolder(up__ID, jwtToken, SDMConstants.REPOSITORY_ID);
             } else {
                 folderId = folderIds[0];
             }
