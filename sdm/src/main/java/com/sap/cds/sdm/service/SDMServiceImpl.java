@@ -23,9 +23,10 @@ import org.json.JSONObject;
 public class SDMServiceImpl implements SDMService{
 
     @Override
-    public String createDocument(CmisDocument cmisDocument, String jwtToken) {
+    public JSONObject createDocument(CmisDocument cmisDocument, String jwtToken) {
         String failedDocument = "";
         String accessToken;
+        JSONObject result = new JSONObject();
 
         OkHttpClient client = new OkHttpClient();
         SDMCredentials sdmCredentials = TokenHandler.getSDMCredentials();
@@ -64,13 +65,20 @@ public class SDMServiceImpl implements SDMService{
                 if (!response.isSuccessful()) {
                     failedDocument = cmisDocument.getFileName();
                 }
+                else{
+                    String responseBody = response.body().string();
+                    JSONObject jsonResponse = new JSONObject(responseBody);
+                    JSONObject succinctProperties = jsonResponse.getJSONObject("succinctProperties");
+                    result.put("success", succinctProperties.getString("cmis:objectId"));
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
             failedDocument = cmisDocument.getFileName();
+            result.put("fail", failedDocument);
         }
 
-        return failedDocument;
+        return result;
     }
 
     @Override
@@ -86,10 +94,11 @@ public class SDMServiceImpl implements SDMService{
     @Override
     public String getFolderId(String jwtToken, CdsEntity attachmentEntity, PersistenceService persistenceService,String up__ID) throws IOException {
         String[] folderIds = {}; // getFolderIdForEntity
-          Result result = DBQuery.getAttachmentsForUP__ID(attachmentEntity,persistenceService,up__ID);
-          System.out.println("Ress "+result);
-          List<Row> rows = result.list();
-         String folderId = null;
+        Result result = DBQuery.getAttachmentsForUP__ID(attachmentEntity,persistenceService,up__ID);
+        List<Row> rows = result.list();
+        String folderId = null;
+        folderId = getFolderIdByPath(up__ID, jwtToken, SDMConstants.REPOSITORY_ID);
+        System.out.println("Value123 : "+folderId);
 
         if (rows.size() ==0) {
             folderId = getFolderIdByPath(up__ID, jwtToken, SDMConstants.REPOSITORY_ID);
@@ -103,7 +112,6 @@ public class SDMServiceImpl implements SDMService{
             }
         }else{
             folderId = rows.get(0).get("folderId").toString();
-            System.out.println("folderId "+folderId);
         }
 
         return folderId;
@@ -111,10 +119,10 @@ public class SDMServiceImpl implements SDMService{
 
     @Override
     public String getFolderIdByPath(String parentId, String jwtToken, String repositoryId) throws IOException {
-        System.out.println("PARENTID : "+parentId+"\nREPO ID : "+repositoryId);
         OkHttpClient client = new OkHttpClient();
         SDMCredentials sdmCredentials = TokenHandler.getSDMCredentials();
-        String sdmUrl = sdmCredentials.getUrl()+"browser/"+repositoryId+"/root/"+parentId+"?cmisselector=object"; //get correct url and repoid
+        String sdmUrl = sdmCredentials.getUrl()+"browser/"+repositoryId+"/root/"+parentId+"?cmisselector=object";
+        System.out.println(jwtToken);
         Request request = new Request.Builder()
                 .url(sdmUrl)
                 .addHeader("Authorization", "Bearer " + jwtToken)
@@ -123,7 +131,9 @@ public class SDMServiceImpl implements SDMService{
 
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
-            return "response"; //check what to actually return
+            else {
+                return response.body().string();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -141,7 +151,7 @@ public class SDMServiceImpl implements SDMService{
                 .setType(MultipartBody.FORM)
                 .addFormDataPart("cmisaction", "createFolder")
                 .addFormDataPart("propertyId[0]", "cmis:name")
-                .addFormDataPart("propertyValue[0]",parentId) //How to get upid
+                .addFormDataPart("propertyValue[0]",parentId)
                 .addFormDataPart("propertyId[1]", "cmis:objectTypeId")
                 .addFormDataPart("propertyValue[1]", "cmis:folder")
                 .addFormDataPart("succinct", "true")

@@ -21,6 +21,7 @@ import com.sap.cds.services.cds.ApplicationService;
 import com.sap.cds.services.handler.EventHandler;
 import com.sap.cds.services.handler.annotations.ServiceName;
 import com.sap.cds.services.persistence.PersistenceService;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -87,7 +88,6 @@ public class SDMUpdateEventHandler implements EventHandler {
         String up__ID=getUP__ID(data);
         List<CmisDocument> cmisDocuments = createDocument(data, jwtToken,context,up__ID);
 
-        System.out.println("DONE");
         var target = context.getTarget();
         var noContentInData = ApplicationHandlerHelper.noContentFieldInData(target, data);
         var associationsAreUnchanged = associationsAreUnchanged(target, data);
@@ -143,7 +143,7 @@ public class SDMUpdateEventHandler implements EventHandler {
         };
         ApplicationHandlerHelper.callValidator(entity, exitingDataList, filter, validator);
     }
-    private List<CmisDocument>  createDocument(List<CdsData> data, String jwtToken,CdsUpdateEventContext context,String up__ID) throws IOException {
+    private List<CmisDocument> createDocument(List<CdsData> data, String jwtToken,CdsUpdateEventContext context,String up__ID) throws IOException {
         String repositoryId = SDMConstants.REPOSITORY_ID;
         List<CmisDocument> cmisDocuments =  new ArrayList<>();
         CdsModel model = context.getModel();
@@ -153,35 +153,31 @@ public class SDMUpdateEventHandler implements EventHandler {
         String folderId = sdmService.getFolderId(jwtToken, attachmentEntity.get(), persistenceService, up__ID);
 
         for (Map<String, Object> entity : data) {
-
-            // Handle attachments if present
             List<Map<String, Object>> attachments = (List<Map<String, Object>>) entity.get("attachments");
-
             if (attachments != null) {
                 for (Map<String, Object> attachment : attachments) {
-                               attachment.remove("DRAFT_READONLY_CONTEXT");
-                                CmisDocument cmisDocument = new CmisDocument();
-                                cmisDocument.setFileName(attachment.get("fileName").toString());
-                                InputStream contentStream = (InputStream) attachment.get("content");
-                                cmisDocument.setContent(contentStream);
-                                cmisDocument.setRepositoryId(repositoryId);
+                    attachment.remove("DRAFT_READONLY_CONTEXT");
+                    CmisDocument cmisDocument = new CmisDocument();
+                    cmisDocument.setFileName(attachment.get("fileName").toString());
+                    InputStream contentStream = (InputStream) attachment.get("content");
+                    cmisDocument.setContent(contentStream);
+                    cmisDocument.setRepositoryId(repositoryId);
+                    cmisDocument.setParentId(attachment.get("up__ID").toString());
+                    cmisDocument.setFolderId(folderId);
 
-
-                                cmisDocument.setParentId(attachment.get("up__ID").toString());
-                                cmisDocument.setFolderId(folderId);
-                                if(contentStream != null) {
-                                    String objectId = sdmService.createDocument(cmisDocument, jwtToken);
-
-                                    attachment.put("folderId", folderId);
-                                    attachment.put("repositoryId", repositoryId);
-                                    attachment.put("url", objectId);
-                                    cmisDocument.setObjectId(objectId);
-                                    cmisDocuments.add(cmisDocument);
-                                }
-
+                    if(contentStream != null) {
+                        JSONObject result = sdmService.createDocument(cmisDocument, jwtToken);
+                        if (result.has("success")) {
+                            attachment.put("folderId",folderId);
+                            attachment.put("repositoryId",repositoryId);
+                            attachment.put("url",result.getString("success"));
+                            cmisDocument.setObjectId(result.getString("success"));
+                        } else if (result.has("fail")) {
+                            String failedDocument = result.getString("fail");
+                        }
+                    }
                 }
             }
-
         }
         return cmisDocuments;
     }

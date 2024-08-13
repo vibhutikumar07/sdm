@@ -69,8 +69,6 @@ public class Registration implements CdsRuntimeConfiguration {
 		configurer.eventHandler(buildUpdateHandler(eventFactory,attachmentsReader, storage,persistenceService));
 	}
 
-
-
 	private AttachmentService buildAttachmentService() {
 		logger.info(marker, "Registering SDM attachment service");
 

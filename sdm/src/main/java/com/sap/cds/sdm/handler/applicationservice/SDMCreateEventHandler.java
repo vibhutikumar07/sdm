@@ -28,6 +28,7 @@ import com.sap.cds.services.handler.annotations.HandlerOrder;
 import com.sap.cds.services.handler.annotations.ServiceName;
 import com.sap.cds.services.persistence.PersistenceService;
 import com.sap.cds.services.utils.OrderConstants;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,6 +101,7 @@ public class SDMCreateEventHandler implements EventHandler {
             if (attachments != null) {
                 Map<String, Object> firstAttachment = attachments.get(0);
                 String parentId = firstAttachment.get("up__ID").toString();
+                List<String> failedDocuments = new ArrayList<>();
                 for (Map<String, Object> attachment : attachments) {
                     CmisDocument cmisDocument = new CmisDocument();
                     cmisDocument.setFileName(attachment.get("fileName").toString());
@@ -109,11 +111,24 @@ public class SDMCreateEventHandler implements EventHandler {
                     cmisDocument.setRepositoryId(repositoryId);
                     cmisDocument.setFolderId(folderId);
 
-                    String objectId = sdmService.createDocument(cmisDocument, jwtToken);
-                    attachment.put("folderId",folderId);
-                    attachment.put("repositoryId",repositoryId);
-                    attachment.put("url",objectId);
-                    cmisDocument.setObjectId(objectId);
+                    JSONObject result = sdmService.createDocument(cmisDocument, jwtToken);
+                    System.out.println("Result : " + result);
+                    if (result.has("success")) {
+                        attachment.put("folderId",folderId);
+                        attachment.put("repositoryId",repositoryId);
+                        attachment.put("url",result.getString("success"));
+                        cmisDocument.setObjectId(result.getString("success"));
+                    } else if (result.has("fail")) {
+                        String failedDocument = result.getString("fail");
+                        //attachment.remove(attachment)
+                        failedDocuments.add(failedDocument);
+                    }
+                }
+                if (!failedDocuments.isEmpty()) {
+                    StringBuilder sb = new StringBuilder("The following files could not be created:\n");
+                    for (String failedDocument : failedDocuments) {
+                        sb.append("• ").append(failedDocument).append("\n");
+                    }
                 }
             }
         }
