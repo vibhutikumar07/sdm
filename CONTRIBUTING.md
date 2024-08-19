@@ -56,7 +56,7 @@ To contribute, you can follow these steps:
 2. Add the original repository as a remote (use the alias "upstream"). 
 3. If you created your fork a while ago be sure to pull upstream changes into your local repository. 
 4. Create a new branch to work on from develop.
-5. If you've added code that should be tested, add unit tests(/test/java/unit). Add comments to explain your changes. Make sure to check the code coverage for tests (>90%). For more information on testing, refer to [Running the unit tests](https://github.com/cap-java/sdm?tab=readme-ov-file#running-the-unit-tests).
+5. If you've added code that should be tested, add unit tests(/test/java/unit). Add comments to explain your changes. Make sure to check the code coverage for tests (>90%).The information will be updated shortly
 6. Once you have made your changes, push your branch commits to the forked repository. 
 7. From the original repository, click the "New pull request" button. 
 8. Select your fork and the branch you worked on. 
