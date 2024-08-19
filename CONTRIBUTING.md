@@ -22,7 +22,7 @@ We use GitHub to manage reviews of pull requests.
 
 * If you are a new contributor, see: [Steps to Contribute](#steps-to-contribute)
 
-* Before implementing your change, create an issue that describes the problem you would like to solve or the code that should be enhanced. Please note that you are willing to work on that issue. When creating an issue, make sure to label it. You can view the available labels here: [Issue labels](https://github.com/cap-js/sdm/labels)
+* Before implementing your change, create an issue that describes the problem you would like to solve or the code that should be enhanced. Please note that you are willing to work on that issue. When creating an issue, make sure to label it. You can view the available labels here: [Issue labels](https://github.com/cap-java/sdm/labels)
 
 * The team will review the issue and decide whether it should be implemented as a pull request. In that case, they will assign the issue to you. If the team decides against picking up the issue, the team will post a comment with an explanation.
 
@@ -56,7 +56,7 @@ To contribute, you can follow these steps:
 2. Add the original repository as a remote (use the alias "upstream"). 
 3. If you created your fork a while ago be sure to pull upstream changes into your local repository. 
 4. Create a new branch to work on from develop.
-5. If you've added code that should be tested, add unit tests(/test/lib). Add comments to explain your changes. Make sure to check the code coverage for tests (>95%). For more information on testing, refer to [Running the unit tests](https://github.com/cap-js/sdm?tab=readme-ov-file#running-the-unit-tests).
+5. If you've added code that should be tested, add unit tests(/test/java/unit). Add comments to explain your changes. Make sure to check the code coverage for tests (>90%). For more information on testing, refer to [Running the unit tests](https://github.com/cap-java/sdm?tab=readme-ov-file#running-the-unit-tests).
 6. Once you have made your changes, push your branch commits to the forked repository. 
 7. From the original repository, click the "New pull request" button. 
 8. Select your fork and the branch you worked on. 
