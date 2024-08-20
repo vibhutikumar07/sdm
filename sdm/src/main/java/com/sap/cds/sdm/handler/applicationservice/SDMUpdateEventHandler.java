@@ -186,6 +186,8 @@ public class SDMUpdateEventHandler implements EventHandler {
         String folderId = sdmService.getFolderId(jwtToken, attachmentEntity.get(), persistenceService, up__ID);
 
         List<String> duplicateDocuments = new ArrayList<>();
+        List<String> incompleteDocuments = new ArrayList<>();
+        List<String> virusDocuments = new ArrayList<>();
         List<String> failedIds = new ArrayList<>();
         for (Map<String, Object> entity : data) {
             List<Map<String, Object>> attachments = (List<Map<String, Object>>) entity.get("attachments");
@@ -202,28 +204,54 @@ public class SDMUpdateEventHandler implements EventHandler {
                     cmisDocument.setFolderId(folderId);
 
                     if(contentStream != null) {
-                        JSONObject result = sdmService.createDocument(cmisDocument, jwtToken);
-                        if (result.has("duplicate") && result.getBoolean("duplicate")) {
-                            cmisDocument.setStatus("Duplicate");
-                            String duplicateName = result.optString("failedDocument");
-                            duplicateDocuments.add(duplicateName);
-                            failedIds.add(result.optString("id"));
+                        if(cmisDocument.getContent() == null){
+                            cmisDocument.setStatus("Incomplete");
+                            incompleteDocuments.add(cmisDocument.getFileName());
+                            failedIds.add(cmisDocument.getAttachmentId());
                         }
-                        else{
-                            cmisDocument.setStatus("Success");
-                            attachment.put("folderId",folderId);
-                            attachment.put("repositoryId",repositoryId);
-                            attachment.put("url",result.optString("url"));
-                            cmisDocument.setObjectId(result.getString("url"));
+                        else {
+                            JSONObject result = sdmService.createDocument(cmisDocument, jwtToken);
+                            if (result.has("duplicate") && result.getBoolean("duplicate")) {
+                                cmisDocument.setStatus("Duplicate");
+                                String duplicateName = result.optString("failedDocument");
+                                duplicateDocuments.add(duplicateName);
+                                failedIds.add(result.optString("id"));
+                            } else if (result.has("virus") && result.getBoolean("virus")) {
+                                cmisDocument.setStatus("Virus");
+                                String virusName = result.optString("failedDocument");
+                                virusDocuments.add(virusName);
+                                failedIds.add(result.optString("id"));
+                            } else {
+                                cmisDocument.setStatus("Success");
+                                attachment.put("folderId", folderId);
+                                attachment.put("repositoryId", repositoryId);
+                                attachment.put("url", result.optString("url"));
+                                cmisDocument.setObjectId(result.getString("url"));
+                            }
                         }
                     }
                 }
-                if (!duplicateDocuments.isEmpty()&& duplicateDocuments.size()>0) {
-                    StringBuilder sb = new StringBuilder("The following files could not be uploaded as they already exist:\n");
+                StringBuilder error = new StringBuilder();
+                if (!duplicateDocuments.isEmpty()) {
+                    error.append("The following files already exist and cannot be uploaded:\n");
                     for (String duplicateDocument : duplicateDocuments) {
-                        sb.append("• ").append(duplicateDocument).append("\n");
+                        error.append("• ").append(duplicateDocument).append("\n");
                     }
-                    context.getMessages().warn(sb.toString());
+                }
+                if (!virusDocuments.isEmpty()) {
+                    error.append("The following files contain potential malware and cannot be uploaded:\n");
+                    for (String virusDocument : virusDocuments) {
+                        error.append("• ").append(virusDocument).append("\n");
+                    }
+                }
+                if (!incompleteDocuments.isEmpty()) {
+                    error.append("The following files are empty and could not be uploaded:\n");
+                    for (String incompleteDocument : incompleteDocuments) {
+                        error.append("• ").append(incompleteDocument).append("\n");
+                    }
+                }
+                if (error.length() > 0) {
+                    context.getMessages().warn(error.toString());
                 }
             }
         }

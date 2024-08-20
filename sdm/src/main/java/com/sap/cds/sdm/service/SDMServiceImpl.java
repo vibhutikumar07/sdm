@@ -62,12 +62,20 @@ public class SDMServiceImpl implements SDMService{
 
             try (Response response = client.newCall(request).execute()) { // Ensure resources are closed
                 if (!response.isSuccessful()) {
-                    System.out.println("Body : " + response.body().string());
+                    String responseBody = response.body().string();
+                    JSONObject jsonResponse = new JSONObject(responseBody);
+                    String message = jsonResponse.getString("message");
                     failedDocument = cmisDocument.getFileName();
                     failedId = cmisDocument.getAttachmentId();
                     if (response.code() == 409){
                         result.put("duplicate", true);
                         result.put("virus", false);
+                        result.put("id", failedId);
+                        result.put("failedDocument", failedDocument);
+                    }
+                    else if ("Malware Service Exception: Virus found in the file!".equals(message)){
+                        result.put("duplicate", false);
+                        result.put("virus", true);
                         result.put("id", failedId);
                         result.put("failedDocument", failedDocument);
                     }
@@ -125,10 +133,11 @@ public class SDMServiceImpl implements SDMService{
     public String getFolderIdByPath(String parentId, String jwtToken, String repositoryId) throws IOException {
         OkHttpClient client = new OkHttpClient();
         SDMCredentials sdmCredentials = TokenHandler.getSDMCredentials();
+        String accessToken = TokenHandler.getDIToken(jwtToken,sdmCredentials);
         String sdmUrl = sdmCredentials.getUrl()+"browser/"+repositoryId+"/root/"+parentId+"?cmisselector=object";
         Request request = new Request.Builder()
                 .url(sdmUrl)
-                .addHeader("Authorization", "Bearer " + jwtToken)
+                .addHeader("Authorization", "Bearer " + accessToken)
                 .get()
                 .build();
 
@@ -138,9 +147,8 @@ public class SDMServiceImpl implements SDMService{
                 return response.body().string();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            return null;
         }
-        return null;
     }
 
     @Override
