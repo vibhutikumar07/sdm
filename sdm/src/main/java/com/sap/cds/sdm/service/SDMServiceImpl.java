@@ -1,10 +1,9 @@
 package com.sap.cds.sdm.service;
 
-import com.sap.cds.CdsData;
 import com.sap.cds.Result;
 import com.sap.cds.Row;
 import com.sap.cds.reflect.CdsEntity;
-import com.sap.cds.reflect.CdsModel;
+import com.sap.cds.sdm.caching.CacheConfig;
 import com.sap.cds.sdm.constants.SDMConstants;
 import com.sap.cds.sdm.handler.TokenHandler;
 import com.sap.cds.sdm.model.CmisDocument;
@@ -16,7 +15,6 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 import org.json.JSONObject;
 
@@ -25,6 +23,7 @@ public class SDMServiceImpl implements SDMService{
     @Override
     public JSONObject createDocument(CmisDocument cmisDocument, String jwtToken) {
         String failedDocument = "";
+        String failedId = "";
         String accessToken;
         JSONObject result = new JSONObject();
 
@@ -63,19 +62,25 @@ public class SDMServiceImpl implements SDMService{
 
             try (Response response = client.newCall(request).execute()) { // Ensure resources are closed
                 if (!response.isSuccessful()) {
+                    System.out.println("Body : " + response.body().string());
                     failedDocument = cmisDocument.getFileName();
+                    failedId = cmisDocument.getAttachmentId();
+                    if (response.code() == 409){
+                        result.put("duplicate", true);
+                        result.put("virus", false);
+                        result.put("id", failedId);
+                        result.put("failedDocument", failedDocument);
+                    }
                 }
                 else{
                     String responseBody = response.body().string();
                     JSONObject jsonResponse = new JSONObject(responseBody);
                     JSONObject succinctProperties = jsonResponse.getJSONObject("succinctProperties");
-                    result.put("success", succinctProperties.getString("cmis:objectId"));
+                    result.put("url", succinctProperties.getString("cmis:objectId"));
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
-            failedDocument = cmisDocument.getFileName();
-            result.put("fail", failedDocument);
         }
 
         return result;
@@ -98,7 +103,6 @@ public class SDMServiceImpl implements SDMService{
         List<Row> rows = result.list();
         String folderId = null;
         folderId = getFolderIdByPath(up__ID, jwtToken, SDMConstants.REPOSITORY_ID);
-        System.out.println("Value123 : "+folderId);
 
         if (rows.size() ==0) {
             folderId = getFolderIdByPath(up__ID, jwtToken, SDMConstants.REPOSITORY_ID);
@@ -122,7 +126,6 @@ public class SDMServiceImpl implements SDMService{
         OkHttpClient client = new OkHttpClient();
         SDMCredentials sdmCredentials = TokenHandler.getSDMCredentials();
         String sdmUrl = sdmCredentials.getUrl()+"browser/"+repositoryId+"/root/"+parentId+"?cmisselector=object";
-        System.out.println(jwtToken);
         Request request = new Request.Builder()
                 .url(sdmUrl)
                 .addHeader("Authorization", "Bearer " + jwtToken)
@@ -170,6 +173,65 @@ public class SDMServiceImpl implements SDMService{
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public String checkRepositoryType(String repositoryId) throws IOException {
+        String type = CacheConfig.getVersionedRepoCache().get(repositoryId);
+        SDMCredentials sdmCredentials =  TokenHandler.getSDMCredentials();
+        String token =  TokenHandler.getAccessToken(sdmCredentials);
+        Boolean isVersioned;
+        if(type == null){
+            JSONObject repoInfo = getRepositoryInfo(token, sdmCredentials);
+            isVersioned = isRepositoryVersioned(repoInfo, repositoryId);
+        } else {
+            isVersioned = "Versioned".equals(type);
+        }
+
+        if(isVersioned){
+            CacheConfig.getVersionedRepoCache().put(repositoryId, "Versioned");
+            return "Versioned";
+        } else {
+            CacheConfig.getVersionedRepoCache().put(repositoryId, "Non Versioned");
+            return "Non versioned";
+        }
+    }
+
+    public JSONObject getRepositoryInfo(String token, SDMCredentials sdmCredentials) throws IOException {
+        String repositoryId = SDMConstants.REPOSITORY_ID;
+        OkHttpClient client = new OkHttpClient();
+        String getRepoInfoUrl = sdmCredentials.getUrl() + "browser/" + repositoryId + "?cmisselector=repositoryInfo";
+
+        Request request = new Request.Builder()
+                .url(getRepoInfoUrl)
+                .addHeader("Authorization", "Bearer " + token)
+                .get()
+                .build();
+
+        try (Response response = client.newCall(request).execute()) { 
+            if (!response.isSuccessful()) {
+                throw new IOException("Unexpected code " + response);
+            }
+            String responseBody = response.body().string();
+            return new JSONObject(responseBody); 
+        } catch (IOException e) {
+            throw new IOException("Failed to get repository info", e);
+        }
+    }
+
+    public Boolean isRepositoryVersioned(JSONObject repoInfo, String repositoryId) throws IOException {
+        repoInfo = repoInfo.getJSONObject(repositoryId);
+        JSONObject capabilities = repoInfo.getJSONObject("capabilities");
+        String type = capabilities.getString("capabilityContentStreamUpdatability");
+        
+        if("pwconly".equals(type)) {
+            type = "Versioned";
+        } else {
+            type = "Non Versioned";
+        }
+
+        //saveRepoToCache(repositoryId, repoInfo);
+        return "Versioned".equals(type);
     }
 
 }

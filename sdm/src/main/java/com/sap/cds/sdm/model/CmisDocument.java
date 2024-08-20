@@ -13,10 +13,12 @@ import java.io.InputStream;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CmisDocument {
+    private String attachmentId;
     private String objectId;
     private String fileName;
     private InputStream content;
     private String parentId;
     private String folderId;
     private String repositoryId;
+    private String status;
 }
