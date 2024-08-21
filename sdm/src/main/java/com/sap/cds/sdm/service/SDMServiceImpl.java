@@ -79,6 +79,11 @@ public class SDMServiceImpl implements SDMService{
                         result.put("id", failedId);
                         result.put("failedDocument", failedDocument);
                     }
+                    else{
+                        result.put("fail", true);
+                        result.put("id", failedId);
+                        result.put("failedDocument", failedDocument);
+                    }
                 }
                 else{
                     String responseBody = response.body().string();
@@ -175,12 +180,11 @@ public class SDMServiceImpl implements SDMService{
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
-            if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+            if (!response.isSuccessful()) throw new IOException("Could not upload");
             return response.body().string();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new IOException("Could not upload");
         }
-        return null;
     }
 
     @Override
@@ -218,12 +222,12 @@ public class SDMServiceImpl implements SDMService{
 
         try (Response response = client.newCall(request).execute()) { 
             if (!response.isSuccessful()) {
-                throw new IOException("Unexpected code " + response);
+                throw new IOException("Failed to get repository info");
             }
             String responseBody = response.body().string();
             return new JSONObject(responseBody); 
         } catch (IOException e) {
-            throw new IOException("Failed to get repository info", e);
+            throw new IOException("Failed to get repository info");
         }
     }
 

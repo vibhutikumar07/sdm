@@ -103,8 +103,9 @@ public class SDMCreateEventHandler implements EventHandler {
 
     private List<String> createDocument(List<CdsData> data, String jwtToken,CdsCreateEventContext context,String up__ID) throws IOException {
         String repositoryId = SDMConstants.REPOSITORY_ID; //Getting repository ID
-
         SDMService sdmService = new SDMServiceImpl();
+        List<String> failedIds = new ArrayList<>();
+        List<String> failedNames = new ArrayList<>();
 
         //Checking to see if repository is versioned
         String repocheck = sdmService.checkRepositoryType(repositoryId);
@@ -117,28 +118,46 @@ public class SDMCreateEventHandler implements EventHandler {
         Optional<CdsEntity> attachmentEntity =
                 model.findEntity(context.getTarget().getQualifiedName() + ".attachments");
 
-        //Checking to see if duplicate files exist in attachments
-        // Result duplicateFiles = getDuplicateFiles(attachmentEntity, persistenceService);
-        // List<Row> rows = duplicateFiles.listOf(Row.class);
-        // if (!rows.isEmpty()) {
-        //     StringBuilder sb = new StringBuilder("The following files could not be uploaded as they already exist:\n");
-        //     for (Row row : rows) {
-        //         String fileName = row.getString("fileName");
-        //         sb.append("• ").append(fileName).append("\n");
-        //     }
-        //     context.getMessages().warn(sb.toString());
-        // }
 
-        //Getting folder id to upload attachment in
-        String folderId = sdmService.getFolderId(jwtToken,attachmentEntity.get(),persistenceService,up__ID);
-
-        List<String> duplicateDocuments = new ArrayList<>();
-        List<String> incompleteDocuments = new ArrayList<>();
-        List<String> virusDocuments = new ArrayList<>();
-        List<String> failedIds = new ArrayList<>();
+        List<Map<String, Object>> attachments = new ArrayList<>();
+        List<String> newFileNames = new ArrayList<>();
+        List<String> newFileIds = new ArrayList<>();
         for (Map<String, Object> entity : data) {
-            // Handle attachments if present
-            List<Map<String, Object>> attachments = (List<Map<String, Object>>) entity.get("attachments");
+            attachments = (List<Map<String, Object>>) entity.get("attachments");
+            if (attachments != null) {
+                for (Map<String, Object> attachment : attachments) {
+                    attachment.remove("DRAFT_READONLY_CONTEXT");
+                    if (attachment.get("url") == null) {
+                        newFileNames.add(attachment.get("fileName").toString());
+                        newFileIds.add(attachment.get("ID").toString());
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < newFileNames.size(); i++) {
+            for (int j = i + 1; j < newFileNames.size(); j++) {
+                if (newFileNames.get(i).equals(newFileNames.get(j))) {
+                    failedIds.add(newFileIds.get(j));
+                    failedNames.add(newFileNames.get(j));
+                }
+            }
+        }
+        Boolean flag = false;
+        if(failedIds.isEmpty()) {//Getting folder id to upload attachment in
+            flag = true;
+            String folderId = null;
+            try {
+                folderId = sdmService.getFolderId(jwtToken, attachmentEntity.get(), persistenceService, up__ID);
+            } catch (Exception e) {
+                context.getMessages().warn("Error in upload");
+            }
+
+            List<String> otherFailedDocuments = new ArrayList<>();
+            List<String> duplicateDocuments = new ArrayList<>();
+            List<String> incompleteDocuments = new ArrayList<>();
+            List<String> virusDocuments = new ArrayList<>();
+
             if (attachments != null) {
                 Map<String, Object> firstAttachment = attachments.get(0);
                 String parentId = firstAttachment.get("up__ID").toString();
@@ -152,30 +171,32 @@ public class SDMCreateEventHandler implements EventHandler {
                     cmisDocument.setRepositoryId(repositoryId);
                     cmisDocument.setFolderId(folderId);
 
-                    if(cmisDocument.getContent() == null){
+                    if (cmisDocument.getContent() == null) {
                         cmisDocument.setStatus("Incomplete");
                         incompleteDocuments.add(cmisDocument.getFileName());
                         failedIds.add(cmisDocument.getAttachmentId());
-                    }
-                    else{
+                    } else {
                         JSONObject result = sdmService.createDocument(cmisDocument, jwtToken);
                         if (result.has("duplicate") && result.getBoolean("duplicate")) {
                             cmisDocument.setStatus("Duplicate");
                             String duplicateName = result.optString("failedDocument");
                             duplicateDocuments.add(duplicateName);
                             failedIds.add(result.optString("id"));
-                        }
-                        else if (result.has("virus") && result.getBoolean("virus")) {
+                        } else if (result.has("virus") && result.getBoolean("virus")) {
                             cmisDocument.setStatus("Virus");
                             String virusName = result.optString("failedDocument");
                             virusDocuments.add(virusName);
                             failedIds.add(result.optString("id"));
-                        }
-                        else{
+                        } else if (result.has("fail") && result.getBoolean("fail")) {
+                            cmisDocument.setStatus("Other");
+                            String fileName = result.optString("failedDocument");
+                            otherFailedDocuments.add(fileName);
+                            failedIds.add(result.optString("id"));
+                        } else {
                             cmisDocument.setStatus("Success");
-                            attachment.put("folderId",folderId);
-                            attachment.put("repositoryId",repositoryId);
-                            attachment.put("url",result.optString("url"));
+                            attachment.put("folderId", folderId);
+                            attachment.put("repositoryId", repositoryId);
+                            attachment.put("url", result.optString("url"));
                             cmisDocument.setObjectId(result.getString("url"));
                         }
                     }
@@ -194,10 +215,24 @@ public class SDMCreateEventHandler implements EventHandler {
                         error.append("• ").append(virusDocument).append("\n");
                     }
                 }
+                if (!otherFailedDocuments.isEmpty()) {
+                    error.append("The following files cannot be uploaded:\n");
+                    for (String otherDocument : otherFailedDocuments) {
+                        error.append("• ").append(otherDocument).append("\n");
+                    }
+                }
                 if (error.length() > 0) {
                     context.getMessages().warn(error.toString());
                 }
             }
+        }
+        if(flag == false){
+            StringBuilder error = new StringBuilder();
+            error.append("The following files have been added multiple times. Please remove them and try again:\n");
+            for (String failName : failedNames) {
+                error.append("• ").append(failName).append("\n");
+            }
+            context.getMessages().error(error.toString());
         }
         return failedIds;
     }
