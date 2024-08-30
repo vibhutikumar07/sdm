@@ -15,13 +15,23 @@
         "kind": 2,
         "language": "shell",
         "value": "cds init demoapp --add java,sample\n",
-        "outputs": []
+        "outputs": [
+            {
+                "mime": "text/plain",
+                "value": "Creating new CAP project"
+            }
+        ]
     },
     {
         "kind": 2,
         "language": "shell",
         "value": "cd demoapp",
-        "outputs": []
+        "outputs": [
+            {
+                "mime": "text/plain",
+                "value": "\n"
+            }
+        ]
     },
     {
         "kind": 1,
@@ -33,43 +43,78 @@
         "kind": 2,
         "language": "shell",
         "value": "%%writefile \"db/attachment-extension.cds\"\nusing {sap.capire.bookshop.Books} from './schema';\nusing {sap.attachments.Attachments} from`com.sap.cds/sdm`;\n\nextend entity Books with {\n    attachments : Composition of many Attachments;\n}\n\nentity Statuses @cds.autoexpose @readonly {\n    key code : StatusCode;\n        text : localized String(255);\n}\n\nextend Attachments with {\n    statusText : Association to Statuses on statusText.code = $self.status;\n}\n\nannotate Books.attachments with {\n    status @(\n        Common.Text: {\n            $value: ![statusText.text],\n            ![@UI.TextArrangement]: #TextOnly\n        },\n        ValueList: {entity:'Statuses'},\n        sap.value.list: 'fixed-values'\n    );\n}\n",
-        "outputs": []
+        "outputs": [
+            {
+                "mime": "text/html",
+                "value": "Wrote cell content to file <a href=\"demoapp/db/attachment-extension.cds\">demoapp/db/attachment-extension.cds</a>.\n"
+            }
+        ]
     },
     {
         "kind": 2,
         "language": "shell",
         "value": "",
-        "outputs": []
+        "outputs": [
+            {
+                "mime": "text/html",
+                "value": "Wrote cell content to file <a href=\"demoapp/db/data/Statuses.csv\">demoapp/db/data/Statuses.csv</a>.\n"
+            }
+        ]
     },
     {
         "kind": 2,
         "language": "shell",
         "value": "",
-        "outputs": []
+        "outputs": [
+            {
+                "mime": "text/html",
+                "value": "Wrote cell content to file <a href=\"demoapp/db/data/Statuses_texts.csv\">demoapp/db/data/Statuses_texts.csv</a>.\n"
+            }
+        ]
     },
     {
         "kind": 2,
         "language": "shell",
-        "value": "%%writefile \"db/pom.xml\"\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project xmlns=\"http://maven.apache.org/POM/4.0.0\"\n\txmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n\txsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd\">\n\t<modelVersion>4.0.0</modelVersion>\n\t<parent>\n\t\t<artifactId>demoapp-parent</artifactId>\n\t\t<groupId>customer</groupId>\n\t\t<version>${revision}</version>\n\t</parent>\n\n\t<artifactId>db</artifactId>\n\n    <!-- CAP Attachment-->\n    <dependencies>\n        <dependency>\n            <groupId>com.sap.cds</groupId>\n            <artifactId>sdm</artifactId>\n            <version>1.0.0-SNAPSHOT</version>\n        </dependency>\n    </dependencies>\n\t\n\t<build>\n\t\t<plugins>\n\t\t\t<plugin>\n\t\t\t\t<groupId>com.sap.cds</groupId>\n\t\t\t\t<artifactId>cds-maven-plugin</artifactId>\n\t\t\t\t<version>${cds.services.version}</version>\n\t\t\t\t<executions>\n\t\t\t\t\t<execution>\n\t\t\t\t\t\t<id>cds.clean</id>\n\t\t\t\t\t\t<goals>\n\t\t\t\t\t\t\t<goal>clean</goal>\n\t\t\t\t\t\t</goals>\n\t\t\t\t\t</execution>\n\t\t\t\t\t<execution>\n\t\t\t\t\t\t<id>cds.resolve</id>\n\t\t\t\t\t\t<goals>\n\t\t\t\t\t\t\t<goal>resolve</goal>\n\t\t\t\t\t\t</goals>\n\t\t\t\t\t</execution>\n\t\t\t\t</executions>\n\t\t\t</plugin>\n\t\t</plugins>\n\t</build>\n\n</project>",
-        "outputs": []
+        "value": "%%writefile \"db/pom.xml\"\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project xmlns=\"http://maven.apache.org/POM/4.0.0\"\n\txmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n\txsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd\">\n\t<modelVersion>4.0.0</modelVersion>\n\t<parent>\n\t\t<artifactId>demoapp-parent</artifactId>\n\t\t<groupId>customer</groupId>\n\t\t<version>${revision}</version>\n\t</parent>\n\n\t<artifactId>db</artifactId>\n\n    <!-- CAP Attachment-->\n    <dependencies>\n        <dependency>\n            <groupId>com.sap.cds</groupId>\n            <artifactId>sdm</artifactId>\n            <version>1.0.0</version>\n        </dependency>\n    </dependencies>\n\t\n\t<build>\n\t\t<plugins>\n\t\t\t<plugin>\n\t\t\t\t<groupId>com.sap.cds</groupId>\n\t\t\t\t<artifactId>cds-maven-plugin</artifactId>\n\t\t\t\t<version>${cds.services.version}</version>\n\t\t\t\t<executions>\n\t\t\t\t\t<execution>\n\t\t\t\t\t\t<id>cds.clean</id>\n\t\t\t\t\t\t<goals>\n\t\t\t\t\t\t\t<goal>clean</goal>\n\t\t\t\t\t\t</goals>\n\t\t\t\t\t</execution>\n\t\t\t\t\t<execution>\n\t\t\t\t\t\t<id>cds.resolve</id>\n\t\t\t\t\t\t<goals>\n\t\t\t\t\t\t\t<goal>resolve</goal>\n\t\t\t\t\t\t</goals>\n\t\t\t\t\t</execution>\n\t\t\t\t</executions>\n\t\t\t</plugin>\n\t\t</plugins>\n\t</build>\n\n</project>",
+        "outputs": [
+            {
+                "mime": "text/html",
+                "value": "Wrote cell content to file <a href=\"demoapp/db/pom.xml\">demoapp/db/pom.xml</a>.\n"
+            }
+        ]
     },
     {
         "kind": 2,
         "language": "shell",
         "value": "cd db",
-        "outputs": []
+        "outputs": [
+            {
+                "mime": "text/plain",
+                "value": "\n"
+            }
+        ]
     },
     {
         "kind": 2,
         "language": "java",
         "value": "Path versionPath = Paths.get(\"../../version.txt\");\nString version;\nif (Files.exists(versionPath)){\n    version = Files.readString(versionPath);\n    System.out.println(\"Using version from 'version.txt': \" + version);\n}else{\n    version = \"1.0.2\";\n    System.out.println(\"Using hard coded version: \" + version);\n}\nPath pomPath = Paths.get(\"pom.xml\");\nStream<String> lines = Files.lines(pomPath);\nList<String> replaced = lines.map(line -> line.replaceAll(\"attachment_version\", version)).collect(Collectors.toList());\nFiles.write(pomPath, replaced);\nlines.close();",
-        "outputs": []
+        "outputs": [
+            {
+                "mime": "text/plain",
+                "value": "Using version from 'version.txt': 1.0.2\n\n\n"
+            }
+        ]
     },
     {
         "kind": 2,
         "language": "shell",
         "value": "mvn clean compile",
-        "outputs": []
+        "outputs": [
+            {
+                "mime": "text/plain",
+                "value": ""
+            }
+        ]
     },
     {
         "kind": 1,
@@ -81,7 +126,12 @@
         "kind": 2,
         "language": "shell",
         "value": "cd ../srv",
-        "outputs": []
+        "outputs": [
+            {
+                "mime": "text/plain",
+                "value": "\n"
+            }
+        ]
     },
     {
         "kind": 1,
@@ -93,13 +143,23 @@
         "kind": 2,
         "language": "java",
         "value": "\nPath versionPath = Paths.get(\"../../version.txt\");\nString version;\nif (Files.exists(versionPath)){\n    version = Files.readString(versionPath);\n    System.out.println(\"Using version from 'version.txt': \" + version);\n}else{\n    version = \"1.0.2\";\n    System.out.println(\"Using hard coded version: \" + version);\n}\n\nString filePath = \"pom.xml\";\ntry {\n    String pom = Files.readString(Path.of(filePath));\n    String searchString = \"<dependencies>\";\n    Pattern pattern = Pattern.compile(searchString);\n    Matcher matcher = pattern.matcher(pom);\n\n    if (matcher.find()) {\n        System.out.println(\"String found at position: \" + matcher.start());\n    } else {\n        System.out.println(\"String not found\");\n    }\n\n    String newDependency = \"\\n\\n         <dependency>\\n          <groupId>com.sap.cds</groupId>\\n           <artifactId>sdm</artifactId>\\n          <version>\" + version + \"</version>\\n        </dependency>\\n\\n\";\n    int insertPos = matcher.end();\n    pom = pom.substring(0, insertPos) + newDependency + pom.substring(insertPos);\n\n    Files.writeString(Path.of(filePath), pom);\n\n} catch (IOException e) {\n    e.printStackTrace();\n}",
-        "outputs": []
+        "outputs": [
+            {
+                "mime": "text/plain",
+                "value": "Using version from 'version.txt': 1.0.2\n\nString found at position: 540\n\n"
+            }
+        ]
     },
     {
         "kind": 2,
         "language": "shell",
         "value": "cd ..",
-        "outputs": []
+        "outputs": [
+            {
+                "mime": "text/plain",
+                "value": "\n"
+            }
+        ]
     },
     {
         "kind": 1,
@@ -117,7 +177,12 @@
         "kind": 2,
         "language": "java",
         "value": "String filePath = \"app/admin-books/fiori-service.cds\";\n\ntry {\n    String cds = Files.readString(Path.of(filePath));\n    String searchString = \"Target:\\\\s*'@UI\\\\.FieldGroup#Details'\\\\s*},\";\n    Pattern pattern = Pattern.compile(searchString);\n    Matcher matcher = pattern.matcher(cds);\n\n    if (matcher.find()) {\n        System.out.println(\"String found at position: \" + matcher.start());\n    } else {\n        System.out.println(\"String not found\");\n    }\n\n    String newFacet = \"\\n    {\\n      $Type : 'UI.ReferenceFacet',\\n      ID     : 'AttachmentsFacet',\\n      Label : '{i18n>attachments}',\\n      Target: 'attachments/@UI.LineItem'\\n    },\";\n    int insertPos = matcher.end();\n    cds = cds.substring(0, insertPos) + newFacet + cds.substring(insertPos);\n\n    Files.writeString(Path.of(filePath), cds);\n\n} catch (IOException e) {\n    e.printStackTrace();\n}",
-        "outputs": []
+        "outputs": [
+            {
+                "mime": "text/plain",
+                "value": "String found at position: 546\n\n"
+            }
+        ]
     },
     {
         "kind": 1,
@@ -129,13 +194,23 @@
         "kind": 2,
         "language": "shell",
         "value": "cd app/_i18n",
-        "outputs": []
+        "outputs": [
+            {
+                "mime": "text/plain",
+                "value": "\n"
+            }
+        ]
     },
     {
         "kind": 2,
         "language": "java",
         "value": "String filePath = \"i18n.properties\";\n\nList<String> properties  = new ArrayList<>();\nproperties.add(\"\\n\");\nproperties.add(\"#Attachment properties\\n\");\nproperties.add(\"attachment_content = Content\\n\");\nproperties.add(\"attachment_mimeType = Mime Type\\n\");\nproperties.add(\"attachment_fileName = File Name\\n\");\nproperties.add(\"attachment_status = Status\\n\");\nproperties.add(\"attachment_note = Notes\\n\");\nproperties.add(\"attachment = Attachment\\n\");\nproperties.add(\"attachments = Attachments\");\n\nfor (String property: properties){\n    try {\n        Files.write(Paths.get(filePath), property.getBytes(), StandardOpenOption.APPEND);\n    } catch (IOException e) {\n        e.printStackTrace();\n    }\n}\n",
-        "outputs": []
+        "outputs": [
+            {
+                "mime": "text/plain",
+                "value": "\n"
+            }
+        ]
     },
     {
         "kind": 1,
@@ -147,7 +222,12 @@
         "kind": 2,
         "language": "shell",
         "value": "cd ../../srv\nmvn clean compile",
-        "outputs": []
+        "outputs": [
+            {
+                "mime": "text/plain",
+                "value": ""
+            }
+        ]
     },
     {
         "kind": 1,
