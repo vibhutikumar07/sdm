@@ -127,7 +127,6 @@ if(duplicateFiles !=null ){
         String repositoryId = SDMConstants.REPOSITORY_ID; //Getting repository ID
         SDMService sdmService = new SDMServiceImpl();
         List<String> failedIds = new ArrayList<>();
-        List<String> failedNames = new ArrayList<>();
 
         //Checking to see if repository is versioned
         String repocheck = sdmService.checkRepositoryType(repositoryId);
@@ -140,46 +139,21 @@ if(duplicateFiles !=null ){
         Optional<CdsEntity> attachmentEntity =
                 model.findEntity(context.getTarget().getQualifiedName() + ".attachments");
 
-
         List<Map<String, Object>> attachments = new ArrayList<>();
-        List<String> newFileNames = new ArrayList<>();
-        List<String> newFileIds = new ArrayList<>();
+        String folderId = null;
+        try {
+            folderId = sdmService.getFolderId(jwtToken, attachmentEntity.get(), persistenceService, up__ID);
+        } catch (Exception e) {
+            context.getMessages().warn("Error in upload");
+        }
+
+        List<String> otherFailedDocuments = new ArrayList<>();
+        List<String> duplicateDocuments = new ArrayList<>();
+        List<String> incompleteDocuments = new ArrayList<>();
+        List<String> virusDocuments = new ArrayList<>();
+
         for (Map<String, Object> entity : data) {
             attachments = (List<Map<String, Object>>) entity.get("attachments");
-            if (attachments != null) {
-                for (Map<String, Object> attachment : attachments) {
-                    attachment.remove("DRAFT_READONLY_CONTEXT");
-                    if (attachment.get("url") == null) {
-                        newFileNames.add(attachment.get("fileName").toString());
-                        newFileIds.add(attachment.get("ID").toString());
-                    }
-                }
-            }
-        }
-
-        for (int i = 0; i < newFileNames.size(); i++) {
-            for (int j = i + 1; j < newFileNames.size(); j++) {
-                if (newFileNames.get(i).equals(newFileNames.get(j))) {
-                    failedIds.add(newFileIds.get(j));
-                    failedNames.add(newFileNames.get(j));
-                }
-            }
-        }
-        Boolean flag = false;
-        if(failedIds.isEmpty()) {//Getting folder id to upload attachment in
-            flag = true;
-            String folderId = null;
-            try {
-                folderId = sdmService.getFolderId(jwtToken, attachmentEntity.get(), persistenceService, up__ID);
-            } catch (Exception e) {
-                context.getMessages().warn("Error in upload");
-            }
-
-            List<String> otherFailedDocuments = new ArrayList<>();
-            List<String> duplicateDocuments = new ArrayList<>();
-            List<String> incompleteDocuments = new ArrayList<>();
-            List<String> virusDocuments = new ArrayList<>();
-
             if (attachments != null) {
                 Map<String, Object> firstAttachment = attachments.get(0);
                 String parentId = firstAttachment.get("up__ID").toString();
@@ -247,14 +221,6 @@ if(duplicateFiles !=null ){
                     context.getMessages().warn(error.toString());
                 }
             }
-        }
-        if(flag == false){
-            StringBuilder error = new StringBuilder();
-            error.append("The following files have been added multiple times. Please remove them and try again:\n");
-            for (String failName : failedNames) {
-                error.append("• ").append(failName).append("\n");
-            }
-            context.getMessages().error(error.toString());
         }
         return failedIds;
     }
