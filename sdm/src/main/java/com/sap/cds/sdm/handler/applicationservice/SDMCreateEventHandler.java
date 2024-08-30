@@ -11,6 +11,7 @@ import com.sap.cds.feature.attachments.handler.applicationservice.helper.Readonl
 import com.sap.cds.feature.attachments.handler.applicationservice.helper.ThreadDataStorageReader;
 import com.sap.cds.feature.attachments.handler.applicationservice.processor.modifyevents.ModifyAttachmentEventFactory;
 import com.sap.cds.feature.attachments.handler.common.ApplicationHandlerHelper;
+import com.sap.cds.feature.attachments.handler.draftservice.constants.DraftConstants;
 import com.sap.cds.feature.attachments.utilities.LoggingMarker;
 import com.sap.cds.reflect.CdsBaseType;
 import com.sap.cds.reflect.CdsEntity;
@@ -62,9 +63,9 @@ public class SDMCreateEventHandler implements EventHandler {
     }
 
     @Before(event = CqnService.EVENT_CREATE)
-    @HandlerOrder(HandlerOrder.LATE)
+    @HandlerOrder(HandlerOrder.BEFORE)
     public void processBefore(CdsCreateEventContext context, List<CdsData> data) throws IOException {
-        doCreate(context, data);
+          doCreate(context, data);
     }
 
     private void doCreate(CdsCreateEventContext context, List<CdsData> data) throws IOException {
@@ -72,6 +73,10 @@ public class SDMCreateEventHandler implements EventHandler {
         JwtTokenAuthenticationInfo jwtTokenInfo = authInfo.as(JwtTokenAuthenticationInfo.class);
         String jwtToken = jwtTokenInfo.getToken();
         String up__ID= getUP__ID(data);
+String duplicateFiles = getDuplicateFileNames(data);
+if(duplicateFiles !=null ){
+    context.getMessages().error(String.format(SDMConstants.DUPLICATE_FILES_ERROR, duplicateFiles));
+}
         List<String> failedIds = createDocument(data, jwtToken, context, up__ID);
         for (Map<String, Object> entity : data) {
             List<Map<String, Object>> attachments = (List<Map<String, Object>>) entity.get("attachments");
@@ -95,7 +100,24 @@ public class SDMCreateEventHandler implements EventHandler {
         ModifyApplicationHandlerHelper.handleAttachmentForEntities(context.getTarget(), data, new ArrayList<>(), eventFactory,
                 context);
     }
+    private String getDuplicateFileNames(List<CdsData> data) {
+        List<String> fileNames = getFilesNamesFromInput(data);
+        Set<String> uniqueFileNames = new HashSet<>();
+        Set<String> duplicateFileNames = new HashSet<>();
 
+        for (String fileName : fileNames) {
+            if (!uniqueFileNames.add(fileName)) {
+                duplicateFileNames.add(fileName);
+            }
+        }
+        if(duplicateFileNames.size()>0){
+            // Join the list of existing filenames with commas
+            return String.join(",", duplicateFileNames);
+        }
+        else
+        return  null;
+    }
+ 
     private void setKeysInData(CdsEntity entity, List<CdsData> data) {
         processor.addGenerator((path, element, type) -> element.isKey() && element.getType().isSimpleType(CdsBaseType.UUID),
                 (path, element, isNull) -> UUID.randomUUID().toString()).process(data, entity);
@@ -249,6 +271,22 @@ public class SDMCreateEventHandler implements EventHandler {
             }
         }
         return null;
+    }
+
+    private List<String> getFilesNamesFromInput(List<CdsData> data) {
+        List<String> fileNames = new ArrayList<>();
+        for (Map<String, Object> entity : data) {
+
+            // Handle attachments if present
+            List<Map<String, Object>> attachments = (List<Map<String, Object>>) entity.get("attachments");
+            if (attachments != null) {
+                for (Map<String, Object> attachment : attachments) {
+                    fileNames.add( attachment.get("fileName").toString());
+                }
+
+            }
+        }
+        return fileNames;
     }
 
 }
