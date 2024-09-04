@@ -28,6 +28,7 @@ public class DBQuery {
         updatedFields.put("url", cmisDocument.getObjectId());
         updatedFields.put("repositoryId", repositoryId);
         updatedFields.put("folderId", cmisDocument.getFolderId());
+        updatedFields.put("status", "Clean");
 
         CqnUpdate updateQuery = Update.entity(attachmentEntity)
                 .data(updatedFields)
