@@ -67,33 +67,25 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
             Optional<CdsEntity> attachmentDraftEntity =
                     model.findEntity(context.getAttachmentEntity()+"_drafts");
             Result result = DBQuery.getAttachmentsForUP__ID(attachmentDraftEntity.get(),persistenceService,up__ID);
-            System.out.println("Result DB : "+result);
+            System.out.println("Result before : "+result);
 
-            String contentId = context.getContentId();
-            CdsEntity attachmentEntity = context.getAttachmentEntity();
             MediaData data = context.getData();
-            Boolean isInternalStored = context.getIsInternalStored();
-
-            System.out.println("Content ID: " + contentId);
-            System.out.println("Attachment IDs: " + attachmentIds);
-            System.out.println("Attachment Entity: " + attachmentEntity);
-            System.out.println("Media Data: " + data);
-            System.out.println("Is Internal Stored: " + isInternalStored);
 
             String filename = (String) data.get("fileName");
             String fileid = (String) attachmentIds.get("ID");
 
             Boolean duplicate  = duplicateCheck(filename,fileid,result);
             if(duplicate){
-                System.out.println("Duplicate error");
                 deleteAttachmentFromDraft(attachmentDraftEntity.get(),persistenceService, fileid);
+                Result result123 = DBQuery.getAttachmentsForUP__ID(attachmentDraftEntity.get(),persistenceService,up__ID);
+                System.out.println("Result after delete : "+result123);
                 context.getMessages().warn("This attachment already exists. Please remove it and try again");
             }
             else{
                 AuthenticationInfo authInfo = context.getAuthenticationInfo();
                 JwtTokenAuthenticationInfo jwtTokenInfo = authInfo.as(JwtTokenAuthenticationInfo.class);
                 String jwtToken = jwtTokenInfo.getToken();
-                String folderId = sdmService.getFolderId(jwtToken, attachmentDraftEntity.get(), persistenceService, up__ID);
+                String folderId = sdmService.getFolderId(jwtToken, result, persistenceService, up__ID);
                 cmisDocument.setFileName(filename);
                 cmisDocument.setAttachmentId(fileid);
                 InputStream contentStream = (InputStream) data.get("content");
@@ -103,14 +95,12 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
                 cmisDocument.setFolderId(folderId);
                 SDMCredentials sdmCredentials = TokenHandler.getSDMCredentials();
                 JSONObject createResult = sdmService.createDocument(cmisDocument, jwtToken, sdmCredentials);
-                System.out.println("Result : "+createResult);
 
                 StringBuilder error = new StringBuilder();
                 if(createResult.get("status") == "duplicate"){
                     deleteAttachmentFromDraft(attachmentDraftEntity.get(),persistenceService, fileid);
                     error.append("The following files already exist and cannot be uploaded:\n");
                     error.append("• ").append(createResult.get("name")).append("\n");
-                    System.out.println(error);
                 }
                 else if(createResult.get("status") == "virus"){
                     deleteAttachmentFromDraft(attachmentDraftEntity.get(),persistenceService, fileid);
@@ -123,11 +113,9 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
                     error.append("• ").append(createResult.get("name")).append("\n");
                 }
                 else{
-                    System.out.println("URL : "+createResult.get("url"));
                     cmisDocument.setObjectId(createResult.get("url").toString());
+                    addAttachmentToDraft(attachmentDraftEntity.get(),persistenceService, cmisDocument);
                 }
-                System.out.println("Status : "+createResult.get("status"));
-                addAttachmentToDraft(attachmentDraftEntity.get(),persistenceService, cmisDocument);
             }
         }
 
