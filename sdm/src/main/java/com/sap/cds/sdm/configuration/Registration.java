@@ -9,6 +9,8 @@ import com.sap.cds.sdm.caching.CacheConfig;
 import com.sap.cds.sdm.handler.applicationservice.SDMCreateEventHandler;
 import com.sap.cds.sdm.handler.applicationservice.SDMUpdateEventHandler;
 import com.sap.cds.sdm.service.SDMAttachmentsService;
+import com.sap.cds.sdm.service.SDMService;
+import com.sap.cds.sdm.service.SDMServiceImpl;
 import com.sap.cds.sdm.service.handler.SDMAttachmentsServiceHandler;
 import com.sap.cds.services.persistence.PersistenceService;
 import org.slf4j.Logger;
@@ -59,19 +61,19 @@ public class Registration implements CdsRuntimeConfiguration {
 		var outbox = configurer.getCdsRuntime().getServiceCatalog().getService(OutboxService.class,
 				OutboxService.PERSISTENT_UNORDERED_NAME);//need to check if required
 		var outboxedAttachmentService = outbox.outboxed(attachmentService);
-
-		configurer.eventHandler(new SDMAttachmentsServiceHandler());
-		var attachmentsReader = buildAttachmentsReader(persistenceService);
-		var deleteContentEvent = new MarkAsDeletedAttachmentEvent(outboxedAttachmentService);
-		var eventFactory = buildAttachmentEventFactory(attachmentService, deleteContentEvent, outboxedAttachmentService);
-		ThreadLocalDataStorage storage = new ThreadLocalDataStorage();
-		configurer.eventHandler(buildCreateHandler(eventFactory, storage,persistenceService));
-		configurer.eventHandler(buildUpdateHandler(eventFactory,attachmentsReader, storage,persistenceService));
+		System.out.println("Registration");
+		SDMService sdmService = new SDMServiceImpl();
+		configurer.eventHandler(new SDMAttachmentsServiceHandler(persistenceService, sdmService));
+//		var attachmentsReader = buildAttachmentsReader(persistenceService);
+//		var deleteContentEvent = new MarkAsDeletedAttachmentEvent(outboxedAttachmentService);
+//		var eventFactory = buildAttachmentEventFactory(attachmentService, deleteContentEvent, outboxedAttachmentService);
+//		ThreadLocalDataStorage storage = new ThreadLocalDataStorage();
+//		configurer.eventHandler(buildCreateHandler(eventFactory, storage,persistenceService));
+//		configurer.eventHandler(buildUpdateHandler(eventFactory,attachmentsReader, storage,persistenceService));
 	}
 
 	private AttachmentService buildAttachmentService() {
 		logger.info(marker, "Registering SDM attachment service");
-
 		return new SDMAttachmentsService();
 	}
 
@@ -90,14 +92,16 @@ public class Registration implements CdsRuntimeConfiguration {
 		return (contentId, cdsRuntime) -> new CreationChangeSetListener(contentId, cdsRuntime, outboxedAttachmentService);
 	}
 
-	protected EventHandler buildCreateHandler(ModifyAttachmentEventFactory factory, ThreadLocalDataStorage storage,PersistenceService persistenceService) {
-		return new SDMCreateEventHandler(factory, storage,persistenceService);
-	}
-
-	protected EventHandler buildUpdateHandler(ModifyAttachmentEventFactory factory, AttachmentsReader attachmentsReader,
-											  ThreadLocalDataStorage storage,PersistenceService persistenceService) {
-		return new SDMUpdateEventHandler(factory,attachmentsReader, storage,persistenceService);
-	}
+//	protected EventHandler buildCreateHandler(ModifyAttachmentEventFactory factory, ThreadLocalDataStorage storage,PersistenceService persistenceService) {
+//		SDMService sdmService = new SDMServiceImpl();
+//		return new SDMCreateEventHandler(factory, storage, persistenceService, sdmService);
+//	}
+//
+//	protected EventHandler buildUpdateHandler(ModifyAttachmentEventFactory factory, AttachmentsReader attachmentsReader,
+//											  ThreadLocalDataStorage storage,PersistenceService persistenceService) {
+//		SDMService sdmService = new SDMServiceImpl();
+//		return new SDMUpdateEventHandler(factory,attachmentsReader, storage, persistenceService, sdmService);
+//	}
 	protected AttachmentsReader buildAttachmentsReader(PersistenceService persistenceService) {
 		var cascader = new DefaultAssociationCascader();
 		return new DefaultAttachmentsReader(cascader, persistenceService);

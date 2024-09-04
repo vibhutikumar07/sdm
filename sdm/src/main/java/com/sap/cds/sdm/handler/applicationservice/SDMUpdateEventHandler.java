@@ -10,6 +10,8 @@ import com.sap.cds.ql.Select;
 import com.sap.cds.ql.cqn.*;
 import com.sap.cds.reflect.CdsModel;
 import com.sap.cds.sdm.constants.SDMConstants;
+import com.sap.cds.sdm.handler.TokenHandler;
+import com.sap.cds.sdm.model.SDMCredentials;
 import com.sap.cds.sdm.persistence.DBQuery;
 import com.sap.cds.sdm.model.CmisDocument;
 import com.sap.cds.sdm.persistence.DBQuery;
@@ -58,15 +60,16 @@ public class SDMUpdateEventHandler implements EventHandler {
 
     private final ModifyAttachmentEventFactory eventFactory;
     private final ThreadDataStorageReader storageReader;
-    private final  AttachmentsReader attachmentsReader;
+    private final AttachmentsReader attachmentsReader;
     private final PersistenceService persistenceService;
+    private final SDMService sdmService;
 
-    public SDMUpdateEventHandler(ModifyAttachmentEventFactory eventFactory,AttachmentsReader attachmentsReader,
-                                 ThreadDataStorageReader storageReader,PersistenceService persistenceService) {
+    public SDMUpdateEventHandler(ModifyAttachmentEventFactory eventFactory, AttachmentsReader attachmentsReader, ThreadDataStorageReader storageReader, PersistenceService persistenceService, SDMService sdmService) {
         this.eventFactory = eventFactory;
         this.attachmentsReader = attachmentsReader;
         this.storageReader = storageReader;
         this.persistenceService = persistenceService;
+        this.sdmService = sdmService;
     }
 
     @Before(event = CqnService.EVENT_UPDATE)
@@ -87,20 +90,23 @@ public class SDMUpdateEventHandler implements EventHandler {
         String jwtToken = jwtTokenInfo.getToken();
         String up__ID=getUP__ID(data);
           //get the data and get all the filenames, query the attachments for particular up__ID and then check if filenames list is present within the reult list and return those filenames list
-String duplicateFiles = getDuplicateFileNames(data);
-if(duplicateFiles !=null ){
-    context.getMessages().error(String.format(SDMConstants.DUPLICATE_FILES_ERROR, duplicateFiles));
-}
-        List<String> failedIds = createDocument(data, jwtToken, context, up__ID);
-        for (Map<String, Object> entity : data) {
-            List<Map<String, Object>> attachments = (List<Map<String, Object>>) entity.get("attachments");
-            if (attachments != null) {
-                Iterator<Map<String, Object>> iterator = attachments.iterator();
-                while (iterator.hasNext()) {
-                    Map<String, Object> attachment = iterator.next();
-                    String checkId = (String) attachment.get("ID"); // Ensure appropriate cast to String
-                    if (failedIds.contains(checkId)) {
-                        iterator.remove();
+        String duplicateFiles = getDuplicateFileNames(data);
+        if(duplicateFiles !=null ){
+            //context.getMessages().error(String.format(SDMConstants.DUPLICATE_FILES_ERROR, duplicateFiles));
+            throw new IOException("Duplicate files");
+        }
+        else{
+            List<String> failedIds = createDocument(data, jwtToken, context, up__ID);
+            for (Map<String, Object> entity : data) {
+                List<Map<String, Object>> attachments = (List<Map<String, Object>>) entity.get("attachments");
+                if (attachments != null) {
+                    Iterator<Map<String, Object>> iterator = attachments.iterator();
+                    while (iterator.hasNext()) {
+                        Map<String, Object> attachment = iterator.next();
+                        String checkId = (String) attachment.get("ID"); // Ensure appropriate cast to String
+                        if (failedIds.contains(checkId)) {
+                            iterator.remove();
+                        }
                     }
                 }
             }
@@ -194,7 +200,6 @@ if(duplicateFiles !=null ){
     }
     private List<String> createDocument(List<CdsData> data, String jwtToken,CdsUpdateEventContext context,String up__ID) throws IOException {
         String repositoryId = SDMConstants.REPOSITORY_ID; //Getting repository ID
-        SDMService sdmService = new SDMServiceImpl();
         List<String> failedIds = new ArrayList<>();
         List<String> failedNames = new ArrayList<>();
 
@@ -234,36 +239,35 @@ if(duplicateFiles !=null ){
                 cmisDocument.setRepositoryId(repositoryId);
                 cmisDocument.setParentId(attachment.get("up__ID").toString());
                 cmisDocument.setFolderId(folderId);
-
-                if (contentStream != null) {
-                    if (cmisDocument.getContent() == null) {
-                        cmisDocument.setStatus("Incomplete");
-                        incompleteDocuments.add(cmisDocument.getFileName());
-                        failedIds.add(cmisDocument.getAttachmentId());
+                if (cmisDocument.getContent() == null) {
+                    cmisDocument.setStatus("Incomplete");
+                    incompleteDocuments.add(cmisDocument.getFileName());
+                    failedIds.add(cmisDocument.getAttachmentId());
+                }
+                else {
+                    SDMCredentials sdmCredentials = TokenHandler.getSDMCredentials();
+                    JSONObject result = sdmService.createDocument(cmisDocument, jwtToken, sdmCredentials);
+                    if (result.has("duplicate") && result.getBoolean("duplicate")) {
+                        cmisDocument.setStatus("Duplicate");
+                        String duplicateName = result.optString("failedDocument");
+                        duplicateDocuments.add(duplicateName);
+                        failedIds.add(result.optString("id"));
+                    } else if (result.has("virus") && result.getBoolean("virus")) {
+                        cmisDocument.setStatus("Virus");
+                        String virusName = result.optString("failedDocument");
+                        virusDocuments.add(virusName);
+                        failedIds.add(result.optString("id"));
+                    } else if (result.has("fail") && result.getBoolean("fail")) {
+                        cmisDocument.setStatus("Other");
+                        String fileName = result.optString("failedDocument");
+                        otherFailedDocuments.add(fileName);
+                        failedIds.add(result.optString("id"));
                     } else {
-                        JSONObject result = sdmService.createDocument(cmisDocument, jwtToken);
-                        if (result.has("duplicate") && result.getBoolean("duplicate")) {
-                            cmisDocument.setStatus("Duplicate");
-                            String duplicateName = result.optString("failedDocument");
-                            duplicateDocuments.add(duplicateName);
-                            failedIds.add(result.optString("id"));
-                        } else if (result.has("virus") && result.getBoolean("virus")) {
-                            cmisDocument.setStatus("Virus");
-                            String virusName = result.optString("failedDocument");
-                            virusDocuments.add(virusName);
-                            failedIds.add(result.optString("id"));
-                        } else if (result.has("fail") && result.getBoolean("fail")) {
-                            cmisDocument.setStatus("Other");
-                            String fileName = result.optString("failedDocument");
-                            otherFailedDocuments.add(fileName);
-                            failedIds.add(result.optString("id"));
-                        } else {
-                            cmisDocument.setStatus("Success");
-                            attachment.put("folderId", folderId);
-                            attachment.put("repositoryId", repositoryId);
-                            attachment.put("url", result.optString("url"));
-                            cmisDocument.setObjectId(result.getString("url"));
-                        }
+                        cmisDocument.setStatus("Success");
+                        attachment.put("folderId", folderId);
+                        attachment.put("repositoryId", repositoryId);
+                        attachment.put("url", result.optString("url"));
+                        cmisDocument.setObjectId(result.getString("url"));
                     }
                 }
             }

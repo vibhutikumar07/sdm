@@ -12,13 +12,13 @@ import java.io.IOException;
 import java.util.List;
 
 public interface SDMService {
-    public JSONObject createDocument(CmisDocument cmisDocument, String jwtToken) throws IOException;
-    public String createFolder(String parentId, String jwtToken, String repositoryId) throws IOException;
+    public JSONObject createDocument(CmisDocument cmisDocument, String jwtToken, SDMCredentials sdmCredentials) throws IOException;
+    public String createFolder(String parentId, String jwtToken, String repositoryId, SDMCredentials sdmCredentials) throws IOException;
     public String getFolderId(String jwtToken, CdsEntity attachmentEntity, PersistenceService persistenceService, String up__ID) throws IOException;
-    public String getFolderIdByPath(String parentId, String jwtToken, String repositoryId) throws IOException;
+    public String getFolderIdByPath(String parentId, String jwtToken, String repositoryId, SDMCredentials sdmCredentials) throws IOException;
     public String checkRepositoryType(String repositoryId)throws IOException;
     public JSONObject getRepositoryInfo(String token, SDMCredentials sdmCredentials) throws IOException ;
     public Boolean isRepositoryVersioned(JSONObject repoInfo, String repositoryId) throws IOException;
-    public void readDocument();
-    public void deleteDocument();
+//    public void readDocument();
+//    public void deleteDocument();
 }
