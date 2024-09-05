@@ -18,7 +18,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.json.JSONObject;
 
@@ -49,6 +48,8 @@ public class SDMServiceImpl implements SDMService{
                     .addFormDataPart("succinct", "true")
                     .addFormDataPart("filename", cmisDocument.getFileName(), fileBody)
                     .build();
+            System.out.println("BODY : "+requestBody);
+            System.out.println("Folder : "+cmisDocument.getFolderId());
 
             Request request = new Request.Builder()
                     .url(sdmUrl)
@@ -72,6 +73,7 @@ public class SDMServiceImpl implements SDMService{
                     } else if ("Malware Service Exception: Virus found in the file!".equals(message)) {
                         status = "virus";
                     } else {
+                        System.out.println("Fail : "+response);
                         status = "fail";
                     }
                 } else {
@@ -112,30 +114,24 @@ public class SDMServiceImpl implements SDMService{
 //    }
 
     @Override
-    public String getFolderId(String jwtToken, Result result, PersistenceService persistenceService,String up__ID) throws IOException {
-        List<Map<String, Object>> resultList =
-                result.listOf(Map.class).stream()
-                        .map(map -> (Map<String, Object>) map)
-                        .collect(Collectors.toList());
-
+    public String getFolderId(String jwtToken, CdsEntity attachmentEntity, PersistenceService persistenceService,String up__ID) throws IOException {
+        String result = DBQuery.getFolderIdForActiveEntity(attachmentEntity,persistenceService,up__ID);
         String folderId = null;
-        for (Map<String, Object> attachment : resultList) {
-            if(attachment.get("folderId")!=null){
-                folderId = attachment.get("folderId").toString();
-            }
-        }
         SDMCredentials sdmCredentials = TokenHandler.getSDMCredentials();
 
-        if (folderId==null) {
+        if (result==null) {
+            System.out.println("Check1");
             folderId = getFolderIdByPath(up__ID, jwtToken, SDMConstants.REPOSITORY_ID, sdmCredentials);
+            System.out.println("Check2");
             if (folderId == null) {
                 folderId = createFolder(up__ID, jwtToken, SDMConstants.REPOSITORY_ID, sdmCredentials);
                 JSONObject jsonObject = new JSONObject(folderId);
                 JSONObject succinctProperties = jsonObject.getJSONObject("succinctProperties");
                 folderId = succinctProperties.getString("cmis:objectId");
             }
+        }else{
+            folderId = result;
         }
-        System.out.println("Folder val : "+folderId);
         return folderId;
     }
 

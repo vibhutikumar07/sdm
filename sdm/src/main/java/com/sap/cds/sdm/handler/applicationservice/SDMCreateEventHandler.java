@@ -84,6 +84,7 @@ public class SDMCreateEventHandler implements EventHandler {
         }
         else {
             List<String> failedIds = createDocument(data, jwtToken, context, up__ID);
+            System.out.println("failed : "+failedIds);
             for (Map<String, Object> entity : data) {
                 List<Map<String, Object>> attachments = (List<Map<String, Object>>) entity.get("attachments");
                 if (attachments != null) {
@@ -91,6 +92,7 @@ public class SDMCreateEventHandler implements EventHandler {
                     while (iterator.hasNext()) {
                         Map<String, Object> attachment = iterator.next();
                         String checkId = (String) attachment.get("ID");
+                        System.out.println("check : "+checkId);// Ensure appropriate cast to String
                         if (failedIds.contains(checkId)) {
                             iterator.remove();
                         }
@@ -123,7 +125,7 @@ public class SDMCreateEventHandler implements EventHandler {
         }
         else return null;
     }
-
+ 
     private void setKeysInData(CdsEntity entity, List<CdsData> data) {
         processor.addGenerator((path, element, type) -> element.isKey() && element.getType().isSimpleType(CdsBaseType.UUID),
                 (path, element, isNull) -> UUID.randomUUID().toString()).process(data, entity);
@@ -146,9 +148,8 @@ public class SDMCreateEventHandler implements EventHandler {
 
             List<Map<String, Object>> attachments = new ArrayList<>();
             String folderId = null;
-            Result result123 = null;
             try {
-                folderId = sdmService.getFolderId(jwtToken, result123, persistenceService, up__ID);
+                folderId = sdmService.getFolderId(jwtToken, attachmentEntity.get(), persistenceService, up__ID);
             } catch (Exception e) {
                 context.getMessages().warn("Error in upload");
             }

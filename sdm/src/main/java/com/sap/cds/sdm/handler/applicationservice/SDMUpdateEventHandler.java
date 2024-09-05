@@ -217,9 +217,8 @@ public class SDMUpdateEventHandler implements EventHandler {
         List<Map<String, Object>> attachments = new ArrayList<>();
 
         String folderId = null;
-        Result result123 = null;
         try {
-            folderId = sdmService.getFolderId(jwtToken, result123, persistenceService, up__ID);
+            folderId = sdmService.getFolderId(jwtToken, attachmentEntity.get(), persistenceService, up__ID);
         } catch (Exception e) {
             context.getMessages().warn("Error in upload");
         }
