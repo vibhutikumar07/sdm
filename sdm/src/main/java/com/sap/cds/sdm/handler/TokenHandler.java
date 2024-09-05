@@ -59,6 +59,7 @@ public class TokenHandler {
 
     public static SDMCredentials getSDMCredentials() {
         List<ServiceBinding> allServiceBindings = DefaultServiceBindingAccessor.getInstance().getServiceBindings();
+        // filter for a specific binding
         ServiceBinding sdmBinding = allServiceBindings.stream()
                 .filter(binding -> "sdm".equalsIgnoreCase(binding.getServiceName().orElse(null)))
                 .findFirst()
@@ -75,7 +76,7 @@ public class TokenHandler {
 
     }
 
-    public static String getAccessToken(SDMCredentials sdmCredentials) throws IOException, ProtocolException {
+    public  static String getAccessToken(SDMCredentials sdmCredentials) throws IOException, ProtocolException {
         //Fetch the token from Cache if present use it else generate and store
         String cachedToken = CacheConfig.getClientCredentialsTokenCache().get("clientCredentialsToken");
         if(cachedToken == null) {
@@ -108,18 +109,14 @@ public class TokenHandler {
         }
         return cachedToken;
     }
-
     public static String getDIToken(String token,SDMCredentials sdmCredentials) throws OAuth2ServiceException {
-    System.out.println("inside");
     JsonObject payloadObj = getTokenFields(token);
-    System.out.println("payload : "+payloadObj);
     String email = payloadObj.get("email").getAsString();
     String token_expiry = payloadObj.get("exp").getAsString();
     CacheKey cacheKey = new CacheKey();
     cacheKey.setEmail(email);
     cacheKey.setExpiration(token_expiry);
     String cachedToken = CacheConfig.getUserTokenCache().get(cacheKey);
-    System.out.println("Cachedtoken : "+cachedToken);
     if (cachedToken == null) {
         cachedToken=  generateDITokenFromTokenExchange(token,sdmCredentials,payloadObj);
     }
@@ -128,7 +125,7 @@ public class TokenHandler {
 
     private static String generateDITokenFromTokenExchange(String token,SDMCredentials sdmCredentials,JsonObject payloadObj)
             throws OAuth2ServiceException {
-            String cachedToken =null;
+           String cachedToken =null;
             CloseableHttpClient httpClient = null;
             try {
                 httpClient = HttpClients.createDefault();

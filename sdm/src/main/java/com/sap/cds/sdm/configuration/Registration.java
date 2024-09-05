@@ -9,8 +9,6 @@ import com.sap.cds.sdm.caching.CacheConfig;
 import com.sap.cds.sdm.handler.applicationservice.SDMCreateEventHandler;
 import com.sap.cds.sdm.handler.applicationservice.SDMUpdateEventHandler;
 import com.sap.cds.sdm.service.SDMAttachmentsService;
-import com.sap.cds.sdm.service.SDMService;
-import com.sap.cds.sdm.service.SDMServiceImpl;
 import com.sap.cds.sdm.service.handler.SDMAttachmentsServiceHandler;
 import com.sap.cds.services.persistence.PersistenceService;
 import org.slf4j.Logger;
@@ -73,6 +71,7 @@ public class Registration implements CdsRuntimeConfiguration {
 
 	private AttachmentService buildAttachmentService() {
 		logger.info(marker, "Registering SDM attachment service");
+
 		return new SDMAttachmentsService();
 	}
 
@@ -92,14 +91,12 @@ public class Registration implements CdsRuntimeConfiguration {
 	}
 
 	protected EventHandler buildCreateHandler(ModifyAttachmentEventFactory factory, ThreadLocalDataStorage storage,PersistenceService persistenceService) {
-		SDMService sdmService = new SDMServiceImpl();
-		return new SDMCreateEventHandler(factory, storage,persistenceService, sdmService);
+		return new SDMCreateEventHandler(factory, storage,persistenceService);
 	}
 
 	protected EventHandler buildUpdateHandler(ModifyAttachmentEventFactory factory, AttachmentsReader attachmentsReader,
 											  ThreadLocalDataStorage storage,PersistenceService persistenceService) {
-		SDMService sdmService = new SDMServiceImpl();
-		return new SDMUpdateEventHandler(factory,attachmentsReader, storage,persistenceService, sdmService);
+		return new SDMUpdateEventHandler(factory,attachmentsReader, storage,persistenceService);
 	}
 	protected AttachmentsReader buildAttachmentsReader(PersistenceService persistenceService) {
 		var cascader = new DefaultAssociationCascader();
