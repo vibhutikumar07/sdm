@@ -60,13 +60,15 @@ public class SDMUpdateEventHandler implements EventHandler {
     private final ThreadDataStorageReader storageReader;
     private final  AttachmentsReader attachmentsReader;
     private final PersistenceService persistenceService;
+    private SDMService sdmService;
 
     public SDMUpdateEventHandler(ModifyAttachmentEventFactory eventFactory,AttachmentsReader attachmentsReader,
-                                 ThreadDataStorageReader storageReader,PersistenceService persistenceService) {
+                                 ThreadDataStorageReader storageReader,PersistenceService persistenceService, SDMService sdmService) {
         this.eventFactory = eventFactory;
         this.attachmentsReader = attachmentsReader;
         this.storageReader = storageReader;
         this.persistenceService = persistenceService;
+        this.sdmService = sdmService;
     }
 
     @Before(event = CqnService.EVENT_UPDATE)
@@ -82,50 +84,64 @@ public class SDMUpdateEventHandler implements EventHandler {
     }
 
     private void doUpdate(CdsUpdateEventContext context, List<CdsData> data) throws IOException {
-        AuthenticationInfo authInfo = context.getAuthenticationInfo();
-        JwtTokenAuthenticationInfo jwtTokenInfo = authInfo.as(JwtTokenAuthenticationInfo.class);
-        String jwtToken = jwtTokenInfo.getToken();
-        String up__ID=getUP__ID(data);
-          //get the data and get all the filenames, query the attachments for particular up__ID and then check if filenames list is present within the reult list and return those filenames list
-String duplicateFiles = getDuplicateFileNames(data);
-if(duplicateFiles !=null ){
-    context.getMessages().error(String.format(SDMConstants.DUPLICATE_FILES_ERROR, duplicateFiles));
-}
-        List<String> failedIds = createDocument(data, jwtToken, context, up__ID);
-        for (Map<String, Object> entity : data) {
-            List<Map<String, Object>> attachments = (List<Map<String, Object>>) entity.get("attachments");
-            if (attachments != null) {
-                Iterator<Map<String, Object>> iterator = attachments.iterator();
-                while (iterator.hasNext()) {
-                    Map<String, Object> attachment = iterator.next();
-                    String checkId = (String) attachment.get("ID"); // Ensure appropriate cast to String
-                    if (failedIds.contains(checkId)) {
-                        iterator.remove();
+        String repositoryId = SDMConstants.REPOSITORY_ID;
+        String repocheck = sdmService.checkRepositoryType(repositoryId);
+        if("Versioned".equals(repocheck)){
+            context.getMessages().error("Upload not supported for versioned repositories");
+        }
+        else{
+            AuthenticationInfo authInfo = context.getAuthenticationInfo();
+            JwtTokenAuthenticationInfo jwtTokenInfo = authInfo.as(JwtTokenAuthenticationInfo.class);
+            String jwtToken = jwtTokenInfo.getToken();
+            String up__ID=getUP__ID(data);
+            //get the data and get all the filenames, query the attachments for particular up__ID and then check if filenames list is present within the reult list and return those filenames list
+            StringBuilder uiError = new StringBuilder();
+            Set<String> duplicateFiles = getDuplicateFileNames(data);
+            if (duplicateFiles != null && !duplicateFiles.isEmpty()) {
+                uiError.append("The following files already exist and cannot be uploaded:\n");
+                for (String file : duplicateFiles) {
+                    uiError.append("• ").append(file).append("\n");
+                }
+                context.getMessages().error(uiError.toString());
+            }
+            else{
+                List<String> failedIds = createDocument(data, jwtToken, context, up__ID);
+                for (Map<String, Object> entity : data) {
+                    List<Map<String, Object>> attachments = (List<Map<String, Object>>) entity.get("attachments");
+                    if (attachments != null) {
+                        Iterator<Map<String, Object>> iterator = attachments.iterator();
+                        while (iterator.hasNext()) {
+                            Map<String, Object> attachment = iterator.next();
+                            String checkId = (String) attachment.get("ID"); // Ensure appropriate cast to String
+                            if (failedIds.contains(checkId)) {
+                                iterator.remove();
+                            }
+                        }
                     }
                 }
             }
-        }
 
-        var target = context.getTarget();
-        var noContentInData = ApplicationHandlerHelper.noContentFieldInData(target, data);
-        var associationsAreUnchanged = associationsAreUnchanged(target, data);
-        if (noContentInData && associationsAreUnchanged) {
-            return;
-        }
+            var target = context.getTarget();
+            var noContentInData = ApplicationHandlerHelper.noContentFieldInData(target, data);
+            var associationsAreUnchanged = associationsAreUnchanged(target, data);
+            if (noContentInData && associationsAreUnchanged) {
+                return;
+            }
 
-        logger.debug(marker, "Processing before update event for entity {}", target.getName());
-
-        var select = getSelect(context.getCqn(), context.getTarget());
-        var attachments = attachmentsReader.readAttachments(context.getModel(), target, select);
-
-        var condensedAttachments = ApplicationHandlerHelper.condenseData(attachments, target);
-        ModifyApplicationHandlerHelper.handleAttachmentForEntities(target, data, condensedAttachments, eventFactory, context);
-
-        if (!associationsAreUnchanged) {
-            deleteRemovedAttachments(attachments, data, target);
+//            logger.debug(marker, "Processing before update event for entity {}", target.getName());
+//
+//            var select = getSelect(context.getCqn(), context.getTarget());
+//            var attachments = attachmentsReader.readAttachments(context.getModel(), target, select);
+//
+//            var condensedAttachments = ApplicationHandlerHelper.condenseData(attachments, target);
+//            ModifyApplicationHandlerHelper.handleAttachmentForEntities(target, data, condensedAttachments, eventFactory, context);
+//
+//            if (!associationsAreUnchanged) {
+//                deleteRemovedAttachments(attachments, data, target);
+//            }
         }
     }
-    private String getDuplicateFileNames(List<CdsData> data) {
+    private Set<String> getDuplicateFileNames(List<CdsData> data) {
         List<String> fileNames = getFilesNamesFromInput(data);
         Set<String> uniqueFileNames = new HashSet<>();
         Set<String> duplicateFileNames = new HashSet<>();
@@ -136,11 +152,10 @@ if(duplicateFiles !=null ){
             }
         }
         if(duplicateFileNames.size()>0){
-            // Join the list of existing filenames with commas
-            return String.join(",", duplicateFileNames);
+            System.out.println("Duplicate : "+duplicateFileNames);
+            return duplicateFileNames;
         }
-        else
-        return  null;
+        return null;
     }
     private List<String> getFilesNamesFromInput(List<CdsData> data) {
         List<String> fileNames = new ArrayList<>();
@@ -194,16 +209,8 @@ if(duplicateFiles !=null ){
     }
     private List<String> createDocument(List<CdsData> data, String jwtToken,CdsUpdateEventContext context,String up__ID) throws IOException {
         String repositoryId = SDMConstants.REPOSITORY_ID; //Getting repository ID
-        SDMService sdmService = new SDMServiceImpl();
         List<String> failedIds = new ArrayList<>();
         List<String> failedNames = new ArrayList<>();
-
-        //Checking to see if repository is versioned
-        String repocheck = sdmService.checkRepositoryType(repositoryId);
-        if("Versioned".equals(repocheck)){
-            context.getMessages().error("Upload not supported for versioned repositories");
-        }
-
         List<CmisDocument> cmisDocuments =  new ArrayList<>();
         CdsModel model = context.getModel();
         Optional<CdsEntity> attachmentEntity =
@@ -212,10 +219,9 @@ if(duplicateFiles !=null ){
         List<Map<String, Object>> attachments = new ArrayList<>();
 
         String folderId = null;
-        try {
-            folderId = sdmService.getFolderId(jwtToken, attachmentEntity.get(), persistenceService, up__ID);
-        } catch (Exception e) {
-            context.getMessages().warn("Error in upload");
+        folderId = sdmService.getFolderId(jwtToken, attachmentEntity.get(), persistenceService, up__ID);
+        if(folderId == null){
+            context.getMessages().error("Could not upload attachments");
         }
         List<String> duplicateDocuments = new ArrayList<>();
         List<String> otherFailedDocuments = new ArrayList<>();
@@ -235,62 +241,63 @@ if(duplicateFiles !=null ){
                 cmisDocument.setParentId(attachment.get("up__ID").toString());
                 cmisDocument.setFolderId(folderId);
 
-                if (contentStream != null) {
-                    if (cmisDocument.getContent() == null) {
-                        cmisDocument.setStatus("Incomplete");
-                        incompleteDocuments.add(cmisDocument.getFileName());
-                        failedIds.add(cmisDocument.getAttachmentId());
+                if (cmisDocument.getContent() == null) {
+                    System.out.println("Incomplete : "+cmisDocument.getFileName());
+                    cmisDocument.setStatus("Incomplete");
+                    incompleteDocuments.add(cmisDocument.getFileName());
+                    System.out.println("Incomplete docs : "+incompleteDocuments);
+                    failedIds.add(cmisDocument.getAttachmentId());
+                } else {
+                    JSONObject result = sdmService.createDocument(cmisDocument, jwtToken);
+                    if (result.has("duplicate") && result.getBoolean("duplicate")) {
+                        cmisDocument.setStatus("Duplicate");
+                        String duplicateName = result.optString("failedDocument");
+                        duplicateDocuments.add(duplicateName);
+                        failedIds.add(result.optString("id"));
+                    } else if (result.has("virus") && result.getBoolean("virus")) {
+                        cmisDocument.setStatus("Virus");
+                        String virusName = result.optString("failedDocument");
+                        virusDocuments.add(virusName);
+                        failedIds.add(result.optString("id"));
+                    } else if (result.has("fail") && result.getBoolean("fail")) {
+                        cmisDocument.setStatus("Other");
+                        String fileName = result.optString("failedDocument");
+                        otherFailedDocuments.add(fileName);
+                        failedIds.add(result.optString("id"));
                     } else {
-                        JSONObject result = sdmService.createDocument(cmisDocument, jwtToken);
-                        if (result.has("duplicate") && result.getBoolean("duplicate")) {
-                            cmisDocument.setStatus("Duplicate");
-                            String duplicateName = result.optString("failedDocument");
-                            duplicateDocuments.add(duplicateName);
-                            failedIds.add(result.optString("id"));
-                        } else if (result.has("virus") && result.getBoolean("virus")) {
-                            cmisDocument.setStatus("Virus");
-                            String virusName = result.optString("failedDocument");
-                            virusDocuments.add(virusName);
-                            failedIds.add(result.optString("id"));
-                        } else if (result.has("fail") && result.getBoolean("fail")) {
-                            cmisDocument.setStatus("Other");
-                            String fileName = result.optString("failedDocument");
-                            otherFailedDocuments.add(fileName);
-                            failedIds.add(result.optString("id"));
-                        } else {
-                            cmisDocument.setStatus("Success");
-                            attachment.put("folderId", folderId);
-                            attachment.put("repositoryId", repositoryId);
-                            attachment.put("url", result.optString("url"));
-                            cmisDocument.setObjectId(result.getString("url"));
-                        }
+                        cmisDocument.setStatus("Success");
+                        attachment.put("folderId", folderId);
+                        attachment.put("repositoryId", repositoryId);
+                        attachment.put("url", result.optString("url"));
+                        cmisDocument.setObjectId(result.getString("url"));
                     }
                 }
             }
         }
+        System.out.println("Docs : "+incompleteDocuments);
         StringBuilder error = new StringBuilder();
         if (!duplicateDocuments.isEmpty()) {
-            error.append("The following files already exist and cannot be uploaded:\n");
+            error.append("The following files already exist and could not be uploaded:\n");
             for (String duplicateDocument : duplicateDocuments) {
                 error.append("• ").append(duplicateDocument).append("\n");
             }
         }
         if (!virusDocuments.isEmpty()) {
-            error.append("The following files contain potential malware and cannot be uploaded:\n");
+            error.append("The following files contain potential malware and could not be uploaded:\n");
             for (String virusDocument : virusDocuments) {
                 error.append("• ").append(virusDocument).append("\n");
             }
         }
-        if (!incompleteDocuments.isEmpty()) {
-            error.append("The following files are empty and could not be uploaded:\n");
-            for (String incompleteDocument : incompleteDocuments) {
-                error.append("• ").append(incompleteDocument).append("\n");
-            }
-        }
         if (!otherFailedDocuments.isEmpty()) {
-            error.append("The following files cannot be uploaded:\n");
+            error.append("The following files could not be uploaded:\n");
             for (String otherDocument : otherFailedDocuments) {
                 error.append("• ").append(otherDocument).append("\n");
+            }
+        }
+        if (!incompleteDocuments.isEmpty()) {
+            error.append("Content of the following files is empty. Either they are corrupted or not uploaded properly:\n");
+            for (String incompleteDocument : incompleteDocuments) {
+                error.append("• ").append(incompleteDocument).append("\n");
             }
         }
         if (error.length() > 0) {
