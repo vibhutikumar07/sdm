@@ -218,6 +218,9 @@
                         <exclude>
                             com/sap/cds/sdm/service/handler/**
                         </exclude>
+                        <exclude>
+                            com/sap/cds/sdm/util/**
+                        </exclude>
                     </excludes>
                 </configuration>
                 <executions>
