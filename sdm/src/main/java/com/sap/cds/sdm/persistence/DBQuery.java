@@ -1,5 +1,4 @@
 package com.sap.cds.sdm.persistence;
-
 import com.sap.cds.Result;
 import com.sap.cds.Row;
 import com.sap.cds.ql.Select;

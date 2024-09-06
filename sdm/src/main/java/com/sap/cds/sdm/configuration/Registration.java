@@ -1,6 +1,4 @@
-
 package com.sap.cds.sdm.configuration;
-
 
 import com.sap.cds.feature.attachments.handler.common.AttachmentsReader;
 import com.sap.cds.feature.attachments.handler.common.DefaultAssociationCascader;
@@ -27,18 +25,23 @@ import com.sap.cds.feature.attachments.handler.applicationservice.processor.modi
 import com.sap.cds.feature.attachments.handler.applicationservice.processor.modifyevents.UpdateAttachmentEvent;
 import com.sap.cds.feature.attachments.handler.applicationservice.processor.transaction.CreationChangeSetListener;
 import com.sap.cds.feature.attachments.handler.applicationservice.processor.transaction.ListenerProvider;
-
 import com.sap.cds.feature.attachments.service.AttachmentService;
 import com.sap.cds.feature.attachments.utilities.LoggingMarker;
+import com.sap.cds.sdm.caching.CacheConfig;
+import com.sap.cds.sdm.handler.applicationservice.SDMCreateEventHandler;
+import com.sap.cds.sdm.service.SDMAttachmentsService;
+import com.sap.cds.sdm.service.handler.SDMAttachmentsServiceHandler;
 import com.sap.cds.services.handler.EventHandler;
 import com.sap.cds.services.outbox.OutboxService;
 import com.sap.cds.services.runtime.CdsRuntimeConfiguration;
 import com.sap.cds.services.runtime.CdsRuntimeConfigurer;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
 
 /**
- * The class {@link Registration} is a configuration class that registers the
- * services and event handlers for the attachments feature.
+ * The class {@link Registration} is a configuration class that registers the services and event
+ * handlers for the attachments feature.
  */
 public class Registration implements CdsRuntimeConfiguration {
 
@@ -106,5 +109,4 @@ public class Registration implements CdsRuntimeConfiguration {
 		var cascader = new DefaultAssociationCascader();
 		return new DefaultAttachmentsReader(cascader, persistenceService);
 	}
-
 }

@@ -36,7 +36,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -304,3 +303,4 @@ public class SDMCreateEventHandler implements EventHandler {
 //        return fileInfos;
 //    }
 }
+

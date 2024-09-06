@@ -1,19 +1,13 @@
 package com.sap.cds.sdm.caching;
 
 import java.util.concurrent.TimeUnit;
-
-import com.sap.cds.sdm.configuration.Registration;
 import org.ehcache.Cache;
 import org.ehcache.CacheManager;
 import org.ehcache.config.builders.*;
 import org.ehcache.expiry.Duration;
 import org.ehcache.expiry.Expirations;
-import org.ehcache.expiry.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.TimeUnit;
-
 
 public class CacheConfig {
 

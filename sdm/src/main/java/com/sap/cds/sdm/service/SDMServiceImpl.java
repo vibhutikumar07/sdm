@@ -179,6 +179,8 @@ public class SDMServiceImpl implements SDMService{
             throw new IOException("Could not upload");
         }
     }
+    return null;
+  }
 
     @Override
     public String checkRepositoryType(String repositoryId) throws IOException {

@@ -7,9 +7,7 @@ import com.sap.cds.sdm.model.CmisDocument;
 import com.sap.cds.services.persistence.PersistenceService;
 import org.json.JSONObject;
 import com.sap.cds.sdm.model.SDMCredentials;
-
 import java.io.IOException;
-import java.util.List;
 
 public interface SDMService {
     public JSONObject createDocument(CmisDocument cmisDocument, String jwtToken) throws IOException;
