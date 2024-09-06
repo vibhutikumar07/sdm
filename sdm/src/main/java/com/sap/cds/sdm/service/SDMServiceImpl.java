@@ -111,26 +111,19 @@ public class SDMServiceImpl implements SDMService{
 
     @Override
     public String getFolderId(String jwtToken, CdsEntity attachmentEntity, PersistenceService persistenceService,String up__ID) throws IOException {
-        String[] folderIds = {}; // getFolderIdForEntity
-        Result result = DBQuery.getAttachmentsForUP__ID(attachmentEntity,persistenceService,up__ID);
-        List<Row> rows = result.list();
-        String folderId = null;
-        folderId = getFolderIdByPath(up__ID, jwtToken, SDMConstants.REPOSITORY_ID);
+        String folderId = DBQuery.getAttachmentsForUP__ID(attachmentEntity,persistenceService,up__ID);
 
-        if (rows.size() ==0) {
+        if (folderId == null) {
             folderId = getFolderIdByPath(up__ID, jwtToken, SDMConstants.REPOSITORY_ID);
             if (folderId == null) {
                 folderId = createFolder(up__ID, jwtToken, SDMConstants.REPOSITORY_ID);
-                JSONObject jsonObject = new JSONObject(folderId);
-                JSONObject succinctProperties = jsonObject.getJSONObject("succinctProperties");
-                folderId = succinctProperties.getString("cmis:objectId");
-            } else {
-                folderId = folderIds[0];
+                if(folderId != null){
+                    JSONObject jsonObject = new JSONObject(folderId);
+                    JSONObject succinctProperties = jsonObject.getJSONObject("succinctProperties");
+                    folderId = succinctProperties.getString("cmis:objectId");
+                }
             }
-        }else{
-            folderId = rows.get(0).get("folderId").toString();
         }
-
         return folderId;
     }
 
@@ -190,10 +183,10 @@ public class SDMServiceImpl implements SDMService{
     @Override
     public String checkRepositoryType(String repositoryId) throws IOException {
         String type = CacheConfig.getVersionedRepoCache().get(repositoryId);
-        SDMCredentials sdmCredentials =  TokenHandler.getSDMCredentials();
-        String token =  TokenHandler.getAccessToken(sdmCredentials);
         Boolean isVersioned;
         if(type == null){
+            SDMCredentials sdmCredentials =  TokenHandler.getSDMCredentials();
+            String token =  TokenHandler.getAccessToken(sdmCredentials);
             JSONObject repoInfo = getRepositoryInfo(token, sdmCredentials);
             isVersioned = isRepositoryVersioned(repoInfo, repositoryId);
         } else {
@@ -205,7 +198,7 @@ public class SDMServiceImpl implements SDMService{
             return "Versioned";
         } else {
             CacheConfig.getVersionedRepoCache().put(repositoryId, "Non Versioned");
-            return "Non versioned";
+            return "Non Versioned";
         }
     }
 
