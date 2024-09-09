@@ -1,7 +1,6 @@
 package com.sap.cds.sdm.handler;
 
 import static com.sap.cloud.security.xsuaa.client.OAuth2TokenServiceConstants.*;
-import static com.sap.cloud.security.xsuaa.client.OAuth2TokenServiceConstants.ASSERTION;
 import static java.util.Objects.requireNonNull;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -21,6 +20,7 @@ import com.sap.cloud.security.xsuaa.http.MediaType;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
@@ -86,6 +86,52 @@ public class TokenHandler {
       String bodyParams = "grant_type=client_credentials";
       byte[] postData = toBytes(bodyParams);
       String authurl = sdmCredentials.getBaseTokenUrl() + "/oauth/token";
+      URL url = new URL(authurl);
+      HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+      conn.setRequestProperty("Authorization", authHeaderValue);
+      conn.setRequestMethod("POST");
+      conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+      conn.setRequestProperty("charset", "utf-8");
+      conn.setRequestProperty("Content-Length", "" + postData.length);
+      conn.setUseCaches(false);
+      conn.setDoInput(true);
+      conn.setDoOutput(true);
+      try (DataOutputStream os = new DataOutputStream(conn.getOutputStream())) {
+        os.write(postData);
+      }
+      String resp;
+      try (DataInputStream is = new DataInputStream(conn.getInputStream());
+          BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
+        resp = br.lines().collect(Collectors.joining("\n"));
+      }
+      conn.disconnect();
+      cachedToken = mapper.readValue(resp, JsonNode.class).get("access_token").asText();
+      CacheConfig.getClientCredentialsTokenCache().put("clientCredentialsToken", cachedToken);
+    }
+    return cachedToken;
+  }
+
+  public static String getAccessTokenForUser(SDMCredentials sdmCredentials, String useremail)
+      throws IOException {
+    // Fetch the token from Cache if present use it else generate and store
+    String cachedToken = CacheConfig.getClientCredentialsTokenCache().get("clientCredentialsToken");
+    if (cachedToken == null) {
+      String userCredentials =
+          sdmCredentials.getClientId() + ":" + sdmCredentials.getClientSecret();
+      String authHeaderValue = "Basic " + Base64.encodeBase64String(toBytes(userCredentials));
+      String authorities =
+          "{\"az_attr\":{\"X-EcmUserEnc\":\""
+              + useremail
+              + "\",\"X-EcmAddPrincipals\":\""
+              + useremail
+              + "\"}}";
+      String bodyParams =
+          "grant_type=client_credentials&authorities="
+              + URLEncoder.encode(authorities, StandardCharsets.UTF_8.name());
+
+      byte[] postData = bodyParams.getBytes(StandardCharsets.UTF_8);
+      String authurl = sdmCredentials.getBaseTokenUrl() + "/oauth/token";
+
       URL url = new URL(authurl);
       HttpURLConnection conn = (HttpURLConnection) url.openConnection();
       conn.setRequestProperty("Authorization", authHeaderValue);
