@@ -3,10 +3,14 @@ package com.sap.cds.sdm.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import com.sap.cds.reflect.CdsEntity;
 import com.sap.cds.sdm.caching.CacheConfig;
 import com.sap.cds.sdm.handler.TokenHandler;
 import com.sap.cds.sdm.model.CmisDocument;
 import com.sap.cds.sdm.model.SDMCredentials;
+import com.sap.cds.sdm.persistence.DBQuery;
+import com.sap.cds.services.cds.CdsCreateEventContext;
+import com.sap.cds.services.persistence.PersistenceService;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,6 +27,8 @@ import org.mockito.Mockito;
 public class SDMServiceImplTest {
   private static final String REPO_ID = "repo";
   private SDMService SDMService;
+  private PersistenceService persistenceService;
+  private CdsCreateEventContext mockContext;
 
   @BeforeEach
   public void setUp() {
@@ -233,10 +239,10 @@ public class SDMServiceImplTest {
       SDMCredentials sdmCredentials = new SDMCredentials();
       sdmCredentials.setUrl(mockUrl);
       Mockito.when(TokenHandler.getDIToken(jwtToken, sdmCredentials)).thenReturn("mockAccessToken");
+      Mockito.when(TokenHandler.getSDMCredentials()).thenReturn(sdmCredentials);
       SDMServiceImpl sdmServiceImpl = new SDMServiceImpl();
 
-      String actualResponse =
-          sdmServiceImpl.createFolder(parentId, jwtToken, repositoryId, sdmCredentials);
+      String actualResponse = sdmServiceImpl.createFolder(parentId, jwtToken, repositoryId);
 
       assertEquals(expectedResponse, actualResponse);
 
@@ -264,6 +270,7 @@ public class SDMServiceImplTest {
       String mockUrl = mockWebServer.url("/").toString();
       SDMCredentials sdmCredentials = new SDMCredentials();
       sdmCredentials.setUrl(mockUrl);
+      tokenHandlerMockedStatic.when(TokenHandler::getSDMCredentials).thenReturn(sdmCredentials);
       Mockito.when(TokenHandler.getDIToken(jwtToken, sdmCredentials)).thenReturn("mockAccessToken");
       SDMServiceImpl sdmServiceImpl = new SDMServiceImpl();
 
@@ -271,7 +278,7 @@ public class SDMServiceImplTest {
           assertThrows(
               IOException.class,
               () -> {
-                sdmServiceImpl.createFolder(parentId, jwtToken, repositoryId, sdmCredentials);
+                sdmServiceImpl.createFolder(parentId, jwtToken, repositoryId);
               });
       assertEquals("Could not upload", exception.getMessage());
 
@@ -298,10 +305,10 @@ public class SDMServiceImplTest {
       SDMCredentials sdmCredentials = new SDMCredentials();
       sdmCredentials.setUrl(mockUrl);
       Mockito.when(TokenHandler.getDIToken(jwtToken, sdmCredentials)).thenReturn("mockAccessToken");
+      Mockito.when(TokenHandler.getSDMCredentials()).thenReturn(sdmCredentials);
       SDMServiceImpl sdmServiceImpl = new SDMServiceImpl();
 
-      String actualResponse =
-          sdmServiceImpl.getFolderIdByPath(parentId, jwtToken, repositoryId, sdmCredentials);
+      String actualResponse = sdmServiceImpl.getFolderIdByPath(parentId, jwtToken, repositoryId);
 
       assertEquals(expectedResponse, actualResponse);
 
@@ -330,15 +337,11 @@ public class SDMServiceImplTest {
       SDMCredentials sdmCredentials = new SDMCredentials();
       sdmCredentials.setUrl(mockUrl);
       Mockito.when(TokenHandler.getDIToken(jwtToken, sdmCredentials)).thenReturn("mockAccessToken");
+      tokenHandlerMockedStatic.when(TokenHandler::getSDMCredentials).thenReturn(sdmCredentials);
       SDMServiceImpl sdmServiceImpl = new SDMServiceImpl();
 
-      IOException exception =
-          assertThrows(
-              IOException.class,
-              () -> {
-                sdmServiceImpl.getFolderIdByPath(parentId, jwtToken, repositoryId, sdmCredentials);
-              });
-      assertEquals("Could not upload", exception.getMessage());
+      String res = sdmServiceImpl.getFolderIdByPath(parentId, jwtToken, repositoryId);
+      assertEquals(res, null);
 
     } finally {
       mockWebServer.shutdown();
@@ -376,10 +379,10 @@ public class SDMServiceImplTest {
       tokenHandlerMockedStatic
           .when(() -> TokenHandler.getDIToken(jwtToken, sdmCredentials))
           .thenReturn("mockAccessToken");
+      Mockito.when(TokenHandler.getSDMCredentials()).thenReturn(sdmCredentials);
 
       SDMServiceImpl sdmServiceImpl = new SDMServiceImpl();
-      JSONObject actualResponse =
-          sdmServiceImpl.createDocument(cmisDocument, jwtToken, sdmCredentials);
+      JSONObject actualResponse = sdmServiceImpl.createDocument(cmisDocument, jwtToken);
 
       JSONObject expectedResponse = new JSONObject();
       expectedResponse.put("url", "objectId");
@@ -421,10 +424,10 @@ public class SDMServiceImplTest {
       tokenHandlerMockedStatic
           .when(() -> TokenHandler.getDIToken(jwtToken, sdmCredentials))
           .thenReturn("mockAccessToken");
+      Mockito.when(TokenHandler.getSDMCredentials()).thenReturn(sdmCredentials);
 
       SDMServiceImpl sdmServiceImpl = new SDMServiceImpl();
-      JSONObject actualResponse =
-          sdmServiceImpl.createDocument(cmisDocument, jwtToken, sdmCredentials);
+      JSONObject actualResponse = sdmServiceImpl.createDocument(cmisDocument, jwtToken);
 
       JSONObject expectedResponse = new JSONObject();
       expectedResponse.put("duplicate", true);
@@ -474,10 +477,10 @@ public class SDMServiceImplTest {
       tokenHandlerMockedStatic
           .when(() -> TokenHandler.getDIToken(jwtToken, sdmCredentials))
           .thenReturn("mockAccessToken");
+      Mockito.when(TokenHandler.getSDMCredentials()).thenReturn(sdmCredentials);
 
       SDMServiceImpl sdmServiceImpl = new SDMServiceImpl();
-      JSONObject actualResponse =
-          sdmServiceImpl.createDocument(cmisDocument, jwtToken, sdmCredentials);
+      JSONObject actualResponse = sdmServiceImpl.createDocument(cmisDocument, jwtToken);
 
       JSONObject expectedResponse = new JSONObject();
       expectedResponse.put("duplicate", false);
@@ -527,10 +530,10 @@ public class SDMServiceImplTest {
       tokenHandlerMockedStatic
           .when(() -> TokenHandler.getDIToken(jwtToken, sdmCredentials))
           .thenReturn("mockAccessToken");
+      Mockito.when(TokenHandler.getSDMCredentials()).thenReturn(sdmCredentials);
 
       SDMServiceImpl sdmServiceImpl = new SDMServiceImpl();
-      JSONObject actualResponse =
-          sdmServiceImpl.createDocument(cmisDocument, jwtToken, sdmCredentials);
+      JSONObject actualResponse = sdmServiceImpl.createDocument(cmisDocument, jwtToken);
 
       JSONObject expectedResponse = new JSONObject();
       expectedResponse.put("fail", true);
@@ -543,6 +546,70 @@ public class SDMServiceImplTest {
       assertEquals(expectedResponse.toString(), actualResponse.toString());
     } finally {
       mockWebServer.shutdown();
+    }
+  }
+
+  @Test
+  public void testGetFolderIdDB() throws IOException {
+    CdsEntity mockEntity = mock(CdsEntity.class);
+
+    try (MockedStatic<DBQuery> DBQueryStatic = Mockito.mockStatic(DBQuery.class)) {
+      Mockito.when(DBQuery.getAttachmentsForUP__ID(mockEntity, persistenceService, "up__ID"))
+          .thenReturn("folderId");
+      SDMServiceImpl sdmServiceImpl = new SDMServiceImpl();
+      String actualResponse =
+          sdmServiceImpl.getFolderId("jwToken", mockEntity, persistenceService, "up__ID");
+
+      assertEquals("folderId", actualResponse);
+    }
+  }
+
+  @Test
+  public void testGetFolderIdPath() throws IOException {
+    CdsEntity mockEntity = mock(CdsEntity.class);
+    SDMServiceImpl spySDMService = Mockito.spy(new SDMServiceImpl());
+    try (MockedStatic<DBQuery> DBQueryStatic = Mockito.mockStatic(DBQuery.class)) {
+      Mockito.doReturn("folderId").when(spySDMService).getFolderIdByPath(any(), any(), any());
+      Mockito.when(DBQuery.getAttachmentsForUP__ID(mockEntity, persistenceService, "up__ID"))
+          .thenReturn(null);
+      String actualResponse =
+          spySDMService.getFolderId("jwToken", mockEntity, persistenceService, "up__ID");
+
+      assertEquals("folderId", actualResponse);
+    }
+  }
+
+  @Test
+  public void testGetFolderIdCreate() throws IOException {
+    CdsEntity mockEntity = mock(CdsEntity.class);
+    SDMServiceImpl spySDMService = Mockito.spy(new SDMServiceImpl());
+    try (MockedStatic<DBQuery> DBQueryStatic = Mockito.mockStatic(DBQuery.class)) {
+      Mockito.doReturn(null).when(spySDMService).getFolderIdByPath(any(), any(), any());
+      Mockito.doReturn("{\"succinctProperties\":{\"cmis:objectId\":\"folderId\"}}")
+          .when(spySDMService)
+          .createFolder(any(), any(), any());
+      Mockito.when(DBQuery.getAttachmentsForUP__ID(mockEntity, persistenceService, "up__ID"))
+          .thenReturn(null);
+      String actualResponse =
+          spySDMService.getFolderId("jwToken", mockEntity, persistenceService, "up__ID");
+
+      assertEquals("folderId", actualResponse);
+    }
+  }
+
+  @Test
+  public void testGetFolderIdFail() throws IOException {
+    CdsEntity mockEntity = mock(CdsEntity.class);
+    SDMServiceImpl spySDMService = Mockito.spy(new SDMServiceImpl());
+    try (MockedStatic<DBQuery> DBQueryStatic = Mockito.mockStatic(DBQuery.class)) {
+      Mockito.doReturn(null).when(spySDMService).getFolderIdByPath(any(), any(), any());
+      Mockito.doReturn(null).when(spySDMService).createFolder(any(), any(), any());
+      Mockito.when(DBQuery.getAttachmentsForUP__ID(mockEntity, persistenceService, "up__ID"))
+          .thenReturn(null);
+      String actualResponse =
+          spySDMService.getFolderId("jwToken", mockEntity, persistenceService, "up__ID");
+
+      assertEquals(null, actualResponse);
     }
   }
 }

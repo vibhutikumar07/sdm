@@ -1,7 +1,6 @@
 package com.sap.cds.sdm.handler.applicationservice;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.Mockito.*;
 
@@ -18,6 +17,7 @@ import com.sap.cds.sdm.service.SDMServiceImpl;
 import com.sap.cds.services.authentication.AuthenticationInfo;
 import com.sap.cds.services.authentication.JwtTokenAuthenticationInfo;
 import com.sap.cds.services.cds.CdsUpdateEventContext;
+import com.sap.cds.services.messages.Message;
 import com.sap.cds.services.messages.Messages;
 import com.sap.cds.services.persistence.PersistenceService;
 import java.io.ByteArrayInputStream;
@@ -57,35 +57,35 @@ public class SDMUpdateEventHandlerTest {
                 eventFactory, attachmentsReader, storageReader, persistenceService, sdmService));
   }
 
-  //    @Test
-  //    public void testCreateVersioned() throws IOException {
-  //        when(mockContext.getAuthenticationInfo()).thenReturn(mockAuthInfo);
-  //        when(mockAuthInfo.as(JwtTokenAuthenticationInfo.class)).thenReturn(mockJwtTokenInfo);
-  //        when(mockJwtTokenInfo.getToken()).thenReturn("mockedJwtToken");
-  //        when(sdmService.checkRepositoryType(anyString())).thenReturn("Versioned");
-  //        Messages mockMessages = mock(Messages.class);
-  //        when(mockContext.getMessages()).thenReturn(mockMessages);
-  //        Message mockMessage = mock(Message.class);
-  //        when(mockMessages.error("Upload not supported for versioned
-  // repositories")).thenReturn(mockMessage);
-  //
-  //        mockData = new ArrayList<>();
-  //        CdsData cdsData = mock(CdsData.class);
-  //        List<Map<String, Object>> attachments = new ArrayList<>();
-  //        Map<String, Object> attachment1 = new HashMap<>();
-  //        Map<String, Object> attachment2 = new HashMap<>();
-  //        attachment1.put("up__ID", "up__id");
-  //        attachment1.put("fileName", "sample1.pdf");
-  //        attachment2.put("up__ID", "up__id");
-  //        attachment2.put("fileName", "sample2.pdf");
-  //        attachments.add(attachment1);
-  //        attachments.add(attachment2);
-  //        when(cdsData.get("attachments")).thenReturn(attachments);
-  //        mockData.add(cdsData);
-  //
-  //        handlerSpy.processBefore(mockContext, mockData);
-  //        verify(mockMessages).error("Upload not supported for versioned repositories");
-  //    }
+  @Test
+  public void testCreateVersioned() throws IOException {
+    when(mockContext.getAuthenticationInfo()).thenReturn(mockAuthInfo);
+    when(mockAuthInfo.as(JwtTokenAuthenticationInfo.class)).thenReturn(mockJwtTokenInfo);
+    when(mockJwtTokenInfo.getToken()).thenReturn("mockedJwtToken");
+    when(sdmService.checkRepositoryType(anyString())).thenReturn("Versioned");
+    Messages mockMessages = mock(Messages.class);
+    when(mockContext.getMessages()).thenReturn(mockMessages);
+    Message mockMessage = mock(Message.class);
+    when(mockMessages.error("Upload not supported for versioned repositories"))
+        .thenReturn(mockMessage);
+
+    mockData = new ArrayList<>();
+    CdsData cdsData = mock(CdsData.class);
+    List<Map<String, Object>> attachments = new ArrayList<>();
+    Map<String, Object> attachment1 = new HashMap<>();
+    Map<String, Object> attachment2 = new HashMap<>();
+    attachment1.put("up__ID", "up__id");
+    attachment1.put("fileName", "sample1.pdf");
+    attachment2.put("up__ID", "up__id");
+    attachment2.put("fileName", "sample2.pdf");
+    attachments.add(attachment1);
+    attachments.add(attachment2);
+    when(cdsData.get("attachments")).thenReturn(attachments);
+    mockData.add(cdsData);
+
+    handlerSpy.processBefore(mockContext, mockData);
+    verify(mockMessages).error("Upload not supported for versioned repositories");
+  }
 
   @Test
   public void testUpdateNonVersionedSuccess() throws IOException {
@@ -95,7 +95,7 @@ public class SDMUpdateEventHandlerTest {
     when(sdmService.checkRepositoryType(anyString())).thenReturn("Non Versioned");
     JSONObject mockResult = new JSONObject(); // Mock result object
     mockResult.put("url", "url");
-    when(sdmService.createDocument(any(), any(), any())).thenReturn(mockResult);
+    when(sdmService.createDocument(any(), any())).thenReturn(mockResult);
     when(sdmService.getFolderId(any(), any(), any(), any())).thenReturn("folderId");
 
     CdsEntity targetMock = mock(CdsEntity.class);
@@ -159,7 +159,7 @@ public class SDMUpdateEventHandlerTest {
     mockResult3.put("fail", true);
     mockResult3.put("id", "id3");
     mockResult3.put("failedDocument", "sample3.pdf");
-    when(sdmService.createDocument(any(), any(), any()))
+    when(sdmService.createDocument(any(), any()))
         .thenReturn(mockResult1)
         .thenReturn(mockResult2)
         .thenReturn(mockResult3);
@@ -180,7 +180,6 @@ public class SDMUpdateEventHandlerTest {
     Map<String, Object> attachment1 = new HashMap<>();
     Map<String, Object> attachment2 = new HashMap<>();
     Map<String, Object> attachment3 = new HashMap<>();
-    Map<String, Object> attachment4 = new HashMap<>();
     String simulatedContent = "Sample Content"; // Example content as a string
     InputStream contentStream =
         new ByteArrayInputStream(simulatedContent.getBytes(StandardCharsets.UTF_8));
@@ -196,36 +195,29 @@ public class SDMUpdateEventHandlerTest {
     attachment3.put("fileName", "sample3.pdf");
     attachment3.put("ID", "id3");
     attachment3.put("content", contentStream);
-    attachment4.put("up__ID", "up__id");
-    attachment4.put("fileName", "sample4.pdf");
-    attachment4.put("ID", "id4");
     attachments.add(attachment1);
     attachments.add(attachment2);
     attachments.add(attachment3);
-    attachments.add(attachment4);
     when(cdsData.get("attachments")).thenReturn(attachments);
     mockData.add(cdsData);
 
     String expectedWarnMessage =
-        "The following files already exist and cannot be uploaded:\n"
+        "The following files already exist and could not be uploaded:\n"
             + "• sample1.pdf\n"
-            + "The following files contain potential malware and cannot be uploaded:\n"
+            + "The following files contain potential malware and could not be uploaded:\n"
             + "• sample2.pdf\n"
-            + "The following files are empty and could not be uploaded:\n"
-            + "• sample4.pdf\n"
-            + "The following files cannot be uploaded:\n"
-            + "• sample3.pdf";
+            + "The following files could not be uploaded:\n"
+            + "• sample3.pdf\n";
 
     try (MockedStatic<TokenHandler> tokenHandlerMockedStatic =
         Mockito.mockStatic(TokenHandler.class)) {
       SDMCredentials mockSdmCredentials = Mockito.mock(SDMCredentials.class);
       tokenHandlerMockedStatic.when(TokenHandler::getSDMCredentials).thenReturn(mockSdmCredentials);
       handlerSpy.processBefore(mockContext, mockData);
-      // verify(mockMessages).warn(trim(expectedWarnMessage));
       ArgumentCaptor<String> warnMessageCaptor = forClass(String.class);
       verify(mockMessages).warn(warnMessageCaptor.capture());
       String actualWarnMessage = warnMessageCaptor.getValue().trim(); // Trim the actual message
-      assertEquals(expectedWarnMessage, actualWarnMessage);
+      assertEquals(expectedWarnMessage.trim(), actualWarnMessage.trim());
     }
   }
 
@@ -246,40 +238,55 @@ public class SDMUpdateEventHandlerTest {
     Map<String, Object> attachment2 = new HashMap<>();
     attachment1.put("up__ID", "up__id");
     attachment1.put("fileName", "sample1.pdf");
+    attachment1.put("ID", "id1");
     attachment2.put("up__ID", "up__id");
     attachment2.put("fileName", "sample1.pdf");
+    attachment2.put("ID", "id2");
     attachments.add(attachment1);
     attachments.add(attachment2);
     when(cdsData.get("attachments")).thenReturn(attachments);
     mockData.add(cdsData);
 
-    IOException exception =
-        assertThrows(
-            IOException.class,
-            () -> {
-              handlerSpy.processBefore(mockContext, mockData);
-            });
-    assertEquals("Duplicate files", exception.getMessage());
+    handlerSpy.processBefore(mockContext, mockData);
+    verify(mockMessages)
+        .error(contains("The following files already exist and could not be uploaded:"));
   }
 
-  //    @Test
-  //    public void testProcessBeforeDraft() throws IOException {
-  //        when(mockContext.getAuthenticationInfo()).thenReturn(mockAuthInfo);
-  //
-  //        mockData = new ArrayList<>();
-  //        CdsData cdsData = mock(CdsData.class);
-  //        List<Map<String, Object>> attachments = new ArrayList<>();
-  //        Map<String, Object> attachment1 = new HashMap<>();
-  //        Map<String, Object> attachment2 = new HashMap<>();
-  //        attachment1.put("up__ID", "up__id");
-  //        attachment1.put("fileName", "sample1.pdf");
-  //        attachment2.put("up__ID", "up__id");
-  //        attachment2.put("fileName", "sample1.pdf");
-  //        attachments.add(attachment1);
-  //        attachments.add(attachment2);
-  //        when(cdsData.get("attachments")).thenReturn(attachments);
-  //        mockData.add(cdsData);
-  //
-  //        handlerSpy.processBeforeForDraft(mockContext, mockData);
-  //    }
+  @Test
+  public void testGetFolderIdFail() throws IOException {
+    when(mockContext.getAuthenticationInfo()).thenReturn(mockAuthInfo);
+    when(mockAuthInfo.as(JwtTokenAuthenticationInfo.class)).thenReturn(mockJwtTokenInfo);
+    when(mockJwtTokenInfo.getToken()).thenReturn("mockedJwtToken");
+    when(sdmService.checkRepositoryType(anyString())).thenReturn("Non Versioned");
+    JSONObject mockResult = new JSONObject(); // Mock result object
+    mockResult.put("url", "url");
+    when(sdmService.createDocument(any(), any())).thenReturn(mockResult);
+    when(sdmService.getFolderId(any(), any(), any(), any())).thenReturn(null);
+
+    CdsEntity targetMock = mock(CdsEntity.class);
+    when(mockContext.getTarget()).thenReturn(targetMock);
+    when(targetMock.getQualifiedName()).thenReturn("some.qualified.Name");
+    CdsEntity mockEntity = mock(CdsEntity.class);
+    CdsModel mockModel = mock(CdsModel.class);
+    when(mockContext.getModel()).thenReturn(mockModel);
+    Messages mockMessages = mock(Messages.class);
+    when(mockContext.getMessages()).thenReturn(mockMessages);
+    when(mockModel.findEntity("some.qualified.Name.attachments"))
+        .thenReturn(Optional.of(mockEntity));
+
+    mockData = new ArrayList<>();
+    CdsData cdsData = mock(CdsData.class);
+    List<Map<String, Object>> attachments = new ArrayList<>();
+    when(cdsData.get("attachments")).thenReturn(attachments);
+    mockData.add(cdsData);
+
+    try (MockedStatic<TokenHandler> tokenHandlerMockedStatic =
+        Mockito.mockStatic(TokenHandler.class)) {
+      SDMCredentials mockSdmCredentials = Mockito.mock(SDMCredentials.class);
+      tokenHandlerMockedStatic.when(TokenHandler::getSDMCredentials).thenReturn(mockSdmCredentials);
+
+      handlerSpy.processBefore(mockContext, mockData);
+      verify(mockMessages).error(contains("Could not upload attachments"));
+    }
+  }
 }

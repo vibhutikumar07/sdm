@@ -8,10 +8,7 @@ import com.sap.cds.sdm.model.CmisDocument;
 import com.sap.cds.sdm.model.SDMCredentials;
 import com.sap.cds.sdm.persistence.DBQuery;
 import com.sap.cds.services.persistence.PersistenceService;
-import com.sap.cloud.security.xsuaa.client.OAuth2ServiceException;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import okhttp3.*;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
@@ -19,14 +16,20 @@ import org.json.JSONObject;
 public class SDMServiceImpl implements SDMService {
 
   @Override
-  public JSONObject createDocument(
-      CmisDocument cmisDocument, String jwtToken, SDMCredentials sdmCredentials)
-      throws IOException {
+  public JSONObject createDocument(CmisDocument cmisDocument, String jwtToken) {
+    String failedDocument = "";
+    String failedId = "";
     String accessToken;
-    Map<String, String> finalResponse = new HashMap<>();
+    JSONObject result = new JSONObject();
 
     OkHttpClient client = new OkHttpClient();
-    accessToken = TokenHandler.getDIToken(jwtToken, sdmCredentials);
+    SDMCredentials sdmCredentials = TokenHandler.getSDMCredentials();
+    try {
+      accessToken = TokenHandler.getDIToken(jwtToken, sdmCredentials);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new RuntimeException();
+    }
 
     String sdmUrl = sdmCredentials.getUrl() + "browser/" + cmisDocument.getRepositoryId() + "/root";
 
@@ -48,8 +51,6 @@ public class SDMServiceImpl implements SDMService {
               .addFormDataPart("succinct", "true")
               .addFormDataPart("filename", cmisDocument.getFileName(), fileBody)
               .build();
-      System.out.println("BODY : " + requestBody);
-      System.out.println("Folder : " + cmisDocument.getFolderId());
 
       Request request =
           new Request.Builder()
@@ -58,60 +59,47 @@ public class SDMServiceImpl implements SDMService {
               .post(requestBody)
               .build();
 
-      try (Response response = client.newCall(request).execute()) {
-        String status = "success";
-        String name = cmisDocument.getFileName();
-        String id = cmisDocument.getAttachmentId();
-        String objectId = "";
-
+      try (Response response = client.newCall(request).execute()) { // Ensure resources are closed
         if (!response.isSuccessful()) {
           String responseBody = response.body().string();
           JSONObject jsonResponse = new JSONObject(responseBody);
           String message = jsonResponse.getString("message");
-
+          failedDocument = cmisDocument.getFileName();
+          failedId = cmisDocument.getAttachmentId();
           if (response.code() == 409) {
-            status = "duplicate";
+            result.put("duplicate", true);
+            result.put("virus", false);
+            result.put("id", failedId);
+            result.put("failedDocument", failedDocument);
           } else if ("Malware Service Exception: Virus found in the file!".equals(message)) {
-            status = "virus";
+            result.put("duplicate", false);
+            result.put("virus", true);
+            result.put("id", failedId);
+            result.put("failedDocument", failedDocument);
           } else {
-            System.out.println("Fail : " + response);
-            status = "fail";
+            result.put("fail", true);
+            result.put("id", failedId);
+            result.put("failedDocument", failedDocument);
           }
         } else {
           String responseBody = response.body().string();
           JSONObject jsonResponse = new JSONObject(responseBody);
           JSONObject succinctProperties = jsonResponse.getJSONObject("succinctProperties");
-          status = "success";
-          objectId = succinctProperties.getString("cmis:objectId");
+          result.put("url", succinctProperties.getString("cmis:objectId"));
         }
-
-        // Construct the final response
-        finalResponse.put("name", name);
-        finalResponse.put("id", id);
-        finalResponse.put("status", status);
-        if (objectId != "") {
-          finalResponse.put("url", objectId);
-        }
-
-      } catch (IOException e) {
-        throw new IOException("Could not upload");
       }
     } catch (IOException e) {
-      throw new IOException("Could not upload");
+      e.printStackTrace();
     }
-    JSONObject result = new JSONObject(finalResponse);
+
     return result;
   }
 
-  //    @Override
-  //    public void readDocument() {
-  //
-  //    }
-  //
-  //    @Override
-  //    public void deleteDocument() {
-  //
-  //    }
+  @Override
+  public void readDocument() {}
+
+  @Override
+  public void deleteDocument() {}
 
   @Override
   public String getFolderId(
@@ -120,32 +108,27 @@ public class SDMServiceImpl implements SDMService {
       PersistenceService persistenceService,
       String up__ID)
       throws IOException {
-    String result =
-        DBQuery.getFolderIdForActiveEntity(attachmentEntity, persistenceService, up__ID);
-    String folderId = null;
-    SDMCredentials sdmCredentials = TokenHandler.getSDMCredentials();
+    String folderId = DBQuery.getAttachmentsForUP__ID(attachmentEntity, persistenceService, up__ID);
 
-    if (result == null) {
-      System.out.println("Check1");
-      folderId = getFolderIdByPath(up__ID, jwtToken, SDMConstants.REPOSITORY_ID, sdmCredentials);
-      System.out.println("Check2");
+    if (folderId == null) {
+      folderId = getFolderIdByPath(up__ID, jwtToken, SDMConstants.REPOSITORY_ID);
       if (folderId == null) {
-        folderId = createFolder(up__ID, jwtToken, SDMConstants.REPOSITORY_ID, sdmCredentials);
-        JSONObject jsonObject = new JSONObject(folderId);
-        JSONObject succinctProperties = jsonObject.getJSONObject("succinctProperties");
-        folderId = succinctProperties.getString("cmis:objectId");
+        folderId = createFolder(up__ID, jwtToken, SDMConstants.REPOSITORY_ID);
+        if (folderId != null) {
+          JSONObject jsonObject = new JSONObject(folderId);
+          JSONObject succinctProperties = jsonObject.getJSONObject("succinctProperties");
+          folderId = succinctProperties.getString("cmis:objectId");
+        }
       }
-    } else {
-      folderId = result;
     }
     return folderId;
   }
 
   @Override
-  public String getFolderIdByPath(
-      String parentId, String jwtToken, String repositoryId, SDMCredentials sdmCredentials)
+  public String getFolderIdByPath(String parentId, String jwtToken, String repositoryId)
       throws IOException {
     OkHttpClient client = new OkHttpClient();
+    SDMCredentials sdmCredentials = TokenHandler.getSDMCredentials();
     String accessToken = TokenHandler.getDIToken(jwtToken, sdmCredentials);
     String sdmUrl =
         sdmCredentials.getUrl()
@@ -172,12 +155,13 @@ public class SDMServiceImpl implements SDMService {
   }
 
   @Override
-  public String createFolder(
-      String parentId, String jwtToken, String repositoryId, SDMCredentials sdmCredentials)
+  public String createFolder(String parentId, String jwtToken, String repositoryId)
       throws IOException {
     OkHttpClient client = new OkHttpClient();
+    SDMCredentials sdmCredentials = TokenHandler.getSDMCredentials();
     String accessToken = TokenHandler.getDIToken(jwtToken, sdmCredentials);
     String sdmUrl = sdmCredentials.getUrl() + "browser/" + repositoryId + "/root";
+
     RequestBody requestBody =
         new MultipartBody.Builder()
             .setType(MultipartBody.FORM)
@@ -207,16 +191,12 @@ public class SDMServiceImpl implements SDMService {
   @Override
   public String checkRepositoryType(String repositoryId) throws IOException {
     String type = CacheConfig.getVersionedRepoCache().get(repositoryId);
-    System.out.println("Type " + type);
     Boolean isVersioned;
     if (type == null) {
       SDMCredentials sdmCredentials = TokenHandler.getSDMCredentials();
-      System.out.println("sdmCredentials " + sdmCredentials);
       String token = TokenHandler.getAccessToken(sdmCredentials);
-      System.out.println("token " + token);
       JSONObject repoInfo = getRepositoryInfo(token, sdmCredentials);
       isVersioned = isRepositoryVersioned(repoInfo, repositoryId);
-      System.out.println("isVersioned" + isVersioned);
     } else {
       isVersioned = "Versioned".equals(type);
     }
@@ -245,12 +225,10 @@ public class SDMServiceImpl implements SDMService {
             .build();
 
     try (Response response = client.newCall(request).execute()) {
-      System.out.println("Response " + response);
       if (!response.isSuccessful()) {
         throw new IOException("Failed to get repository info");
       }
       String responseBody = response.body().string();
-      System.out.println("responseBody " + responseBody);
       return new JSONObject(responseBody);
     } catch (IOException e) {
       throw new IOException("Failed to get repository info");
@@ -260,7 +238,6 @@ public class SDMServiceImpl implements SDMService {
   public Boolean isRepositoryVersioned(JSONObject repoInfo, String repositoryId)
       throws IOException {
     repoInfo = repoInfo.getJSONObject(repositoryId);
-    System.out.println("repoInfo " + repoInfo);
     JSONObject capabilities = repoInfo.getJSONObject("capabilities");
     String type = capabilities.getString("capabilityContentStreamUpdatability");
 
@@ -269,66 +246,8 @@ public class SDMServiceImpl implements SDMService {
     } else {
       type = "Non Versioned";
     }
+
+    // saveRepoToCache(repositoryId, repoInfo);
     return "Versioned".equals(type);
-  }
-
-  @Override
-  public int deleteDocument(String objectId, String jwtToken, String cmisaction)
-      throws OAuth2ServiceException {
-    OkHttpClient client = new OkHttpClient();
-    SDMCredentials sdmCredentials = TokenHandler.getSDMCredentials();
-    // String accessToken = TokenHandler.getDIToken(jwtToken, sdmCredentials);
-    String sdmUrl = sdmCredentials.getUrl() + "browser/" + SDMConstants.REPOSITORY_ID + "/root";
-
-    RequestBody requestBody =
-        new MultipartBody.Builder()
-            .setType(MultipartBody.FORM)
-            .addFormDataPart("cmisaction", cmisaction)
-            .addFormDataPart("objectId", objectId)
-            .build();
-
-    Request request =
-        new Request.Builder()
-            .url(sdmUrl)
-            .addHeader("Authorization", "Bearer " + jwtToken)
-            .post(requestBody)
-            .build();
-
-    try (Response response = client.newCall(request).execute()) {
-      if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
-      return response.code();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    return 0;
-  }
-
-  @Override
-  public JSONObject getChildren(String objectId, String jwtToken) {
-    OkHttpClient client = new OkHttpClient();
-    SDMCredentials sdmCredentials = TokenHandler.getSDMCredentials();
-    String sdmUrl =
-        sdmCredentials.getUrl()
-            + "browser/"
-            + SDMConstants.REPOSITORY_ID
-            + "/root/"
-            + "?cmisselector=children&objectId="
-            + objectId;
-
-    Request request =
-        new Request.Builder()
-            .url(sdmUrl)
-            .addHeader("Authorization", "Bearer " + jwtToken)
-            .get()
-            .build();
-
-    try (Response response = client.newCall(request).execute()) {
-      if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
-      else {
-        return new JSONObject(response.body().string());
-      }
-    } catch (IOException e) {
-      return null;
-    }
   }
 }

@@ -4,16 +4,13 @@ import com.sap.cds.reflect.CdsEntity;
 import com.sap.cds.sdm.model.CmisDocument;
 import com.sap.cds.sdm.model.SDMCredentials;
 import com.sap.cds.services.persistence.PersistenceService;
-import com.sap.cloud.security.xsuaa.client.OAuth2ServiceException;
 import java.io.IOException;
 import org.json.JSONObject;
 
 public interface SDMService {
-  public JSONObject createDocument(
-      CmisDocument cmisDocument, String jwtToken, SDMCredentials sdmCredentials) throws IOException;
+  public JSONObject createDocument(CmisDocument cmisDocument, String jwtToken) throws IOException;
 
-  public String createFolder(
-      String parentId, String jwtToken, String repositoryId, SDMCredentials sdmCredentials)
+  public String createFolder(String parentId, String jwtToken, String repositoryId)
       throws IOException;
 
   public String getFolderId(
@@ -23,8 +20,7 @@ public interface SDMService {
       String up__ID)
       throws IOException;
 
-  public String getFolderIdByPath(
-      String parentId, String jwtToken, String repositoryId, SDMCredentials sdmCredentials)
+  public String getFolderIdByPath(String parentId, String jwtToken, String repositoryId)
       throws IOException;
 
   public String checkRepositoryType(String repositoryId) throws IOException;
@@ -34,9 +30,7 @@ public interface SDMService {
 
   public Boolean isRepositoryVersioned(JSONObject repoInfo, String repositoryId) throws IOException;
 
-  //    public void readDocument();
-  public int deleteDocument(String objectId, String jwtToken, String cmisaction)
-      throws OAuth2ServiceException;
+  public void readDocument();
 
-  public JSONObject getChildren(String objectId, String jwtToken);
+  public void deleteDocument();
 }
