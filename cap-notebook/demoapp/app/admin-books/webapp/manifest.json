@@ -20,7 +20,7 @@
     },
     "crossNavigation": {
       "inbounds": {
-        "intent-Books-manage": {
+        "Books-manage": {
           "signature": {
             "parameters": {},
             "additionalParameters": "allowed"

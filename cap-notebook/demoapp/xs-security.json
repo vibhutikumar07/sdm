@@ -1,16 +1,9 @@
-{
+{   "xsappname": "demoappjava-rashmi",
 	"tenant-mode": "dedicated",
 	"scopes": [
 		{
 			"name": "$XSAPPNAME.admin",
 			"description": "admin"
-		}
-	],
-	"attributes": [
-		{
-			"name": "businessPartner",
-			"description": "S/4 BusinessPartner ID assigned to the user",
-			"valueType": "string"
 		}
 	],
 	"role-templates": [
@@ -19,9 +12,6 @@
 			"description": "generated",
 			"scope-references": [
 				"$XSAPPNAME.admin"
-			],
-			"attribute-references": [
-				"businessPartner"
 			]
 		}
 	]
