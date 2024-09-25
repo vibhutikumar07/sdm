@@ -24,6 +24,7 @@ jobs:
           
       - name: npm install
         run: |
+          cd sdm
           ls
           npm install
           curl --silent -O https://detect.synopsys.com/detect9.sh
