@@ -22,7 +22,7 @@ jobs:
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
           
-      - name: npm install
+      - name: Install Dependencies
         run: |
           pwd
           ls
@@ -30,7 +30,7 @@ jobs:
           cd sdm
           ls
           pwd
-          npm install
+          mvn clean install
           curl --silent -O https://detect.synopsys.com/detect9.sh
 
       - name: Run & analyze BlackDuck Scan
