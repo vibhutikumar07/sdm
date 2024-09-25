@@ -27,7 +27,7 @@ jobs:
           pwd
           ls
           echo "....."
-          cd sdm/sdm
+          cd sdm
           ls
           pwd
           npm install
