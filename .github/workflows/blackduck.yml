@@ -27,7 +27,7 @@ jobs:
           pwd
           ls
           echo "....."
-          cd sdm
+          cd sdm/sdm
           ls
           pwd
           npm install
@@ -50,7 +50,7 @@ jobs:
           --detect.project.name="SAP_DOC_MGMT_CAPPLUGIN_JAVA1.0" \
           --detect.project.version.name="1.0" \
           --detect.code.location.name="SAP_DOC_MGMT_CAPPLUGIN_JAVA1.0/1.0" \
-          --detect.source.path="/home/runner/work/sdm/sdm"
+          --detect.source.path="/home/runner/work/sdm/sdm/sdm"
 
 
     
