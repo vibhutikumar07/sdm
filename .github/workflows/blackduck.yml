@@ -44,7 +44,7 @@ jobs:
           --detect.cleanup=false \
           --detect.diagnostic=true \
           --blackduck.url="https://sap.blackducksoftware.com" \
-          --blackduck.api.token="MTk2NjUzOTItNTg3Zi00YWM1LTkxMDQtMmY5NjdmYWY1Yzk0OjhiZDM0NzYwLTYzMDAtNDNiZC1hMzc4LWVjZDBiYTdmNWVlYQ=="   \
+          --blackduck.api.token=""${{ secrets.BLACKDUCK_TOKEN }}""   \
           --detect.blackduck.signature.scanner.arguments="--min-scan-interval=0" \
           --detect.maven.build.command="install" \
           --detect.latest.release.version="9.6.0" \
