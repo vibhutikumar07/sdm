@@ -38,10 +38,13 @@ jobs:
 
       - name: Run & analyze BlackDuck Scan
         run: |
-          bash ./detect9.sh \
-          --logging.level.detect=DEBUG  \
+          bash ./detect9.sh -d \
+          --diagnostic \
+          --logging.level.com.synopsys.integration=DEBUG  \
+          --detect.cleanup=false \
+          --detect.diagnostic=true \
           --blackduck.url="https://sap.blackducksoftware.com" \
-          --blackduck.api.token="${{ secrets.BLACKDUCK_TOKEN }}" \
+          --blackduck.api.token="MTk2NjUzOTItNTg3Zi00YWM1LTkxMDQtMmY5NjdmYWY1Yzk0OjhiZDM0NzYwLTYzMDAtNDNiZC1hMzc4LWVjZDBiYTdmNWVlYQ=="   \
           --detect.blackduck.signature.scanner.arguments="--min-scan-interval=0" \
           --detect.maven.build.command="install" \
           --detect.latest.release.version="9.6.0" \
@@ -53,6 +56,4 @@ jobs:
           --detect.project.name="SAP_DOC_MGMT_CAPPLUGIN_JAVA1.0" \
           --detect.project.version.name="1.0" \
           --detect.code.location.name="SAP_DOC_MGMT_CAPPLUGIN_JAVA1.0/1.0" \
-          --detect.source.path="/home/runner/work/sdm/sdm/sdm" \
-          --detect.cleanup=false \
-          --detect.cleanup.force=false 
+          --detect.source.path="/home/runner/work/sdm/sdm/sdm"
