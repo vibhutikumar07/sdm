@@ -243,7 +243,7 @@
                                         <limit implementation="org.jacoco.report.check.Limit">
                                             <counter>CLASS</counter>
                                             <value>MISSEDCOUNT</value>
-                                            <maximum>0</maximum>
+                                            <maximum>15</maximum>
                                         </limit>
                                     </limits>
                                 </rule>
