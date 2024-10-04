@@ -39,9 +39,6 @@ jobs:
           echo "....."
           ls -lart
           echo "......"
-          cd sdm
-          echo "......"
-          ls -lart
           
           mvn clean install -DskipTests
         
@@ -68,4 +65,4 @@ jobs:
           --detect.project.name="SAP_DOC_MGMT_CAPPLUGIN_JAVA1.0" \
           --detect.project.version.name="1.0" \
           --detect.code.location.name="SAP_DOC_MGMT_CAPPLUGIN_JAVA1.0/1.0" \
-          --detect.source.path="/home/runner/work/sdm/sdm"
+          --detect.source.path="/sapmnt/home/I355238/actions-runner_cap-java/_work/sdm/sdm/sdm"
