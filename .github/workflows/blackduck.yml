@@ -31,15 +31,6 @@ jobs:
           
       - name: Install dependencies
         run: |
-          pwd
-          echo "......"
-          ls -lart
-          echo "....."
-          cd sdm
-          echo "....."
-          ls -lart
-          echo "......"
-          
           mvn clean install -DskipTests
         
       - name: Download Synopsys Detect Script
