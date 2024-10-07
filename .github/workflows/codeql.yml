@@ -23,7 +23,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ['java', 'kotlin']  # CodeQL supports ['cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby'] 
+        include:
+      # Analyzes Java code directly from the codebase without a build
+          - language: java-kotlin
+            build-mode: none # analyzes Java only
 
     steps:
       - name: Checkout repository
