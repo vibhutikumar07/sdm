@@ -37,6 +37,7 @@ jobs:
            languages: java
 
       - run: |
+           java -version
            mvn -v
            mvn package -DskipTests -Dmaven.javadoc.skip=true
       - name: Perform CodeQL Analysis
