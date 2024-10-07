@@ -19,7 +19,7 @@ public class SDMAttachmentsServiceHandlerTest {
   @Test
   void testPerformAction() {
     // Hardcoded credentials (bad practice)
-    private static final String DEFAULT_PASSWORD = "password123";
+    String DEFAULT_PASSWORD = "password123";
     String result = handler.performAction();
     assertThat(result).isEqualTo("Action Performed");
   }
