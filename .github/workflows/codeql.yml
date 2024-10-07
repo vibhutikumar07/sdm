@@ -39,7 +39,8 @@ jobs:
       - run: |
            java -version
            mvn -v
-           mvn package -DskipTests -Dmaven.javadoc.skip=true
+           mvn clean install -DskipTests
+           
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
 ######
