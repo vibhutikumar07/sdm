@@ -131,7 +131,6 @@ public class SDMServiceImpl implements SDMService {
             + "/root?objectID="
             + objectId
             + "&cmisselector=content";
-    System.out.println(accessToken);
     Request request =
         new Request.Builder()
             .url(sdmUrl)
@@ -150,7 +149,7 @@ public class SDMServiceImpl implements SDMService {
       context.getData().setContent(documentStream);
     } catch (Exception e) {
       response.close();
-      throw new RuntimeException("Failed to set document stream in context", e);
+      throw new IOException("Failed to set document stream in context", e);
     }
   }
 

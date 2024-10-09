@@ -457,7 +457,7 @@ public class SDMAttachmentsServiceHandlerTest {
 
       Exception exception =
           assertThrows(
-              RuntimeException.class,
+              IOException.class,
               () -> {
                 handlerSpy.readAttachment(mockReadContext);
               });

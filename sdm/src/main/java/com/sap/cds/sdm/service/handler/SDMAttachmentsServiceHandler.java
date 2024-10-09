@@ -140,7 +140,7 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
     try {
       sdmService.readDocument(objectId, jwtToken, sdmCredentials, context);
     } catch (Exception e) {
-      throw new RuntimeException("Failed to read document from SDM service", e);
+      throw new IOException("Failed to read document from SDM service", e);
     }
   }
 

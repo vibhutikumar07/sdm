@@ -762,9 +762,9 @@ public class SDMServiceImplTest {
           .when(mockData)
           .setContent(any(InputStream.class));
 
-      RuntimeException exception =
+      IOException exception =
           assertThrows(
-              RuntimeException.class,
+              IOException.class,
               () -> {
                 sdmServiceImpl.readDocument(objectId, jwtToken, sdmCredentials, mockContext);
               });
