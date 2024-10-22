@@ -1,12 +1,15 @@
-name: Pull Request Build with Maven
+name: Build Java Project
 
 on:
+  push:
+    branches:
+      - develop
   pull_request:
-    branches: [ "develop" ]
+    branches:
+      - develop
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     strategy:
@@ -14,10 +17,16 @@ jobs:
         java-version: [ 17 ]
 
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build with Maven
+      - name: Set up JDK ${{ matrix.java-version }}
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.java-version }}
+
+      - name: Build with Maven Custom Action
         uses: ./.github/actions/build
         with:
           java-version: ${{ matrix.java-version }}
