@@ -1,4 +1,4 @@
-name: Build Java Project
+name: pull-request-build.yml
 
 on:
   push:
