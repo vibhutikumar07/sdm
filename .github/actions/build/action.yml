@@ -1,40 +1,28 @@
-name: Maven Build
-description: "Builds a Maven project."
+name: Pull Request Build with Maven
 
-inputs:
-  java-version:
-    description: "The Java version the build shall run with."
-    required: true
-  maven-version:
-    description: "The Maven version the build shall run with."
-    default: '3.6.3'
-    required: false
-  mutation-testing:
-    description: "Whether to run mutation testing."
-    default: 'true'
-    required: false
+on:
+  pull_request:
+    branches: [ "develop" ]
 
-runs:
-  using: composite
-  steps:
-    - name: Set up JDK ${{ inputs.java-version }}
-      uses: actions/setup-java@v4
-      with:
-        java-version: ${{ inputs.java-version }}
-        distribution: sapmachine
-        cache: maven
+jobs:
+  build:
 
-    - name: Setup Maven ${{ inputs.maven-version }}
-      uses: stCarolas/setup-maven@v5
-      with:
-        maven-version: ${{ inputs.maven-version }}
+    runs-on: ubuntu-latest
 
-    - name: Perform Piper Maven build
-      uses: SAP/project-piper-action@main
-      with:
-        step-name: mavenBuild
+    strategy:
+      matrix:
+        java-version: [ 17 ]
 
-    - name: Run Mutation Testing
-      if: ${{ inputs.mutation-testing == 'true' }}
-      run: mvn org.pitest:pitest-maven:mutationCoverage -f cds-feature-attachments/pom.xml
-      shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ matrix.java-version }}
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.java-version }}
+
+      - name: Build with Maven
+        run: |
+          mvn -B package --file pom.xml
