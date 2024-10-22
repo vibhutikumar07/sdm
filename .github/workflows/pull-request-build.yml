@@ -1,0 +1,23 @@
+name: Pull Request Build with Maven
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        java-version: [ 17, 21 ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build with Maven
+        uses: ./.github/actions/build
+        with:
+          java-version: ${{ matrix.java-version }}
