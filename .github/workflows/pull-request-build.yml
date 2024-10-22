@@ -28,5 +28,3 @@ jobs:
 
       - name: Build with Maven Custom Action
         uses: ./.github/actions/build
-        with:
-          java-version: ${{ matrix.java-version }}
