@@ -2,10 +2,8 @@ package com.sap.cds.sdm.persistence;
 
 import com.sap.cds.Result;
 import com.sap.cds.Row;
-import com.sap.cds.ql.Delete;
 import com.sap.cds.ql.Select;
 import com.sap.cds.ql.Update;
-import com.sap.cds.ql.cqn.CqnDelete;
 import com.sap.cds.ql.cqn.CqnSelect;
 import com.sap.cds.ql.cqn.CqnUpdate;
 import com.sap.cds.reflect.CdsEntity;
@@ -47,13 +45,6 @@ public class DBQuery {
             .data(updatedFields)
             .where(doc -> doc.get("ID").eq(cmisDocument.getAttachmentId()));
     persistenceService.run(updateQuery);
-  }
-
-  public static void deleteAttachmentFromDraft(
-      CdsEntity attachmentEntity, PersistenceService persistenceService, String attachmentId) {
-    CqnDelete deleteQuery =
-        Delete.from(attachmentEntity).where(doc -> doc.get("ID").eq(attachmentId));
-    persistenceService.run(deleteQuery);
   }
 
   public static String getFolderIdForActiveEntity(
