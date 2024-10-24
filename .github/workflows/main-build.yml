@@ -43,8 +43,8 @@ jobs:
           distribution: sapmachine
           cache: maven
           server-id: artifactory
-          server-username: DEPLOYMENT_USER1
-          server-password: DEPLOYMENT_PASS1
+          server-username: CAP_DEPLOYMENT_USER
+          server-password: CAP_DEPLOYMENT_PASS
 
       - name: Setup Maven
         uses: stCarolas/setup-maven@v5
@@ -67,6 +67,6 @@ jobs:
         run: |
           mvn -B -ntp -fae -Dmaven.install.skip=true -Dmaven.test.skip=true -DdeployAtEnd=true deploy
         env:
-          DEPLOYMENT_USER: ${{ secrets.DEPLOYMENT_USER1 }}
-          DEPLOYMENT_PASS: ${{ secrets.DEPLOYMENT_PASS1 }}
+          DEPLOYMENT_USER: ${{ secrets.CAP_DEPLOYMENT_USER }}
+          DEPLOYMENT_PASS: ${{ secrets.CAP_DEPLOYMENT_PASS }}
         shell: bash
