@@ -8,7 +8,7 @@ env:
 
 on:
   release:
-    types: [ "Artifact" ]
+    types: [ "prereleased" ]
 
 jobs:
 
