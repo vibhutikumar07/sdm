@@ -143,7 +143,6 @@ public class SDMServiceImpl implements SDMService {
     if (!response.isSuccessful()) {
       response.close();
       throw new ServiceException("Unexpected code");
-      // throw new IOException("Unexpected code " + response);
     }
 
     InputStream documentStream = response.body().byteStream();
@@ -152,7 +151,6 @@ public class SDMServiceImpl implements SDMService {
     } catch (Exception e) {
       response.close();
       throw new ServiceException("Failed to set document stream in context");
-      // throw new IOException("Failed to set document stream in context", e);
     }
   }
 
