@@ -149,7 +149,7 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
 
   @On(event = AttachmentService.EVENT_READ_ATTACHMENT)
   public void readAttachment(AttachmentReadEventContext context) throws IOException {
- AuthenticationInfo authInfo = context.getAuthenticationInfo();
+    AuthenticationInfo authInfo = context.getAuthenticationInfo();
     JwtTokenAuthenticationInfo jwtTokenInfo = authInfo.as(JwtTokenAuthenticationInfo.class);
     String jwtToken = jwtTokenInfo.getToken();
     String[] contentIdParts = context.getContentId().split(":");
