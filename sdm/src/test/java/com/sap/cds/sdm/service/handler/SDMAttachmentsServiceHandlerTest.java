@@ -576,9 +576,9 @@ public class SDMAttachmentsServiceHandlerTest {
           .when(sdmService)
           .readDocument(anyString(), anyString(), any(SDMCredentials.class), eq(mockReadContext));
 
-      ServiceException exception =
+      IOException exception =
           assertThrows(
-              ServiceException.class,
+              IOException.class,
               () -> {
                 handlerSpy.readAttachment(mockReadContext);
               });
