@@ -149,12 +149,7 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
 
   @On(event = AttachmentService.EVENT_READ_ATTACHMENT)
   public void readAttachment(AttachmentReadEventContext context) throws IOException {
-    String repositoryId = SDMConstants.REPOSITORY_ID;
-    String repocheck = sdmService.checkRepositoryType(repositoryId);
-    if ("Versioned".equals(repocheck)) {
-      throw new ServiceException("Read not supported for versioned repositories");
-    }
-    AuthenticationInfo authInfo = context.getAuthenticationInfo();
+ AuthenticationInfo authInfo = context.getAuthenticationInfo();
     JwtTokenAuthenticationInfo jwtTokenInfo = authInfo.as(JwtTokenAuthenticationInfo.class);
     String jwtToken = jwtTokenInfo.getToken();
     String[] contentIdParts = context.getContentId().split(":");
@@ -163,7 +158,7 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
     try {
       sdmService.readDocument(objectId, jwtToken, sdmCredentials, context);
     } catch (Exception e) {
-      throw new ServiceException("Failed to read document from SDM service");
+      throw new IOException("Failed to read document from SDM service", e);
     }
     context.setCompleted();
   }
