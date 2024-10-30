@@ -2,7 +2,7 @@ name: Java CI with Maven
 
 env:
   JAVA_VERSION: '17'
-  DEPLOY_REPOSITORY_URL: 'https://common.repositories.cloud.sap/artifactory/cap-sdm-java'
+  #DEPLOY_REPOSITORY_URL: 'https://common.repositories.cloud.sap/artifactory/cap-sdm-java'
   POM_FILE: '.flattened-pom.xml'
   DRY_RUN: 'true'
 
@@ -95,7 +95,7 @@ jobs:
         # Ensure the environment variables are set correctly
         uses: ./.github/actions/deploy
         with:
-          repository-url: ${{ env.DEPLOY_REPOSITORY_URL }}
+          repository-url: ${{ secrets.REPOSITORY_URL }}
           server-id: 'artifactory'
           user: ${{ secrets.CAP_DEPLOYMENT_USER }}
           password: ${{ secrets.CAP_DEPLOYMENT_PASS }}
