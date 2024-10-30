@@ -1,14 +1,32 @@
 name: Maven Deploy
 description: "Deploys a Maven package to a repository."
 
+inputs:
+  repository-url:
+    description: "The URL of the repository to upload to."
+    required: true
+  server-id:
+    description: "The service id of the repository to upload to."
+    required: true
+  user:
+    description: "The user used for the upload."
+    required: true
+  password:
+    description: "The password used for the upload."
+    required: true
+  pom-file:
+    description: "The path to the POM file."
+    required: false
+    default: "pom.xml"
+
 runs:
   using: composite
   steps:
-    - name: "Echo Variables"
+    - name: "Echo Inputs"
       run: |
-        echo "repository-url: ${{ secrets.REPOSITORY_URL }}"
-        echo "user: ${{ secrets.CAP_DEPLOYMENT_USER }}"
-        echo "password: ${{ secrets.CAP_DEPLOYMENT_PASS }}"
+        echo "repository-url: ${{ inputs.repository-url }}"
+        echo "user: ${{ inputs.user }}"
+        echo "password: ${{ inputs.password }}"
         echo "pom-file: ${{ inputs.pom-file }}"
       shell: bash
 
@@ -17,7 +35,7 @@ runs:
       with:
         distribution: 'sapmachine'
         java-version: '17'
-        server-id: REPOSITORY_URL
+        server-id: ${{ inputs.server-id }}
         server-username: CAP_DEPLOYMENT_USER
         server-password: CAP_DEPLOYMENT_PASS
 
@@ -37,13 +55,7 @@ runs:
         -DskipDuringDeploy=true
         -f ${{ inputs.pom-file }}
         deploy
-      #env:
-        #DEPLOYMENT_USER: ${{ inputs.user }}
-        #DEPLOYMENT_PASS: ${{ inputs.password }}
-
       env:
-          CAP_DEPLOYMENT_USER: ${{ secrets.CAP_DEPLOYMENT_USER }}
-          CAP_DEPLOYMENT_PASS: ${{ secrets.CAP_DEPLOYMENT_PASS }}
-          REPOSITORY_URL: ${{ secrets.REPOSITORY_URL }}
-      
+        CAP_DEPLOYMENT_USER: ${{ inputs.user }}
+        CAP_DEPLOYMENT_PASS: ${{ inputs.password }}
       shell: bash
