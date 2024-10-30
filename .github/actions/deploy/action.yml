@@ -55,4 +55,7 @@ runs:
         -DskipDuringDeploy=true
         -f ${{ inputs.pom-file }}
         deploy
+      env:
+        DEPLOYMENT_USER: ${{ inputs.user }}
+        DEPLOYMENT_PASS: ${{ inputs.password }}
       shell: bash
