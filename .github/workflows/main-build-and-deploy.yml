@@ -47,6 +47,16 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: root-new-version
+      
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+      
+      - name: Verify Java Version
+        run: java -version
+        shell: bash
 
       - name: Build with Maven
         uses: ./.github/actions/build
@@ -60,6 +70,7 @@ jobs:
           include-hidden-files: true
           path: .
           retention-days: 1
+
 
   deploy:
     name: Deploy to Artifactory
