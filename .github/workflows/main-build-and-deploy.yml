@@ -95,7 +95,7 @@ jobs:
           server-password: CAP_DEPLOYMENT_PASS
 
       - name: Deploy with Maven
-        if: ${{ env.DRY_RUN != 'true' }}
+        #if: ${{ env.DRY_RUN != 'true' }}
         uses: ./.github/actions/deploy
         with:
           user: ${{ secrets.DEPLOYMENT_USER }}
