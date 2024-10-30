@@ -56,6 +56,6 @@ runs:
         -f ${{ inputs.pom-file }}
         deploy
       env:
-        DEPLOYMENT_USER: ${{ inputs.user }}
-        DEPLOYMENT_PASS: ${{ inputs.password }}
+        CAP_DEPLOYMENT_USER: ${{ inputs.user }}
+        CAP_DEPLOYMENT_PASS: ${{ inputs.password }}
       shell: bash
