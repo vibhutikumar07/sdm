@@ -90,18 +90,16 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: sapmachine
           cache: maven
-          server-id: artifactory
-          server-username: CAP_DEPLOYMENT_USER
-          server-password: CAP_DEPLOYMENT_PASS
 
       - name: Deploy with Maven
-        #if: ${{ env.DRY_RUN != 'true' }}
+        # Ensure the environment variables are set correctly
         uses: ./.github/actions/deploy
         with:
+          repository-url: ${{ env.DEPLOY_REPOSITORY_URL }}
+          server-id: 'artifactory'
           user: ${{ secrets.CAP_DEPLOYMENT_USER }}
           password: ${{ secrets.CAP_DEPLOYMENT_PASS }}
-          repository-url: ${{ env.DEPLOY_REPOSITORY_ID }}
           pom-file: ${{ env.POM_FILE }}
-
+        
       - name: Echo Status
         run: echo "The job status is ${{ job.status }}"
