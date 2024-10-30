@@ -1,32 +1,13 @@
-name: Maven Build
-description: "Builds a Maven project."
-
-inputs:
-  java-version:
-    description: "The Java version the build shall run with."
-    default: '17'
-    required: false
-  maven-version:
-    description: "The Maven version the build shall run with."
-    default: '3.6.3'
-    required: false
+name: Build Java Project
+description: A custom action to build a Java project with Maven
 
 runs:
-  using: composite
+  using: "composite"
   steps:
-    - name: Set up JDK ${{ inputs.java-version }}
-      uses: actions/setup-java@v4
-      with:
-        java-version: ${{ inputs.java-version }}
-        distribution: sapmachine
-        cache: maven
+    - name: Checkout
+      uses: actions/checkout@v4
 
-    - name: Setup Maven ${{ inputs.maven-version }}
-      uses: stCarolas/setup-maven@v5
-      with:
-        maven-version: ${{ inputs.maven-version }}
-
-    - name: Perform Piper Maven build
-      uses: SAP/project-piper-action@main
-      with:
-        step-name: mavenBuild
+    - name: Build with Maven
+      run: |
+        mvn clean install
+      shell: bash
