@@ -12,6 +12,7 @@ import com.sap.cds.sdm.caching.CacheConfig;
 import com.sap.cds.sdm.handler.TokenHandler;
 import com.sap.cds.sdm.model.CmisDocument;
 import com.sap.cds.sdm.model.SDMCredentials;
+import com.sap.cds.services.ServiceException;
 import com.sap.cds.services.persistence.PersistenceService;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -117,9 +118,9 @@ public class SDMServiceImplTest {
     sdmCredentials.setUrl(mockUrl);
     String token = "token";
 
-    IOException exception =
+    ServiceException exception =
         assertThrows(
-            IOException.class,
+            ServiceException.class,
             () -> {
               SDMService.getRepositoryInfo(token, sdmCredentials);
             });
@@ -274,9 +275,9 @@ public class SDMServiceImplTest {
       Mockito.when(TokenHandler.getDIToken(jwtToken, sdmCredentials)).thenReturn("mockAccessToken");
       SDMServiceImpl sdmServiceImpl = new SDMServiceImpl();
 
-      IOException exception =
+      ServiceException exception =
           assertThrows(
-              IOException.class,
+              ServiceException.class,
               () -> {
                 sdmServiceImpl.createFolder(parentId, jwtToken, repositoryId, sdmCredentials);
               });
@@ -533,6 +534,51 @@ public class SDMServiceImplTest {
       expectedResponse.put("id", "attachmentId");
       expectedResponse.put("status", "fail");
       assertEquals(expectedResponse.toString(), actualResponse.toString());
+    } finally {
+      mockWebServer.shutdown();
+    }
+  }
+
+  @Test
+  public void testCreateDocumentFailRequestError() throws IOException {
+    MockWebServer mockWebServer = new MockWebServer();
+    mockWebServer.start();
+    try (MockedStatic<TokenHandler> tokenHandlerMockedStatic =
+        Mockito.mockStatic(TokenHandler.class)) {
+
+      // Enqueue a failure to simulate a network error
+      mockWebServer.shutdown(); // Shut down the server to simulate network error
+
+      CmisDocument cmisDocument = new CmisDocument();
+      cmisDocument.setFileName("sample.pdf");
+      cmisDocument.setAttachmentId("attachmentId");
+      String content = "sample.pdf content";
+      InputStream contentStream =
+          new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
+      cmisDocument.setContent(contentStream);
+      cmisDocument.setParentId("parentId");
+      cmisDocument.setRepositoryId("repositoryId");
+      cmisDocument.setFolderId("folderId");
+
+      String jwtToken = "jwtToken";
+      String mockUrl = mockWebServer.url("/").toString();
+      SDMCredentials sdmCredentials = new SDMCredentials();
+      sdmCredentials.setUrl(mockUrl);
+
+      tokenHandlerMockedStatic
+          .when(() -> TokenHandler.getDIToken(jwtToken, sdmCredentials))
+          .thenReturn("mockAccessToken");
+
+      SDMServiceImpl sdmServiceImpl = new SDMServiceImpl();
+
+      try {
+        sdmServiceImpl.createDocument(cmisDocument, jwtToken, sdmCredentials);
+        fail("Expected ServiceException to be thrown");
+      } catch (ServiceException e) {
+        // Expected exception to be thrown
+        assertEquals("Could not upload", e.getMessage());
+      }
+
     } finally {
       mockWebServer.shutdown();
     }
@@ -840,17 +886,15 @@ public class SDMServiceImplTest {
 
       SDMServiceImpl sdmServiceImpl = new SDMServiceImpl();
 
-      IOException exception =
+      ServiceException exception =
           assertThrows(
-              IOException.class,
+              ServiceException.class,
               () -> {
                 sdmServiceImpl.readDocument(objectId, jwtToken, sdmCredentials, mockContext);
               });
 
       // Check if the exception message contains the expected first part
-      String expectedMessagePart1 =
-          "Unexpected code Response{protocol=http/1.1, code=500, message=Server Error, url="
-              + mockUrl;
+      String expectedMessagePart1 = "Unexpected code";
       assertTrue(exception.getMessage().contains(expectedMessagePart1));
     } finally {
       mockWebServer.shutdown();
@@ -884,9 +928,9 @@ public class SDMServiceImplTest {
           .when(mockData)
           .setContent(any(InputStream.class));
 
-      IOException exception =
+      ServiceException exception =
           assertThrows(
-              IOException.class,
+              ServiceException.class,
               () -> {
                 sdmServiceImpl.readDocument(objectId, jwtToken, sdmCredentials, mockContext);
               });

@@ -7,6 +7,7 @@ import com.sap.cds.sdm.constants.SDMConstants;
 import com.sap.cds.sdm.handler.TokenHandler;
 import com.sap.cds.sdm.model.CmisDocument;
 import com.sap.cds.sdm.model.SDMCredentials;
+import com.sap.cds.services.ServiceException;
 import com.sap.cds.services.persistence.PersistenceService;
 import java.io.IOException;
 import java.io.InputStream;
@@ -55,7 +56,7 @@ public class SDMServiceImpl implements SDMService {
           cmisDocument, client, requestBody, sdmUrl, accessToken, finalResponse);
 
     } catch (IOException e) {
-      throw new IOException("Could not upload");
+      throw new ServiceException("Could not upload");
     }
     return new JSONObject(finalResponse);
   }
@@ -110,7 +111,7 @@ public class SDMServiceImpl implements SDMService {
       }
 
     } catch (IOException e) {
-      throw new IOException("Could not upload");
+      throw new ServiceException("Could not upload");
     }
   }
 
@@ -141,7 +142,7 @@ public class SDMServiceImpl implements SDMService {
     Response response = client.newCall(request).execute();
     if (!response.isSuccessful()) {
       response.close();
-      throw new IOException("Unexpected code " + response);
+      throw new ServiceException("Unexpected code");
     }
 
     InputStream documentStream = response.body().byteStream();
@@ -149,7 +150,7 @@ public class SDMServiceImpl implements SDMService {
       context.getData().setContent(documentStream);
     } catch (Exception e) {
       response.close();
-      throw new IOException("Failed to set document stream in context", e);
+      throw new ServiceException("Failed to set document stream in context");
     }
   }
 
@@ -245,10 +246,10 @@ public class SDMServiceImpl implements SDMService {
             .build();
 
     try (Response response = client.newCall(request).execute()) {
-      if (!response.isSuccessful()) throw new IOException("Could not upload");
+      if (!response.isSuccessful()) throw new ServiceException("Could not upload");
       return response.body().string();
     } catch (IOException e) {
-      throw new IOException("Could not upload");
+      throw new ServiceException("Could not upload");
     }
   }
 
@@ -290,12 +291,12 @@ public class SDMServiceImpl implements SDMService {
 
     try (Response response = client.newCall(request).execute()) {
       if (!response.isSuccessful()) {
-        throw new IOException("Failed to get repository info");
+        throw new ServiceException("Failed to get repository info");
       }
       String responseBody = response.body().string();
       return new JSONObject(responseBody);
     } catch (IOException e) {
-      throw new IOException("Failed to get repository info");
+      throw new ServiceException("Failed to get repository info");
     }
   }
 
@@ -341,7 +342,7 @@ public class SDMServiceImpl implements SDMService {
     try (Response response = client.newCall(request).execute()) {
       return response.code();
     } catch (IOException e) {
-      throw new IOException("Could not delete the document");
+      throw new ServiceException("Could not delete the document");
     }
   }
 }

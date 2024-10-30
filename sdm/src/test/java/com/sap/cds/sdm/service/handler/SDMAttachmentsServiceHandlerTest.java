@@ -28,6 +28,7 @@ import com.sap.cds.sdm.model.SDMCredentials;
 import com.sap.cds.sdm.persistence.DBQuery;
 import com.sap.cds.sdm.service.SDMService;
 import com.sap.cds.sdm.service.SDMServiceImpl;
+import com.sap.cds.services.ServiceException;
 import com.sap.cds.services.authentication.AuthenticationInfo;
 import com.sap.cds.services.authentication.JwtTokenAuthenticationInfo;
 import com.sap.cds.services.messages.Message;
@@ -90,6 +91,7 @@ public class SDMAttachmentsServiceHandlerTest {
 
   @Test
   public void testCreateVersioned() throws IOException {
+    // Initialization of mocks and setup
     Message mockMessage = mock(Message.class);
     Messages mockMessages = mock(Messages.class);
     MediaData mockMediaData = mock(MediaData.class);
@@ -102,12 +104,21 @@ public class SDMAttachmentsServiceHandlerTest {
     when(mockContext.getData()).thenReturn(mockMediaData);
     when(mockContext.getModel()).thenReturn(mockModel);
 
-    handlerSpy.createAttachment(mockContext);
-    verify(mockMessages).error("Upload not supported for versioned repositories");
+    // Use assertThrows to expect a ServiceException and validate the message
+    ServiceException thrown =
+        assertThrows(
+            ServiceException.class,
+            () -> {
+              handlerSpy.createAttachment(mockContext);
+            });
+
+    // Verify the exception message
+    assertEquals("Upload not supported for versioned repositories", thrown.getMessage());
   }
 
   @Test
   public void testCreateNonVersionedDuplicate() throws IOException {
+    // Initialization of mocks and setup
     Map<String, Object> mockattachmentIds = new HashMap<>();
     mockattachmentIds.put("up__ID", "upid");
     mockattachmentIds.put("ID", "id");
@@ -128,7 +139,7 @@ public class SDMAttachmentsServiceHandlerTest {
     when(mockModel.findEntity("some.qualified.Name.attachments"))
         .thenReturn(Optional.of(mockEntity));
     when(mockModel.findEntity("some.qualified.Name.attachments_drafts"))
-        .thenReturn(Optional.of(mockDraftEntity)); // mockDraftEntity is your mock CdsEntity
+        .thenReturn(Optional.of(mockDraftEntity));
     when(sdmService.checkRepositoryType(anyString())).thenReturn("Non Versioned");
     when(mockContext.getMessages()).thenReturn(mockMessages);
     when(mockContext.getAttachmentIds()).thenReturn(mockattachmentIds);
@@ -142,8 +153,18 @@ public class SDMAttachmentsServiceHandlerTest {
       DBQueryMockedStatic.when(
               () -> DBQuery.getAttachmentsForUPID(mockEntity, persistenceService, "upid"))
           .thenReturn(mockResult);
-      handlerSpy.createAttachment(mockContext);
-      verify(mockMessages).warn("This attachment already exists. Please remove it and try again");
+
+      // Use assertThrows to expect a ServiceException and validate the message
+      ServiceException thrown =
+          assertThrows(
+              ServiceException.class,
+              () -> {
+                handlerSpy.createAttachment(mockContext);
+              });
+
+      // Verify the exception message
+      assertEquals(
+          "This attachment already exists. Please remove it and try again", thrown.getMessage());
     }
   }
 
@@ -192,6 +213,7 @@ public class SDMAttachmentsServiceHandlerTest {
 
   @Test
   public void testCreateNonVersionedDIDuplicate() throws IOException {
+    // Initialization of mocks and setup
     Map<String, Object> mockattachmentIds = new HashMap<>();
     mockattachmentIds.put("up__ID", "upid");
     mockattachmentIds.put("ID", "id");
@@ -243,9 +265,18 @@ public class SDMAttachmentsServiceHandlerTest {
 
       tokenHandlerMockedStatic.when(TokenHandler::getSDMCredentials).thenReturn(mockSdmCredentials);
       Mockito.when(TokenHandler.getTokenFields(anyString())).thenReturn(mockPayload);
-      handlerSpy.createAttachment(mockContext);
-      verify(mockMessages)
-          .error("The following files already exist and cannot be uploaded:\n• sample.pdf\n");
+
+      // Use assertThrows to expect a ServiceException and validate the message
+      ServiceException thrown =
+          assertThrows(
+              ServiceException.class,
+              () -> {
+                handlerSpy.createAttachment(mockContext);
+              });
+
+      assertEquals("The following file already exists and cannot be uploaded", thrown.getMessage());
+
+      // Add any additional verifications if needed
     }
   }
 
@@ -266,6 +297,7 @@ public class SDMAttachmentsServiceHandlerTest {
 
   @Test
   public void testCreateNonVersionedDIVirus() throws IOException {
+    // Initialization of mocks and setup
     Map<String, Object> mockattachmentIds = new HashMap<>();
     mockattachmentIds.put("up__ID", "upid");
     mockattachmentIds.put("ID", "id");
@@ -317,15 +349,25 @@ public class SDMAttachmentsServiceHandlerTest {
 
       tokenHandlerMockedStatic.when(TokenHandler::getSDMCredentials).thenReturn(mockSdmCredentials);
       Mockito.when(TokenHandler.getTokenFields(anyString())).thenReturn(mockPayload);
-      handlerSpy.createAttachment(mockContext);
-      verify(mockMessages)
-          .error(
-              "The following files contain potential malware and cannot be uploaded:\n• sample.pdf\n");
+
+      // Use assertThrows to expect a ServiceException and validate the message
+      ServiceException thrown =
+          assertThrows(
+              ServiceException.class,
+              () -> {
+                handlerSpy.createAttachment(mockContext);
+              });
+
+      // Verify the exception message
+      assertEquals(
+          "The following file contains potential malware and cannot be uploaded",
+          thrown.getMessage());
     }
   }
 
   @Test
   public void testCreateNonVersionedDIOther() throws IOException {
+    // Initialization of mocks and setup
     Map<String, Object> mockattachmentIds = new HashMap<>();
     mockattachmentIds.put("up__ID", "upid");
     mockattachmentIds.put("ID", "id");
@@ -377,8 +419,17 @@ public class SDMAttachmentsServiceHandlerTest {
 
       tokenHandlerMockedStatic.when(TokenHandler::getSDMCredentials).thenReturn(mockSdmCredentials);
       Mockito.when(TokenHandler.getTokenFields(anyString())).thenReturn(mockPayload);
-      handlerSpy.createAttachment(mockContext);
-      verify(mockMessages).error("The following files cannot be uploaded:\n• sample.pdf\n");
+
+      // Use assertThrows to expect a ServiceException and validate the message
+      ServiceException thrown =
+          assertThrows(
+              ServiceException.class,
+              () -> {
+                handlerSpy.createAttachment(mockContext);
+              });
+
+      // Verify the exception message
+      assertEquals("The following file cannot be uploaded", thrown.getMessage());
     }
   }
 
@@ -525,7 +576,7 @@ public class SDMAttachmentsServiceHandlerTest {
           .when(sdmService)
           .readDocument(anyString(), anyString(), any(SDMCredentials.class), eq(mockReadContext));
 
-      Exception exception =
+      IOException exception =
           assertThrows(
               IOException.class,
               () -> {
