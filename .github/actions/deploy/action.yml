@@ -36,8 +36,8 @@ runs:
         distribution: 'sapmachine'
         java-version: '17'
         server-id: ${{ inputs.server-id }}
-        server-username: CAP_DEPLOYMENT_USER
-        server-password: CAP_DEPLOYMENT_PASS
+        server-username: ${{ inputs.user }}
+        server-password: ${{ inputs.password }}
 
     - name: "Publish package"
       run: >
@@ -55,7 +55,4 @@ runs:
         -DskipDuringDeploy=true
         -f ${{ inputs.pom-file }}
         deploy
-      env:
-        CAP_DEPLOYMENT_USER: ${{ inputs.user }}
-        CAP_DEPLOYMENT_PASS: ${{ inputs.password }}
       shell: bash
