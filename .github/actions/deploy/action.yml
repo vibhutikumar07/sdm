@@ -36,8 +36,8 @@ runs:
         distribution: 'sapmachine'
         java-version: '17'
         server-id: ${{ inputs.server-id }}
-        server-username: DEPLOYMENT_USER
-        server-password: DEPLOYMENT_PASS
+        server-username: CAP_DEPLOYMENT_USER
+        server-password: CAP_DEPLOYMENT_PASS
 
     - name: "Publish package"
       run: >
