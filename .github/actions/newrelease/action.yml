@@ -30,11 +30,11 @@ runs:
         VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
         echo $VERSION > cap-notebook/version.txt
         mvn --no-transfer-progress versions:set-property -Dproperty=revision -DnewVersion=$VERSION
-        chmod +x ensure-license.sh
-        ./ensure-license.sh
+        #chmod +x ensure-license.sh
+        #./ensure-license.sh
         git config --global user.name 'github-actions[bot]'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        git checkout -b new_artifact
+        git checkout -b New_Artifact
         git commit -am "Update version to $VERSION"
-        git push --set-upstream origin new_artifact
+        git push --set-upstream origin New_Artifact
       shell: bash
