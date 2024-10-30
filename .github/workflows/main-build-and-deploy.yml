@@ -42,6 +42,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: root-new-version
+      - name: Verify Java Version
+        run: java -version
+        shell: bash
 
       - name: Build with Maven
         uses: ./.github/actions/build
