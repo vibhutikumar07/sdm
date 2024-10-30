@@ -17,9 +17,9 @@ runs:
       with:
         distribution: 'sapmachine'
         java-version: '17'
-        server-id: ${{ secrets.REPOSITORY_URL }}
-        server-username: ${{ secrets.CAP_DEPLOYMENT_USER }}
-        server-password: ${{ secrets.CAP_DEPLOYMENT_PASS }}
+        server-id: REPOSITORY_URL
+        server-username: CAP_DEPLOYMENT_USER
+        server-password: CAP_DEPLOYMENT_PASS
 
     - name: "Publish package"
       run: >
@@ -40,4 +40,10 @@ runs:
       #env:
         #DEPLOYMENT_USER: ${{ inputs.user }}
         #DEPLOYMENT_PASS: ${{ inputs.password }}
+
+      env:
+          CAP_DEPLOYMENT_USER: ${{ secrets.CAP_DEPLOYMENT_USER }}
+          CAP_DEPLOYMENT_PASS: ${{ secrets.CAP_DEPLOYMENT_PASS }}
+          REPOSITORY_URL: ${{ secrets.REPOSITORY_URL }}
+      
       shell: bash
