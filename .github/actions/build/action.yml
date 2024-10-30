@@ -4,6 +4,7 @@ description: "Builds a Maven project."
 inputs:
   java-version:
     description: "The Java version the build shall run with."
+    default: '17'
     required: true
   maven-version:
     description: "The Maven version the build shall run with."
