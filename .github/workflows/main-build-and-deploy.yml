@@ -2,9 +2,8 @@ name: Java CI with Maven
 
 env:
   JAVA_VERSION: '17'
-  #DEPLOY_REPOSITORY_URL: 'https://common.repositories.cloud.sap/artifactory/cap-sdm-java'
+  DEPLOY_REPOSITORY_URL: 'https://common.repositories.cloud.sap/artifactory/cap-sdm-java'
   POM_FILE: '.flattened-pom.xml'
-  DRY_RUN: 'true'
 
 on:
   release:
@@ -14,17 +13,12 @@ jobs:
 
   update-version:
     runs-on: ubuntu-latest
+    #needs: blackduck
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_TOKEN }}
-
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
 
       - name: Update version
         uses: ./.github/actions/newrelease
@@ -47,16 +41,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: root-new-version
-      
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-      
-      - name: Verify Java Version
-        run: java -version
-        shell: bash
 
       - name: Build with Maven
         uses: ./.github/actions/build
@@ -83,23 +67,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: root-build
-      
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: sapmachine
-          cache: maven
 
       - name: Deploy with Maven
-        # Ensure the environment variables are set correctly
         uses: ./.github/actions/deploy
         with:
-          repository-url: ${{ secrets.REPOSITORY_URL }}
-          server-id: 'artifactory'
           user: ${{ secrets.CAP_DEPLOYMENT_USER }}
           password: ${{ secrets.CAP_DEPLOYMENT_PASS }}
+          repository-url: ${{ env.DEPLOY_REPOSITORY_ID }}
           pom-file: ${{ env.POM_FILE }}
-        
+
       - name: Echo Status
         run: echo "The job status is ${{ job.status }}"
