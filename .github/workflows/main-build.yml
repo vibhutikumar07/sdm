@@ -1,33 +1,30 @@
-name: Java Build with Maven
+name: Main build and deploy
+
+env:
+  JAVA_VERSION: '17'
+  MAVEN_VERSION: '3.6.3'
 
 on:
   push:
-    branches:
-      - develop
-  pull_request:
-    branches:
-      - develop
+    branches: [ "maven_artifact" ]
   workflow_dispatch:
 
 jobs:
   build:
-    name: Build with Maven
+    name: Build
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java-version: [ 17 ]
+        java-version: [ 17, 21 ]
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK ${{ matrix.java-version }}
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: ${{ matrix.java-version }}
-
-      - name: Build with Maven Custom Action
+      - name: Build
         uses: ./.github/actions/build
+        with:
+          java-version: ${{ matrix.java-version }}
+          maven-version: ${{ env.MAVEN_VERSION }}
 
   deploy-snapshot:
     name: Deploy snapshot to Artifactory
@@ -37,20 +34,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up Java ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
-          java-version: 17
+          java-version: ${{ env.JAVA_VERSION }}
           distribution: sapmachine
           cache: maven
           server-id: artifactory
           server-username: CAP_DEPLOYMENT_USER
           server-password: CAP_DEPLOYMENT_PASS
 
-      - name: Setup Maven
+      - name: Set up Maven ${{ env.MAVEN_VERSION }}
         uses: stCarolas/setup-maven@v5
         with:
-          maven-version: 3.6.3
+          maven-version: ${{ env.MAVEN_VERSION }}
 
       - name: Get Revision
         id: get-revision
@@ -65,9 +62,14 @@ jobs:
       - name: Deploy snapshot
         if: ${{ endsWith(steps.get-revision.outputs.REVISION, '-SNAPSHOT') }}
         # https://maven.apache.org/plugins/maven-deploy-plugin/usage.html#the-deploy-deploy-mojo
-        run: |
-          mvn -B -ntp -fae -Dmaven.install.skip=true -Dmaven.test.skip=true -DdeployAtEnd=true deploy
+        run: >
+          mvn -B -ntp -fae
+          -pl !integration-tests,!integration-tests/db,!integration-tests/srv
+          -Dmaven.install.skip=true
+          -Dmaven.test.skip=true
+          -DdeployAtEnd=true
+          deploy
         env:
-          CAP_DEPLOYMENT_USER: ${{ secrets.CAP_DEPLOYMENT_USER }}
-          CAP_DEPLOYMENT_PASS: ${{ secrets.CAP_DEPLOYMENT_PASS }}
+          DEPLOYMENT_USER: ${{ secrets.CAP_DEPLOYMENT_USER }}
+          DEPLOYMENT_PASS: ${{ secrets.CAP_DEPLOYMENT_PASS }}
         shell: bash
