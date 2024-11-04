@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java-version: [ 17, 21 ]
+        java-version: [ 17 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -62,13 +62,8 @@ jobs:
       - name: Deploy snapshot
         if: ${{ endsWith(steps.get-revision.outputs.REVISION, '-SNAPSHOT') }}
         # https://maven.apache.org/plugins/maven-deploy-plugin/usage.html#the-deploy-deploy-mojo
-        run: >
-          mvn -B -ntp -fae
-          -pl !integration-tests,!integration-tests/db,!integration-tests/srv
-          -Dmaven.install.skip=true
-          -Dmaven.test.skip=true
-          -DdeployAtEnd=true
-          deploy
+        run: |
+          mvn -B -ntp -fae -Dmaven.install.skip=true -Dmaven.test.skip=true -DdeployAtEnd=true deploy
         env:
           DEPLOYMENT_USER: ${{ secrets.CAP_DEPLOYMENT_USER }}
           DEPLOYMENT_PASS: ${{ secrets.CAP_DEPLOYMENT_PASS }}
