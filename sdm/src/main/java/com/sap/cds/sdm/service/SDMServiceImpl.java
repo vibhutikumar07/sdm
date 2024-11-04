@@ -116,6 +116,68 @@ public class SDMServiceImpl implements SDMService {
   }
 
   @Override
+  public int renameAttachments(
+      String jwtToken, SDMCredentials sdmCredentials, String fileName, String objectId)
+      throws IOException {
+    String repositoryId = SDMConstants.REPOSITORY_ID;
+    OkHttpClient client = new OkHttpClient();
+    String accessToken = TokenHandler.getDIToken(jwtToken, sdmCredentials);
+    String sdmUrl = sdmCredentials.getUrl() + "browser/" + repositoryId + "/root";
+    RequestBody requestBody =
+        new MultipartBody.Builder()
+            .setType(MultipartBody.FORM)
+            .addFormDataPart("cmisaction", "update")
+            .addFormDataPart("propertyId[0]", "cmis:name")
+            .addFormDataPart("propertyValue[0]", fileName)
+            .addFormDataPart("objectId", objectId)
+            .build();
+
+    Request request =
+        new Request.Builder()
+            .url(sdmUrl)
+            .addHeader("Authorization", SDMConstants.BEARER_TOKEN + accessToken)
+            .post(requestBody)
+            .build();
+
+    try (Response response = client.newCall(request).execute()) {
+      return response.code();
+    } catch (IOException e) {
+      throw new IOException("Could not rename the document", e);
+    }
+  }
+
+  @Override
+  public String getObject(String jwtToken, String objectId, SDMCredentials sdmCredentials)
+      throws IOException {
+    OkHttpClient client = new OkHttpClient();
+    String accessToken = TokenHandler.getDIToken(jwtToken, sdmCredentials);
+    String sdmUrl =
+        sdmCredentials.getUrl()
+            + "browser/"
+            + SDMConstants.REPOSITORY_ID
+            + "/root?cmisselector=object&objectId="
+            + objectId
+            + "&succinct=true";
+    Request request =
+        new Request.Builder()
+            .url(sdmUrl)
+            .addHeader("Authorization", SDMConstants.BEARER_TOKEN + accessToken)
+            .get()
+            .build();
+
+    try (Response response = client.newCall(request).execute()) {
+      if (!response.isSuccessful()) {
+        return null;
+      } else {
+        String object = response.body().string();
+        JSONObject jsonObject = new JSONObject(object);
+        JSONObject succinctProperties = jsonObject.getJSONObject("succinctProperties");
+        return succinctProperties.getString("cmis:name");
+      }
+    }
+  }
+
+  @Override
   public void readDocument(
       String objectId,
       String jwtToken,

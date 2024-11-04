@@ -40,4 +40,11 @@ public interface SDMService {
       SDMCredentials sdmCredentials,
       AttachmentReadEventContext context)
       throws IOException;
+
+  public int renameAttachments(
+      String jwtToken, SDMCredentials sdmCredentials, String fileName, String objectId)
+      throws IOException;
+
+  public String getObject(String jwtToken, String objectId, SDMCredentials sdmCredentials)
+      throws IOException;
 }

@@ -29,6 +29,13 @@ public class DBQuery {
     return persistenceService.run(q);
   }
 
+  public static Result getAttachmentForID(
+      CdsEntity attachmentEntity, PersistenceService persistenceService, String id) {
+    CqnSelect q =
+        Select.from(attachmentEntity).columns("fileName", "ID").where(doc -> doc.get("ID").eq(id));
+    return persistenceService.run(q);
+  }
+
   public static void addAttachmentToDraft(
       CdsEntity attachmentEntity,
       PersistenceService persistenceService,

@@ -4,7 +4,9 @@ import com.sap.cds.feature.attachments.handler.applicationservice.processor.read
 import com.sap.cds.feature.attachments.service.AttachmentService;
 import com.sap.cds.feature.attachments.utilities.LoggingMarker;
 import com.sap.cds.sdm.caching.CacheConfig;
+import com.sap.cds.sdm.handler.applicationservice.SDMCreateAttachmentsHandler;
 import com.sap.cds.sdm.handler.applicationservice.SDMReadAttachmentsHandler;
+import com.sap.cds.sdm.handler.applicationservice.SDMUpdateAttachmentsHandler;
 import com.sap.cds.sdm.service.SDMAttachmentsService;
 import com.sap.cds.sdm.service.SDMService;
 import com.sap.cds.sdm.service.SDMServiceImpl;
@@ -48,6 +50,8 @@ public class Registration implements CdsRuntimeConfiguration {
 
     SDMService sdmService = new SDMServiceImpl();
     configurer.eventHandler(buildReadHandler(attachmentService, persistenceService));
+    configurer.eventHandler(new SDMCreateAttachmentsHandler(persistenceService, sdmService));
+    configurer.eventHandler(new SDMUpdateAttachmentsHandler(persistenceService, sdmService));
     configurer.eventHandler(new SDMAttachmentsServiceHandler(persistenceService, sdmService));
   }
 
