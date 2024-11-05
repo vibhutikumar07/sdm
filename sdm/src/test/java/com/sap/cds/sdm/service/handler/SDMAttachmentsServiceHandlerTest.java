@@ -163,8 +163,7 @@ public class SDMAttachmentsServiceHandlerTest {
               });
 
       // Verify the exception message
-      assertEquals(
-          "This attachment already exists. Please remove it and try again", thrown.getMessage());
+      assertEquals("The attachment 'sample.pdf' already exists.", thrown.getMessage());
     }
   }
 

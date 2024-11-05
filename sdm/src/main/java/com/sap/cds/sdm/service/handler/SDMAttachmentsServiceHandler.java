@@ -63,13 +63,12 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
       if (!result.list().isEmpty()) {
         MediaData data = context.getData();
 
-        String filename = (String) data.get("fileName");
-        String fileid = (String) attachmentIds.get("ID");
+        String filename = data.getFileName(); // This will return "sample.pdf"
+        String fileid = (String) attachmentIds.get("ID"); // A
 
         Boolean duplicate = duplicateCheck(filename, fileid, result);
         if (Boolean.TRUE.equals(duplicate)) {
-          throw new ServiceException(
-              "This attachment already exists. Please remove it and try again");
+          throw new ServiceException("The attachment '" + filename + "' already exists.");
         } else {
           AuthenticationInfo authInfo = context.getAuthenticationInfo();
           JwtTokenAuthenticationInfo jwtTokenInfo = authInfo.as(JwtTokenAuthenticationInfo.class);
