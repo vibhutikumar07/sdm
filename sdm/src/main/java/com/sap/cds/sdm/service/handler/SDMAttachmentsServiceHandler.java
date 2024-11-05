@@ -63,8 +63,8 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
       if (!result.list().isEmpty()) {
         MediaData data = context.getData();
 
-        String filename = data.getFileName(); // This will return "sample.pdf"
-        String fileid = (String) attachmentIds.get("ID"); // A
+        String filename = data.getFileName(); 
+        String fileid = (String) attachmentIds.get("ID"); 
 
         Boolean duplicate = duplicateCheck(filename, fileid, result);
         if (Boolean.TRUE.equals(duplicate)) {
