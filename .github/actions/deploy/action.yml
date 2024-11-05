@@ -31,7 +31,7 @@ runs:
         echo "user: ${{ inputs.user }}"
         echo "password: ${{ inputs.password }}"
         echo "pom-file: ${{ inputs.pom-file }}"
-        echo "altDeploymentRepository: ${{inputs.server-id}}::${{inputs.repository-url}}"
+        echo "altDeploymentRepository: ${{inputs.server-id}}::default::${{inputs.repository-url}}"
       shell: bash
 
     - name: Setup Java 17
@@ -51,7 +51,7 @@ runs:
     - name: Deploy
       run: >
         mvn -B -ntp --fae --show-version
-        -DaltDeploymentRepository=${{inputs.server-id}}::${{inputs.repository-url}}
+        -DaltDeploymentRepository=${{inputs.server-id}}::default::${{inputs.repository-url}}
         -Dmaven.install.skip=true
         -Dmaven.test.skip=true
         -f ${{ inputs.pom-file }}
