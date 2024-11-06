@@ -78,6 +78,7 @@ public class SDMServiceImpl implements SDMService {
 
     try (Response response = client.newCall(request).execute()) {
       String status = "success";
+      String error = "";
       String name = cmisDocument.getFileName();
       String id = cmisDocument.getAttachmentId();
       String objectId = "";
@@ -93,6 +94,7 @@ public class SDMServiceImpl implements SDMService {
           status = "virus";
         } else {
           status = "fail";
+          error = message;
         }
       } else {
         String responseBody = response.body().string();
@@ -106,6 +108,7 @@ public class SDMServiceImpl implements SDMService {
       finalResponse.put("name", name);
       finalResponse.put("id", id);
       finalResponse.put("status", status);
+      finalResponse.put("message", error);
       if (!objectId.isEmpty()) {
         finalResponse.put("url", objectId);
       }

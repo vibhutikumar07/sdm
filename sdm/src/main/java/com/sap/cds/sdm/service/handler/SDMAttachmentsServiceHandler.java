@@ -63,8 +63,9 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
       if (!result.list().isEmpty()) {
         MediaData data = context.getData();
 
-        String filename = data.getFileName(); 
-        String fileid = (String) attachmentIds.get("ID"); 
+        String filename = data.getFileName();
+        String fileid = (String) attachmentIds.get("ID");
+        String errorMessageDI = "";
 
         Boolean duplicate = duplicateCheck(filename, fileid, result);
         if (Boolean.TRUE.equals(duplicate)) {
@@ -94,7 +95,8 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
             throw new ServiceException(
                 filename + " contains potential malware and cannot be uploaded");
           } else if (createResult.get("status") == "fail") {
-            throw new ServiceException(filename + " cannot be uploaded");
+            errorMessageDI = createResult.get("message").toString();
+            throw new ServiceException(errorMessageDI);
           } else {
             cmisDocument.setObjectId(createResult.get("url").toString());
             addAttachmentToDraft(attachmentDraftEntity.get(), persistenceService, cmisDocument);
