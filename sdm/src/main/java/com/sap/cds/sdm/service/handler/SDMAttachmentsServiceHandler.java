@@ -68,7 +68,7 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
 
         Boolean duplicate = duplicateCheck(filename, fileid, result);
         if (Boolean.TRUE.equals(duplicate)) {
-          throw new ServiceException("The attachment '" + filename + "' already exists.");
+          throw new ServiceException(filename + " already exists.");
         } else {
           AuthenticationInfo authInfo = context.getAuthenticationInfo();
           JwtTokenAuthenticationInfo jwtTokenInfo = authInfo.as(JwtTokenAuthenticationInfo.class);
@@ -89,12 +89,12 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
               sdmService.createDocument(cmisDocument, jwtToken, sdmCredentials);
 
           if (createResult.get("status") == "duplicate") {
-            throw new ServiceException("The following file already exists and cannot be uploaded");
+            throw new ServiceException(filename + "already exists.");
           } else if (createResult.get("status") == "virus") {
             throw new ServiceException(
-                "The following file contains potential malware and cannot be uploaded");
+                filename + "contains potential malware and cannot be uploaded");
           } else if (createResult.get("status") == "fail") {
-            throw new ServiceException("The following file cannot be uploaded");
+            throw new ServiceException(filename + "cannot be uploaded");
           } else {
             cmisDocument.setObjectId(createResult.get("url").toString());
             addAttachmentToDraft(attachmentDraftEntity.get(), persistenceService, cmisDocument);
