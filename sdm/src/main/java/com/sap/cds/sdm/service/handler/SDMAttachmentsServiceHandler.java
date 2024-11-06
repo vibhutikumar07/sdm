@@ -89,12 +89,12 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
               sdmService.createDocument(cmisDocument, jwtToken, sdmCredentials);
 
           if (createResult.get("status") == "duplicate") {
-            throw new ServiceException(filename + "already exists.");
+            throw new ServiceException(filename + " already exists.");
           } else if (createResult.get("status") == "virus") {
             throw new ServiceException(
-                filename + "contains potential malware and cannot be uploaded");
+                filename + " contains potential malware and cannot be uploaded");
           } else if (createResult.get("status") == "fail") {
-            throw new ServiceException(filename + "cannot be uploaded");
+            throw new ServiceException(filename + " cannot be uploaded");
           } else {
             cmisDocument.setObjectId(createResult.get("url").toString());
             addAttachmentToDraft(attachmentDraftEntity.get(), persistenceService, cmisDocument);
