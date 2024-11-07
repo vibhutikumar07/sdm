@@ -175,7 +175,7 @@ public class SDMServiceImpl implements SDMService {
         return succinctProperties.getString("cmis:name");
       }
     } catch (IOException e) {
-      throw new IOException(SDMConstants.Document_NOT_FOUND, e);
+      throw new IOException(SDMConstants.DOCUMENT_NOT_FOUND, e);
     }
   }
 

@@ -17,5 +17,5 @@ public class SDMConstants {
   public static final String FILES_RENAME_WARNING_MESSAGE =
       "The following files could not be renamed as they already exist:\n%s\n";
   public static final String COULD_NOT_RENAME_THE_DOCUMENT = "Could not rename the document";
-  public static final String Document_NOT_FOUND = "Document not found";
+  public static final String DOCUMENT_NOT_FOUND = "Document not found";
 }

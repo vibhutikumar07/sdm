@@ -14,7 +14,6 @@ import com.sap.cds.services.handler.EventHandler;
 import com.sap.cds.services.handler.annotations.Before;
 import com.sap.cds.services.handler.annotations.HandlerOrder;
 import com.sap.cds.services.handler.annotations.ServiceName;
-import com.sap.cds.services.persistence.PersistenceService;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -25,11 +24,9 @@ import java.util.Set;
 @ServiceName(value = "*", type = ApplicationService.class)
 public class SDMCreateAttachmentsHandler implements EventHandler {
 
-  private final PersistenceService persistenceService;
   private final SDMService sdmService;
 
-  public SDMCreateAttachmentsHandler(PersistenceService persistenceService, SDMService sdmService) {
-    this.persistenceService = persistenceService;
+  public SDMCreateAttachmentsHandler(SDMService sdmService) {
     this.sdmService = sdmService;
   }
 
@@ -61,7 +58,6 @@ public class SDMCreateAttachmentsHandler implements EventHandler {
           Iterator<Map<String, Object>> iterator = attachments.iterator();
           while (iterator.hasNext()) {
             Map<String, Object> attachment = iterator.next();
-            String id = (String) attachment.get("ID"); // Ensure appropriate cast to String
             String filenameInRequest = (String) attachment.get("fileName");
             String objectId = (String) attachment.get("url");
             AuthenticationInfo authInfo = context.getAuthenticationInfo();

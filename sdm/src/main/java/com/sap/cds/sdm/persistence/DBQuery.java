@@ -37,7 +37,6 @@ public class DBQuery {
     if (result.rowCount() == 0) {
       return null;
     }
-    System.out.println(result.list().get(0).get("fileName").toString());
     return result.list().get(0).get("fileName").toString();
   }
 

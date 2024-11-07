@@ -59,53 +59,56 @@ public class SDMUpdateAttachmentsHandler implements EventHandler {
                   SDMConstants.DUPLICATE_FILE_IN_DRAFT_ERROR_MESSAGE,
                   String.join(", ", duplicateFilenames)));
     } else {
-      List<String> duplicateFileNameList = new ArrayList<>();
       Optional<CdsEntity> attachmentEntity =
           context.getModel().findEntity(context.getTarget().getQualifiedName() + ".attachments");
+      renameDocument(attachmentEntity, context, data);
+    }
+  }
 
-      for (Map<String, Object> entity : data) {
-        List<Map<String, Object>> attachments =
-            (List<Map<String, Object>>) entity.get("attachments");
-        if (attachments != null) {
-          Iterator<Map<String, Object>> iterator = attachments.iterator();
-          while (iterator.hasNext()) {
-            Map<String, Object> attachment = iterator.next();
-            String id = (String) attachment.get("ID"); // Ensure appropriate cast to String
-            String filenameInRequest = (String) attachment.get("fileName");
-            String objectId = (String) attachment.get("url");
+  private void renameDocument(
+      Optional<CdsEntity> attachmentEntity, CdsUpdateEventContext context, List<CdsData> data)
+      throws IOException {
+    List<String> duplicateFileNameList = new ArrayList<>();
+    for (Map<String, Object> entity : data) {
+      List<Map<String, Object>> attachments = (List<Map<String, Object>>) entity.get("attachments");
+      if (attachments != null) {
+        Iterator<Map<String, Object>> iterator = attachments.iterator();
+        while (iterator.hasNext()) {
+          Map<String, Object> attachment = iterator.next();
+          String id = (String) attachment.get("ID"); // Ensure appropriate cast to String
+          String filenameInRequest = (String) attachment.get("fileName");
+          String objectId = (String) attachment.get("url");
 
-            String fileNameInDB =
-                DBQuery.getAttachmentForID(attachmentEntity.get(), persistenceService, id);
-            String fileNameInSDM = null;
-            AuthenticationInfo authInfo = context.getAuthenticationInfo();
-            JwtTokenAuthenticationInfo jwtTokenInfo = authInfo.as(JwtTokenAuthenticationInfo.class);
-            String jwtToken = jwtTokenInfo.getToken();
-            SDMCredentials sdmCredentials = TokenHandler.getSDMCredentials();
-            if (Objects.isNull(fileNameInDB)) {
-              fileNameInSDM = sdmService.getObject(jwtToken, objectId, sdmCredentials);
-            } else {
-              fileNameInSDM = fileNameInDB;
-            }
-            if (fileNameInSDM != null && !fileNameInSDM.equals(filenameInRequest)) {
-              int responseCode =
-                  sdmService.renameAttachments(
-                      jwtToken, sdmCredentials, filenameInRequest, objectId);
-              if (responseCode == 409) {
-                duplicateFileNameList.add(filenameInRequest);
-                attachment.replace("fileName", fileNameInSDM);
-              }
+          String fileNameInDB =
+              DBQuery.getAttachmentForID(attachmentEntity.get(), persistenceService, id);
+          String fileNameInSDM = null;
+          AuthenticationInfo authInfo = context.getAuthenticationInfo();
+          JwtTokenAuthenticationInfo jwtTokenInfo = authInfo.as(JwtTokenAuthenticationInfo.class);
+          String jwtToken = jwtTokenInfo.getToken();
+          SDMCredentials sdmCredentials = TokenHandler.getSDMCredentials();
+          if (Objects.isNull(fileNameInDB)) {
+            fileNameInSDM = sdmService.getObject(jwtToken, objectId, sdmCredentials);
+          } else {
+            fileNameInSDM = fileNameInDB;
+          }
+          if (fileNameInSDM != null && !fileNameInSDM.equals(filenameInRequest)) {
+            int responseCode =
+                sdmService.renameAttachments(jwtToken, sdmCredentials, filenameInRequest, objectId);
+            if (responseCode == 409) {
+              duplicateFileNameList.add(filenameInRequest);
+              attachment.replace("fileName", fileNameInSDM);
             }
           }
         }
       }
-      if (!duplicateFileNameList.isEmpty()) {
-        context
-            .getMessages()
-            .warn(
-                String.format(
-                    SDMConstants.FILES_RENAME_WARNING_MESSAGE,
-                    String.join(", ", duplicateFileNameList)));
-      }
+    }
+    if (!duplicateFileNameList.isEmpty()) {
+      context
+          .getMessages()
+          .warn(
+              String.format(
+                  SDMConstants.FILES_RENAME_WARNING_MESSAGE,
+                  String.join(", ", duplicateFileNameList)));
     }
   }
 }

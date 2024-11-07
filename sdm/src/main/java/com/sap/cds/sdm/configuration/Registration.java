@@ -50,7 +50,7 @@ public class Registration implements CdsRuntimeConfiguration {
 
     SDMService sdmService = new SDMServiceImpl();
     configurer.eventHandler(buildReadHandler(attachmentService, persistenceService));
-    configurer.eventHandler(new SDMCreateAttachmentsHandler(persistenceService, sdmService));
+    configurer.eventHandler(new SDMCreateAttachmentsHandler(sdmService));
     configurer.eventHandler(new SDMUpdateAttachmentsHandler(persistenceService, sdmService));
     configurer.eventHandler(new SDMAttachmentsServiceHandler(persistenceService, sdmService));
   }

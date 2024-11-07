@@ -8,6 +8,11 @@ import java.util.Map;
 import java.util.Set;
 
 public class SDMUtils {
+
+  private SDMUtils() {
+    // Doesn't do anything
+  }
+
   public static Set<String> isFileNameDuplicateInDrafts(List<CdsData> data) {
     Set<String> uniqueFilenames = new HashSet<>();
     Set<String> duplicateFilenames = new HashSet<>();

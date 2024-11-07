@@ -48,7 +48,7 @@ public class SDMCreateAttachmentsHandlerTest {
     sdmService = mock(SDMServiceImpl.class);
     tokenHandlerMockedStatic = mockStatic(TokenHandler.class);
     tokenHandlerMockedStatic.when(TokenHandler::getSDMCredentials).thenReturn(mockCredentials);
-    handler = spy(new SDMCreateAttachmentsHandler(persistenceService, sdmService));
+    handler = spy(new SDMCreateAttachmentsHandler(sdmService));
   }
 
   @AfterEach
