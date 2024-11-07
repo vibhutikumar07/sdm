@@ -18,7 +18,7 @@ modules:
         SPRING_PROFILES_ACTIVE: cloud,sandbox
         JBP_CONFIG_COMPONENTS: "jres: ['com.sap.xs.java.buildpack.jre.SAPMachineJRE']"
         JBP_CONFIG_SAP_MACHINE_JRE: '{ version: 17.+ }'
-        REPOSITORY_ID: RASHMI-REPO
+        REPOSITORY_ID: SAMPLE-REPO
     build-parameters:
       builder: custom
       commands:
@@ -79,7 +79,7 @@ resources:
       service-plan: application
       path: ./xs-security.json
       config: # override xsappname as it needs to be unique
-        xsappname: demoappjava-rashmi
+        xsappname: demoappjava-sample
         oauth2-configuration:
           redirect-uris:
           - ~{app-api/app-url}/**
