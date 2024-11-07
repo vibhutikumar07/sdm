@@ -388,6 +388,7 @@ public class SDMServiceImplTest {
       JSONObject expectedResponse = new JSONObject();
       expectedResponse.put("name", "sample.pdf");
       expectedResponse.put("id", "attachmentId");
+      expectedResponse.put("message", "");
       expectedResponse.put("url", "objectId");
       expectedResponse.put("status", "success");
       assertEquals(expectedResponse.toString(), actualResponse.toString());
@@ -436,6 +437,7 @@ public class SDMServiceImplTest {
       JSONObject expectedResponse = new JSONObject();
       expectedResponse.put("name", "sample.pdf");
       expectedResponse.put("id", "attachmentId");
+      expectedResponse.put("message", "");
       expectedResponse.put("status", "duplicate");
       assertEquals(expectedResponse.toString(), actualResponse.toString());
     } finally {
@@ -484,6 +486,7 @@ public class SDMServiceImplTest {
       JSONObject expectedResponse = new JSONObject();
       expectedResponse.put("name", "sample.pdf");
       expectedResponse.put("id", "attachmentId");
+      expectedResponse.put("message", "");
       expectedResponse.put("status", "virus");
       assertEquals(expectedResponse.toString(), actualResponse.toString());
     } finally {
@@ -532,6 +535,7 @@ public class SDMServiceImplTest {
       JSONObject expectedResponse = new JSONObject();
       expectedResponse.put("name", "sample.pdf");
       expectedResponse.put("id", "attachmentId");
+      expectedResponse.put("message", "An unexpected error occurred");
       expectedResponse.put("status", "fail");
       assertEquals(expectedResponse.toString(), actualResponse.toString());
     } finally {

@@ -163,7 +163,7 @@ public class SDMAttachmentsServiceHandlerTest {
               });
 
       // Verify the exception message
-      assertEquals("The attachment 'sample.pdf' already exists.", thrown.getMessage());
+      assertEquals("sample.pdf already exists.", thrown.getMessage());
     }
   }
 
@@ -273,7 +273,7 @@ public class SDMAttachmentsServiceHandlerTest {
                 handlerSpy.createAttachment(mockContext);
               });
 
-      assertEquals("The following file already exists and cannot be uploaded", thrown.getMessage());
+      assertEquals("sample.pdf already exists.", thrown.getMessage());
 
       // Add any additional verifications if needed
     }
@@ -359,8 +359,7 @@ public class SDMAttachmentsServiceHandlerTest {
 
       // Verify the exception message
       assertEquals(
-          "The following file contains potential malware and cannot be uploaded",
-          thrown.getMessage());
+          "sample.pdf contains potential malware and cannot be uploaded", thrown.getMessage());
     }
   }
 
@@ -383,6 +382,7 @@ public class SDMAttachmentsServiceHandlerTest {
     InputStream contentStream = new ByteArrayInputStream(byteArray);
     JSONObject mockCreateResult = new JSONObject();
     mockCreateResult.put("status", "fail");
+    mockCreateResult.put("message", "Failed due to a DI error");
     mockCreateResult.put("name", "sample.pdf");
 
     when(mockMediaData.getFileName()).thenReturn("sample.pdf");
@@ -428,7 +428,7 @@ public class SDMAttachmentsServiceHandlerTest {
               });
 
       // Verify the exception message
-      assertEquals("The following file cannot be uploaded", thrown.getMessage());
+      assertEquals("Failed due to a DI error", thrown.getMessage());
     }
   }
 
