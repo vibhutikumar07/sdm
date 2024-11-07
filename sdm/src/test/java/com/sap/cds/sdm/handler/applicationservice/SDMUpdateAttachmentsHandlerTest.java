@@ -1,5 +1,6 @@
 package com.sap.cds.sdm.handler.applicationservice;
 
+import static com.sap.cds.sdm.persistence.DBQuery.getAttachmentForID;
 import static com.sap.cds.sdm.utilities.SDMUtils.isFileNameDuplicateInDrafts;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -7,48 +8,56 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import com.sap.cds.CdsData;
+import com.sap.cds.Result;
+import com.sap.cds.reflect.CdsEntity;
+import com.sap.cds.reflect.CdsModel;
 import com.sap.cds.sdm.handler.TokenHandler;
 import com.sap.cds.sdm.model.SDMCredentials;
+import com.sap.cds.sdm.persistence.DBQuery;
 import com.sap.cds.sdm.service.SDMService;
 import com.sap.cds.sdm.service.SDMServiceImpl;
 import com.sap.cds.sdm.utilities.SDMUtils;
 import com.sap.cds.services.authentication.AuthenticationInfo;
 import com.sap.cds.services.authentication.JwtTokenAuthenticationInfo;
-import com.sap.cds.services.cds.CdsCreateEventContext;
+import com.sap.cds.services.cds.CdsUpdateEventContext;
 import com.sap.cds.services.messages.Messages;
 import com.sap.cds.services.persistence.PersistenceService;
 import java.io.IOException;
 import java.util.*;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-public class SDMCreateAttachmentsHandlerTest {
+@ExtendWith(MockitoExtension.class)
+public class SDMUpdateAttachmentsHandlerTest {
 
   @Mock private PersistenceService persistenceService;
-  @Mock private CdsCreateEventContext context;
+  @Mock private CdsUpdateEventContext context;
   @Mock private AuthenticationInfo authInfo;
   @Mock private JwtTokenAuthenticationInfo jwtTokenInfo;
   @Mock private SDMCredentials mockCredentials;
   @Mock private Messages messages;
+  @Mock private Result result;
+  @Mock private CdsEntity cdsEntity;
+  @Mock private CdsModel model;
   private SDMService sdmService;
 
-  private SDMCreateAttachmentsHandler handler; // Use Spy to allow partial mocking
+  private SDMUpdateAttachmentsHandler handler;
 
   private MockedStatic<TokenHandler> tokenHandlerMockedStatic;
+  private MockedStatic<DBQuery> dbQueryMockedStatic;
   private MockedStatic<SDMUtils> sdmUtilsMockedStatic;
 
   @BeforeEach
   public void setUp() {
     MockitoAnnotations.openMocks(this);
-    // Set up static mocking for `TokenHandler.getSDMCredentials`
     sdmService = mock(SDMServiceImpl.class);
     tokenHandlerMockedStatic = mockStatic(TokenHandler.class);
     tokenHandlerMockedStatic.when(TokenHandler::getSDMCredentials).thenReturn(mockCredentials);
-    handler = spy(new SDMCreateAttachmentsHandler(persistenceService, sdmService));
+    handler = spy(new SDMUpdateAttachmentsHandler(persistenceService, sdmService));
   }
 
   @AfterEach
@@ -56,32 +65,31 @@ public class SDMCreateAttachmentsHandlerTest {
     if (tokenHandlerMockedStatic != null) {
       tokenHandlerMockedStatic.close();
     }
+    if (dbQueryMockedStatic != null) {
+      dbQueryMockedStatic.close();
+    }
     if (sdmUtilsMockedStatic != null) {
       sdmUtilsMockedStatic.close();
     }
   }
 
   @Test
-  public void testProcessBefore() throws IOException {
+  public void testProcessBeforeCallsRename() throws IOException {
     List<CdsData> data = new ArrayList<>();
-    doNothing().when(handler).updateName(any(CdsCreateEventContext.class), anyList());
-
+    doNothing().when(handler).updateName(any(CdsUpdateEventContext.class), anyList());
     handler.processBefore(context, data);
-
     verify(handler, times(1)).updateName(context, data);
   }
 
   @Test
-  public void testProcessBeforeWithException() throws IOException {
+  public void testProcessBeforeCatchesIOException() throws IOException {
     List<CdsData> data = new ArrayList<>();
     when(context.getMessages()).thenReturn(messages);
     doThrow(new IOException())
         .when(handler)
-        .updateName(any(CdsCreateEventContext.class), anyList());
-
+        .updateName(any(CdsUpdateEventContext.class), anyList());
     handler.processBefore(context, data);
-
-    verify(context.getMessages(), times(1)).error("Error renaming attachment");
+    verify(messages, times(1)).error("Error renaming attachment");
   }
 
   @Test
@@ -102,82 +110,27 @@ public class SDMCreateAttachmentsHandlerTest {
   }
 
   @Test
-  public void testRenameWithNoDuplicateFilenames() throws IOException {
-    List<CdsData> data = new ArrayList<>();
-    handler.updateName(context, data);
-
-    verify(messages, never()).error(anyString());
-  }
-
-  @Test
-  public void testRenameWithNoAttachments() throws IOException {
-    List<CdsData> data = new ArrayList<>();
-    CdsData mockCdsData = mock(CdsData.class);
-    when(mockCdsData.get("attachments")).thenReturn(null);
-    data.add(mockCdsData);
-
-    handler.updateName(context, data);
-
-    verify(sdmService, never())
-        .renameAttachments(anyString(), any(SDMCredentials.class), anyString(), anyString());
-  }
-
-  @Test
-  public void testRenameWithoutFileInSDM() throws IOException {
-    List<CdsData> data = new ArrayList<>();
-    CdsData mockCdsData = mock(CdsData.class);
-    Map<String, Object> entity = new HashMap<>();
-    List<Map<String, Object>> attachments = new ArrayList<>();
-    Map<String, Object> attachment = new HashMap<>();
-    attachment.put("fileName", "file1.txt");
-    attachment.put("url", "objectId");
-    attachments.add(attachment);
-    entity.put("attachments", attachments);
-    when(mockCdsData.get("attachments")).thenReturn(attachments);
-    data.add(mockCdsData);
-
+  public void testRenameWithUniqueFilenames() throws IOException {
+    List<CdsData> data = prepareMockAttachmentData("file1.txt");
+    CdsEntity attachmentDraftEntity = mock(CdsEntity.class);
+    when(context.getTarget()).thenReturn(attachmentDraftEntity);
+    when(context.getModel()).thenReturn(model);
+    when(attachmentDraftEntity.getQualifiedName()).thenReturn("some.qualified.Name");
+    when(model.findEntity("some.qualified.Name.attachments"))
+        .thenReturn(Optional.of(attachmentDraftEntity));
     when(context.getAuthenticationInfo()).thenReturn(authInfo);
     when(authInfo.as(JwtTokenAuthenticationInfo.class)).thenReturn(jwtTokenInfo);
     when(jwtTokenInfo.getToken()).thenReturn("jwtToken");
-    // Mock the static TokenHandler
-    when(TokenHandler.getSDMCredentials()).thenReturn(mockCredentials);
 
-    // Mock the SDM service responses
-    when(sdmService.getObject(any(), any(), any()))
-        .thenReturn(null); // Mock with same file name in SDM to not trigger renaming
-
-    handler.updateName(context, data);
-
-    verify(sdmService, never())
-        .renameAttachments(anyString(), any(SDMCredentials.class), anyString(), anyString());
-  }
-
-  @Test
-  public void testRenameWithSameFileNameInSDM() throws IOException {
-    List<CdsData> data = new ArrayList<>();
-    CdsData mockCdsData = mock(CdsData.class);
-    Map<String, Object> entity = new HashMap<>();
-    List<Map<String, Object>> attachments = new ArrayList<>();
-    Map<String, Object> attachment = new HashMap<>();
-    attachment.put("fileName", "file1.txt");
-    attachment.put("url", "objectId");
-    attachments.add(attachment);
-    entity.put("attachments", attachments);
-    when(mockCdsData.get("attachments")).thenReturn(attachments);
-    data.add(mockCdsData);
-
-    when(context.getAuthenticationInfo()).thenReturn(authInfo);
-    when(authInfo.as(JwtTokenAuthenticationInfo.class)).thenReturn(jwtTokenInfo);
-    when(jwtTokenInfo.getToken()).thenReturn("jwtToken");
-    // Mock the static TokenHandler
-    when(TokenHandler.getSDMCredentials()).thenReturn(mockCredentials);
-
-    // Mock the SDM service responses
-    when(sdmService.getObject(any(), any(), any()))
-        .thenReturn("file1.txt"); // Mock with same file name in SDM to not trigger renaming
+    dbQueryMockedStatic = mockStatic(DBQuery.class);
+    dbQueryMockedStatic
+        .when(
+            () ->
+                getAttachmentForID(
+                    any(CdsEntity.class), any(PersistenceService.class), anyString()))
+        .thenReturn("file1.txt");
 
     handler.updateName(context, data);
-
     verify(sdmService, never())
         .renameAttachments(anyString(), any(SDMCredentials.class), anyString(), anyString());
   }
@@ -199,6 +152,13 @@ public class SDMCreateAttachmentsHandlerTest {
     when(mockCdsData.get("attachments")).thenReturn(attachments);
     data.add(mockCdsData);
 
+    CdsEntity attachmentDraftEntity = mock(CdsEntity.class);
+    when(context.getTarget()).thenReturn(attachmentDraftEntity);
+    when(context.getModel()).thenReturn(model);
+    when(attachmentDraftEntity.getQualifiedName()).thenReturn("some.qualified.Name");
+    when(model.findEntity("some.qualified.Name.attachments"))
+        .thenReturn(Optional.of(attachmentDraftEntity));
+
     // Mock the authentication context
     when(context.getAuthenticationInfo()).thenReturn(authInfo);
     when(authInfo.as(JwtTokenAuthenticationInfo.class)).thenReturn(jwtTokenInfo);
@@ -208,8 +168,14 @@ public class SDMCreateAttachmentsHandlerTest {
     when(TokenHandler.getSDMCredentials()).thenReturn(mockCredentials);
 
     // Mock the SDM service responses
-    when(sdmService.getObject(any(), any(), any()))
-        .thenReturn("file-sdm.txt"); // Mock a different file name in SDM to trigger renaming
+    dbQueryMockedStatic = mockStatic(DBQuery.class);
+    dbQueryMockedStatic
+        .when(
+            () ->
+                getAttachmentForID(
+                    any(CdsEntity.class), any(PersistenceService.class), anyString()))
+        .thenReturn("file123.txt"); // Mock a different file name in SDM to trigger renaming
+
     when(sdmService.renameAttachments(
             anyString(), any(SDMCredentials.class), anyString(), anyString()))
         .thenReturn(409); // Mock conflict response code
@@ -221,7 +187,7 @@ public class SDMCreateAttachmentsHandlerTest {
     handler.updateName(context, data);
 
     // Verify the attachment's file name was attempted to be replaced with "file-sdm.txt"
-    verify(attachment).replace("fileName", "file-sdm.txt");
+    verify(attachment).put("fileName", "file1.txt");
 
     // Verify that a warning message was added to the context
     verify(messages, times(1))
@@ -245,6 +211,13 @@ public class SDMCreateAttachmentsHandlerTest {
     when(mockCdsData.get("attachments")).thenReturn(attachments);
     data.add(mockCdsData);
 
+    CdsEntity attachmentDraftEntity = mock(CdsEntity.class);
+    when(context.getTarget()).thenReturn(attachmentDraftEntity);
+    when(context.getModel()).thenReturn(model);
+    when(attachmentDraftEntity.getQualifiedName()).thenReturn("some.qualified.Name");
+    when(model.findEntity("some.qualified.Name.attachments"))
+        .thenReturn(Optional.of(attachmentDraftEntity));
+
     // Mock the authentication context
     when(context.getAuthenticationInfo()).thenReturn(authInfo);
     when(authInfo.as(JwtTokenAuthenticationInfo.class)).thenReturn(jwtTokenInfo);
@@ -254,14 +227,17 @@ public class SDMCreateAttachmentsHandlerTest {
     when(TokenHandler.getSDMCredentials()).thenReturn(mockCredentials);
 
     // Mock the SDM service responses
-    when(sdmService.getObject(any(), any(), any()))
-        .thenReturn("file-sdm.txt"); // Mock a different file name in SDM to trigger renaming
+    dbQueryMockedStatic = mockStatic(DBQuery.class);
+    dbQueryMockedStatic
+        .when(
+            () ->
+                getAttachmentForID(
+                    any(CdsEntity.class), any(PersistenceService.class), anyString()))
+        .thenReturn("file123.txt"); // Mock a different file name in SDM to trigger renaming
+
     when(sdmService.renameAttachments(
             anyString(), any(SDMCredentials.class), anyString(), anyString()))
         .thenReturn(200); // Mock conflict response code
-
-    // Mock the returned messages
-    when(context.getMessages()).thenReturn(messages);
 
     // Execute the method under test
     handler.updateName(context, data);
@@ -271,5 +247,68 @@ public class SDMCreateAttachmentsHandlerTest {
     // Verify that a warning message was added to the context
     verify(messages, times(0))
         .warn("The following files could not be renamed as they already exist:\nfile1.txt\n");
+  }
+
+  @Test
+  public void testRenameWithoutFileInSDM() throws IOException {
+    CdsEntity attachmentDraftEntity = mock(CdsEntity.class);
+    when(context.getTarget()).thenReturn(attachmentDraftEntity);
+    when(context.getModel()).thenReturn(model);
+    when(attachmentDraftEntity.getQualifiedName()).thenReturn("some.qualified.Name");
+    when(model.findEntity("some.qualified.Name.attachments"))
+        .thenReturn(Optional.of(attachmentDraftEntity));
+    when(context.getAuthenticationInfo()).thenReturn(authInfo);
+    when(authInfo.as(JwtTokenAuthenticationInfo.class)).thenReturn(jwtTokenInfo);
+    when(jwtTokenInfo.getToken()).thenReturn("jwtToken");
+
+    List<CdsData> data = prepareMockAttachmentData("file1.txt");
+
+    dbQueryMockedStatic = mockStatic(DBQuery.class);
+
+    dbQueryMockedStatic
+        .when(
+            () ->
+                getAttachmentForID(
+                    any(CdsEntity.class), any(PersistenceService.class), anyString()))
+        .thenReturn(null);
+
+    handler.updateName(context, data);
+    verify(sdmService, never())
+        .renameAttachments(anyString(), any(SDMCredentials.class), anyString(), anyString());
+  }
+
+  @Test
+  public void testRenameWithNoAttachments() throws IOException {
+    List<CdsData> data = new ArrayList<>();
+    CdsEntity attachmentDraftEntity = mock(CdsEntity.class);
+    when(context.getTarget()).thenReturn(attachmentDraftEntity);
+    when(context.getModel()).thenReturn(model);
+    when(attachmentDraftEntity.getQualifiedName()).thenReturn("some.qualified.Name");
+    when(model.findEntity("some.qualified.Name.attachments"))
+        .thenReturn(Optional.of(attachmentDraftEntity));
+    CdsData mockCdsData = mock(CdsData.class);
+    when(mockCdsData.get("attachments")).thenReturn(null);
+    data.add(mockCdsData);
+
+    handler.updateName(context, data);
+
+    verify(sdmService, never())
+        .renameAttachments(anyString(), any(SDMCredentials.class), anyString(), anyString());
+  }
+
+  private List<CdsData> prepareMockAttachmentData(String... fileNames) {
+    List<CdsData> data = new ArrayList<>();
+    for (String fileName : fileNames) {
+      CdsData cdsData = mock(CdsData.class);
+      List<Map<String, Object>> attachments = new ArrayList<>();
+      Map<String, Object> attachment = new HashMap<>();
+      attachment.put("ID", UUID.randomUUID().toString());
+      attachment.put("fileName", fileName);
+      attachment.put("url", "objectId");
+      attachments.add(attachment);
+      when(cdsData.get("attachments")).thenReturn(attachments);
+      data.add(cdsData);
+    }
+    return data;
   }
 }

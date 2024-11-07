@@ -142,7 +142,7 @@ public class SDMServiceImpl implements SDMService {
     try (Response response = client.newCall(request).execute()) {
       return response.code();
     } catch (IOException e) {
-      throw new IOException("Could not rename the document", e);
+      throw new IOException(SDMConstants.COULD_NOT_RENAME_THE_DOCUMENT, e);
     }
   }
 
@@ -174,6 +174,8 @@ public class SDMServiceImpl implements SDMService {
         JSONObject succinctProperties = jsonObject.getJSONObject("succinctProperties");
         return succinctProperties.getString("cmis:name");
       }
+    } catch (IOException e) {
+      throw new IOException(SDMConstants.Document_NOT_FOUND, e);
     }
   }
 

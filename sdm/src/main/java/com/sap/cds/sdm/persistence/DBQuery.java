@@ -29,11 +29,16 @@ public class DBQuery {
     return persistenceService.run(q);
   }
 
-  public static Result getAttachmentForID(
+  public static String getAttachmentForID(
       CdsEntity attachmentEntity, PersistenceService persistenceService, String id) {
     CqnSelect q =
-        Select.from(attachmentEntity).columns("fileName", "ID").where(doc -> doc.get("ID").eq(id));
-    return persistenceService.run(q);
+        Select.from(attachmentEntity).columns("fileName").where(doc -> doc.get("ID").eq(id));
+    Result result = persistenceService.run(q);
+    if (result.rowCount() == 0) {
+      return null;
+    }
+    System.out.println(result.list().get(0).get("fileName").toString());
+    return result.list().get(0).get("fileName").toString();
   }
 
   public static void addAttachmentToDraft(

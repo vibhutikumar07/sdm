@@ -633,8 +633,20 @@ public class SDMServiceImplTest {
       tokenHandlerMockedStatic
           .when(() -> TokenHandler.getDIToken(jwtToken, sdmCredentials))
           .thenReturn("mockAccessToken");
-      String folderId = sdmServiceImpl.getFolderId(jwtToken, result, persistenceService, up__ID);
-      assertEquals("folder123", folderId, "Expected folderId from result list");
+      tokenHandlerMockedStatic.when(TokenHandler::getSDMCredentials).thenReturn(sdmCredentials);
+      // Mock the method `getFolderIdByPath`
+      SDMServiceImpl spyService = spy(sdmServiceImpl);
+      doReturn(null)
+          .when(spyService)
+          .getFolderIdByPath(anyString(), anyString(), anyString(), any(SDMCredentials.class));
+
+      // Mock the method `createFolder`
+      doReturn("{\"succinctProperties\":{\"cmis:objectId\":\"newFolderId123\"}}")
+          .when(spyService)
+          .createFolder(anyString(), anyString(), anyString(), any(SDMCredentials.class));
+
+      String folderId = spyService.getFolderId(jwtToken, result, persistenceService, up__ID);
+      assertEquals("newFolderId123", folderId, "Expected folderId from result list");
     }
   }
 
