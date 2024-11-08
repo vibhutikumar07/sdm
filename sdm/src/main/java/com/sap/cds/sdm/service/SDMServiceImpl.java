@@ -56,7 +56,7 @@ public class SDMServiceImpl implements SDMService {
           cmisDocument, client, requestBody, sdmUrl, accessToken, finalResponse);
 
     } catch (IOException e) {
-      throw new ServiceException("Could not upload");
+      throw new ServiceException(SDMConstants.getGenericError("upload"));
     }
     return new JSONObject(finalResponse);
   }
@@ -78,6 +78,7 @@ public class SDMServiceImpl implements SDMService {
 
     try (Response response = client.newCall(request).execute()) {
       String status = "success";
+      String error = "";
       String name = cmisDocument.getFileName();
       String id = cmisDocument.getAttachmentId();
       String objectId = "";
@@ -93,6 +94,7 @@ public class SDMServiceImpl implements SDMService {
           status = "virus";
         } else {
           status = "fail";
+          error = message;
         }
       } else {
         String responseBody = response.body().string();
@@ -106,12 +108,13 @@ public class SDMServiceImpl implements SDMService {
       finalResponse.put("name", name);
       finalResponse.put("id", id);
       finalResponse.put("status", status);
+      finalResponse.put("message", error);
       if (!objectId.isEmpty()) {
         finalResponse.put("url", objectId);
       }
 
     } catch (IOException e) {
-      throw new ServiceException("Could not upload");
+      throw new ServiceException(SDMConstants.getGenericError("upload"));
     }
   }
 
@@ -312,10 +315,11 @@ public class SDMServiceImpl implements SDMService {
             .build();
 
     try (Response response = client.newCall(request).execute()) {
-      if (!response.isSuccessful()) throw new ServiceException("Could not upload");
+      if (!response.isSuccessful())
+        throw new ServiceException(SDMConstants.getGenericError("upload"));
       return response.body().string();
     } catch (IOException e) {
-      throw new ServiceException("Could not upload");
+      throw new ServiceException(SDMConstants.getGenericError("upload"));
     }
   }
 
@@ -357,12 +361,12 @@ public class SDMServiceImpl implements SDMService {
 
     try (Response response = client.newCall(request).execute()) {
       if (!response.isSuccessful()) {
-        throw new ServiceException("Failed to get repository info");
+        throw new ServiceException(SDMConstants.REPOSITORY_ERROR);
       }
       String responseBody = response.body().string();
       return new JSONObject(responseBody);
     } catch (IOException e) {
-      throw new ServiceException("Failed to get repository info");
+      throw new ServiceException(SDMConstants.REPOSITORY_ERROR);
     }
   }
 
@@ -408,7 +412,7 @@ public class SDMServiceImpl implements SDMService {
     try (Response response = client.newCall(request).execute()) {
       return response.code();
     } catch (IOException e) {
-      throw new ServiceException("Could not delete the document");
+      throw new ServiceException(SDMConstants.getGenericError("delete"));
     }
   }
 }
