@@ -124,7 +124,7 @@ public class SDMServiceImplTest {
             () -> {
               SDMService.getRepositoryInfo(token, sdmCredentials);
             });
-    assertEquals("Failed to get repository info", exception.getMessage());
+    assertEquals("Failed to get repository info.", exception.getMessage());
 
     mockWebServer.shutdown();
   }
@@ -281,7 +281,7 @@ public class SDMServiceImplTest {
               () -> {
                 sdmServiceImpl.createFolder(parentId, jwtToken, repositoryId, sdmCredentials);
               });
-      assertEquals("Could not upload", exception.getMessage());
+      assertEquals("Could not upload the document.", exception.getMessage());
 
     } finally {
       mockWebServer.shutdown();
@@ -388,6 +388,7 @@ public class SDMServiceImplTest {
       JSONObject expectedResponse = new JSONObject();
       expectedResponse.put("name", "sample.pdf");
       expectedResponse.put("id", "attachmentId");
+      expectedResponse.put("message", "");
       expectedResponse.put("url", "objectId");
       expectedResponse.put("status", "success");
       assertEquals(expectedResponse.toString(), actualResponse.toString());
@@ -436,6 +437,7 @@ public class SDMServiceImplTest {
       JSONObject expectedResponse = new JSONObject();
       expectedResponse.put("name", "sample.pdf");
       expectedResponse.put("id", "attachmentId");
+      expectedResponse.put("message", "");
       expectedResponse.put("status", "duplicate");
       assertEquals(expectedResponse.toString(), actualResponse.toString());
     } finally {
@@ -484,6 +486,7 @@ public class SDMServiceImplTest {
       JSONObject expectedResponse = new JSONObject();
       expectedResponse.put("name", "sample.pdf");
       expectedResponse.put("id", "attachmentId");
+      expectedResponse.put("message", "");
       expectedResponse.put("status", "virus");
       assertEquals(expectedResponse.toString(), actualResponse.toString());
     } finally {
@@ -532,6 +535,7 @@ public class SDMServiceImplTest {
       JSONObject expectedResponse = new JSONObject();
       expectedResponse.put("name", "sample.pdf");
       expectedResponse.put("id", "attachmentId");
+      expectedResponse.put("message", "An unexpected error occurred");
       expectedResponse.put("status", "fail");
       assertEquals(expectedResponse.toString(), actualResponse.toString());
     } finally {
@@ -576,7 +580,7 @@ public class SDMServiceImplTest {
         fail("Expected ServiceException to be thrown");
       } catch (ServiceException e) {
         // Expected exception to be thrown
-        assertEquals("Could not upload", e.getMessage());
+        assertEquals("Could not upload the document.", e.getMessage());
       }
 
     } finally {
@@ -712,7 +716,7 @@ public class SDMServiceImplTest {
       tokenHandlerMockedStatic.when(TokenHandler::getSDMCredentials).thenReturn(sdmCredentials);
       tokenHandlerMockedStatic
           .when(() -> TokenHandler.getDITokenUsingAuthorities(sdmCredentials, userEmail, subdomain))
-          .thenThrow(new IOException("Could not delete the document"));
+          .thenThrow(new IOException("Could not delete the document."));
 
       // Since the exception is thrown before OkHttpClient is used, no need to mock httpClient
       // behavior.
@@ -727,7 +731,7 @@ public class SDMServiceImplTest {
               });
 
       // Verify the exception message
-      assertEquals("Could not delete the document", thrown.getMessage());
+      assertEquals("Could not delete the document.", thrown.getMessage());
     }
   }
 
