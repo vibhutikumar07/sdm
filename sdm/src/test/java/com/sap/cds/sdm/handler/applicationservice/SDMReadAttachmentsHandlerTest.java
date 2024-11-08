@@ -11,7 +11,6 @@ import com.sap.cds.reflect.CdsEntity;
 import com.sap.cds.reflect.CdsModel;
 import com.sap.cds.sdm.constants.SDMConstants;
 import com.sap.cds.services.cds.CdsReadEventContext;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -41,9 +40,7 @@ public class SDMReadAttachmentsHandlerTest {
         Select.from(cdsEntity).where(doc -> doc.get("repositoryId").eq(REPOSITORY_ID_KEY));
     when(context.getTarget()).thenReturn(cdsEntity);
     when(context.getCqn()).thenReturn(select);
-    when(context.getModel()).thenReturn(model);
     when(cdsEntity.getQualifiedName()).thenReturn(targetEntity);
-    when(model.findEntity(targetEntity)).thenReturn(Optional.of(cdsEntity));
 
     // Act
     sdmReadAttachmentsHandler.processBefore(context); // Refers to the method you provided

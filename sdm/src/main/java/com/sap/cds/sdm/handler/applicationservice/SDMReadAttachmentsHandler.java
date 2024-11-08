@@ -1,12 +1,10 @@
 package com.sap.cds.sdm.handler.applicationservice;
 
-import com.sap.cds.feature.attachments.handler.applicationservice.processor.readhelper.modifier.ItemModifierProvider;
 import com.sap.cds.feature.attachments.service.AttachmentService;
 import com.sap.cds.ql.CQL;
 import com.sap.cds.ql.Predicate;
 import com.sap.cds.ql.cqn.CqnSelect;
 import com.sap.cds.ql.cqn.Modifier;
-import com.sap.cds.reflect.CdsEntity;
 import com.sap.cds.sdm.constants.SDMConstants;
 import com.sap.cds.services.cds.ApplicationService;
 import com.sap.cds.services.cds.CdsReadEventContext;
@@ -27,9 +25,7 @@ public class SDMReadAttachmentsHandler implements EventHandler {
   private final PersistenceService persistenceService;
 
   public SDMReadAttachmentsHandler(
-      AttachmentService attachmentService,
-      ItemModifierProvider provider,
-      PersistenceService persistenceService) {
+      AttachmentService attachmentService, PersistenceService persistenceService) {
     this.attachmentService = attachmentService;
     this.persistenceService = persistenceService;
   }
@@ -39,8 +35,6 @@ public class SDMReadAttachmentsHandler implements EventHandler {
   public void processBefore(CdsReadEventContext context) {
     String repositoryId = SDMConstants.REPOSITORY_ID;
     if (context.getTarget().getQualifiedName().contains("attachments")) {
-      Optional<CdsEntity> attachmentEntity =
-          context.getModel().findEntity(context.getTarget().getQualifiedName());
       CqnSelect copy =
           CQL.copy(
               context.getCqn(),
