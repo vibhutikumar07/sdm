@@ -65,6 +65,7 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
 
         String filename = (String) data.get("fileName");
         String fileid = (String) attachmentIds.get("ID");
+        String mimeType = (String) data.get("mimeType");
 
         Boolean duplicate = duplicateCheck(filename, fileid, result);
         if (Boolean.TRUE.equals(duplicate)) {
@@ -85,6 +86,7 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
           cmisDocument.setParentId((String) attachmentIds.get("up__ID"));
           cmisDocument.setRepositoryId(repositoryId);
           cmisDocument.setFolderId(folderId);
+          cmisDocument.setMimeType(mimeType);
           SDMCredentials sdmCredentials = TokenHandler.getSDMCredentials();
           JSONObject createResult =
               sdmService.createDocument(cmisDocument, jwtToken, sdmCredentials);

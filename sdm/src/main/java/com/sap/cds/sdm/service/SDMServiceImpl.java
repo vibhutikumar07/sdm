@@ -16,7 +16,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import okhttp3.*;
-import org.apache.commons.io.IOUtils;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
+import okio.BufferedSink;
+import okio.Okio;
+import okio.Source;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 
 public class SDMServiceImpl implements SDMService {
@@ -28,37 +40,108 @@ public class SDMServiceImpl implements SDMService {
     String accessToken;
     Map<String, String> finalResponse = new HashMap<>();
 
-    OkHttpClient client = new OkHttpClient();
+    //    OkHttpClient client =
+    //        new OkHttpClient.Builder()
+    //            .connectTimeout(5, TimeUnit.MINUTES) // Set connection timeout
+    //            .readTimeout(5, TimeUnit.MINUTES) // Set read timeout
+    //            .writeTimeout(5, TimeUnit.MINUTES)
+    //            .build();
     accessToken = TokenHandler.getDIToken(jwtToken, sdmCredentials);
 
     String sdmUrl = sdmCredentials.getUrl() + "browser/" + cmisDocument.getRepositoryId() + "/root";
 
-    try {
-      byte[] fileContent = IOUtils.toByteArray(cmisDocument.getContent());
-      RequestBody fileBody =
-          RequestBody.create(fileContent, MediaType.parse("application/octet-stream"));
-
-      RequestBody requestBody =
-          new MultipartBody.Builder()
-              .setType(MultipartBody.FORM)
-              .addFormDataPart("cmisaction", "createDocument")
-              .addFormDataPart(
-                  "objectId", cmisDocument.getFolderId()) // Note: removed quotes from folderId
-              .addFormDataPart("propertyId[0]", "cmis:name")
-              .addFormDataPart("propertyValue[0]", cmisDocument.getFileName())
-              .addFormDataPart("propertyId[1]", "cmis:objectTypeId")
-              .addFormDataPart("propertyValue[1]", "cmis:document")
-              .addFormDataPart("succinct", "true")
-              .addFormDataPart("filename", cmisDocument.getFileName(), fileBody)
-              .build();
-
-      handleDocumentCreationRequest(
-          cmisDocument, client, requestBody, sdmUrl, accessToken, finalResponse);
-
-    } catch (IOException e) {
-      throw new ServiceException("Could not upload");
-    }
+    //    try {
+    //      RequestBody fileBody = createRequestBodyFromInputStream(cmisDocument);
+    //      RequestBody requestBody =
+    //          new MultipartBody.Builder()
+    //              .setType(MultipartBody.FORM)
+    //              .addFormDataPart("cmisaction", "createDocument")
+    //              .addFormDataPart("objectId", cmisDocument.getFolderId())
+    //              .addFormDataPart("propertyId[0]", "cmis:name")
+    //              .addFormDataPart("propertyValue[0]", cmisDocument.getFileName())
+    //              .addFormDataPart("propertyId[1]", "cmis:objectTypeId")
+    //              .addFormDataPart("propertyValue[1]", "cmis:document")
+    //              .addFormDataPart("succinct", "true")
+    //              .addFormDataPart("filename", cmisDocument.getFileName(), fileBody)
+    //              .build();
+    //
+    //      handleDocumentCreationRequest(
+    //          cmisDocument, client, requestBody, sdmUrl, accessToken, finalResponse);
+    //
+    //    } catch (IOException e) {
+    //      throw new ServiceException("Could not upload", e.getMessage());
+    //    }
+    createDocumentPost(cmisDocument, sdmUrl, accessToken);
     return new JSONObject(finalResponse);
+  }
+
+  private static void createDocumentPost(
+      CmisDocument cmisDocument, String sdmurl, String accessToken) {
+    try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+      HttpPost uploadFile = new HttpPost(sdmurl);
+      MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+      uploadFile.setHeader("Authorization", "Bearer " + accessToken);
+      // Add file to the form
+      builder.addBinaryBody(
+          "filename",
+          cmisDocument.getContent(),
+          ContentType.create(cmisDocument.getMimeType()),
+          cmisDocument.getFileName());
+
+      // Add additional form fields
+      builder.addTextBody("cmisaction", "createDocument", ContentType.TEXT_PLAIN);
+      builder.addTextBody("objectId", cmisDocument.getFolderId(), ContentType.TEXT_PLAIN);
+      builder.addTextBody("propertyId[0]", "cmis:name", ContentType.TEXT_PLAIN);
+      builder.addTextBody("propertyValue[0]", cmisDocument.getFileName(), ContentType.TEXT_PLAIN);
+      builder.addTextBody("propertyId[1]", "cmis:objectTypeId", ContentType.TEXT_PLAIN);
+      builder.addTextBody("propertyValue[1]", "cmis:document", ContentType.TEXT_PLAIN);
+      builder.addTextBody("succinct", "true", ContentType.TEXT_PLAIN);
+      // Add more fields as needed
+
+      HttpEntity multipart = builder.build();
+      uploadFile.setEntity(multipart);
+
+      try (CloseableHttpResponse response = httpClient.execute(uploadFile)) {
+        HttpEntity responseEntity = response.getEntity();
+        if (responseEntity != null) {
+          // Print the response if necessary
+          String responseString = EntityUtils.toString(responseEntity);
+          System.out.println(responseString);
+        }
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  public static RequestBody createRequestBodyFromInputStream(CmisDocument cmisDocument)
+      throws IOException {
+    MediaType mediaType = MediaType.parse(cmisDocument.getMimeType());
+    InputStream inputStream = cmisDocument.getContent();
+
+    return new RequestBody() {
+      @Override
+      public MediaType contentType() {
+        return mediaType;
+      }
+
+      @Override
+      public long contentLength() {
+        try {
+          return inputStream.available();
+        } catch (IOException e) {
+          e.printStackTrace(); // Handle properly in real code
+          return -1;
+        }
+      }
+
+      @Override
+      public void writeTo(BufferedSink sink) throws IOException {
+        try (Source source = Okio.source(inputStream)) {
+          sink.writeAll(source);
+        }
+      }
+    };
   }
 
   private void handleDocumentCreationRequest(
@@ -111,7 +194,7 @@ public class SDMServiceImpl implements SDMService {
       }
 
     } catch (IOException e) {
-      throw new ServiceException("Could not upload");
+      throw new ServiceException("Error in creating document in SDM ", e.getMessage());
     }
   }
 

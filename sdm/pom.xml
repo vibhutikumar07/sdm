@@ -34,7 +34,7 @@
         <test-generation-folder>src/test/gen</test-generation-folder>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <attachments_version>1.0.4-SNAPSHOT</attachments_version>
+        <attachments_version>1.0.4</attachments_version>
         <lombok.version>1.18.30</lombok.version>
         <jacoco.version>0.8.7</jacoco.version>
         <commons-codec.version>1.13</commons-codec.version>
@@ -62,7 +62,6 @@
             <groupId>com.sap.cds</groupId>
             <artifactId>cds-integration-cloud-sdk</artifactId>
         </dependency>
-
         <!-- TESTS -->
         <dependency>
             <groupId>com.sap.cds</groupId>
@@ -313,13 +312,5 @@
         </plugins>
     </build>
 
-
-    <distributionManagement>
-        <snapshotRepository>
-            <id>artifactory</id>
-            <name>Artifactory_DMZ-snapshots</name>
-            <url>https://common.repositories.cloud.sap/artifactory/cap-java</url>
-        </snapshotRepository>
-    </distributionManagement>
 
 </project>
