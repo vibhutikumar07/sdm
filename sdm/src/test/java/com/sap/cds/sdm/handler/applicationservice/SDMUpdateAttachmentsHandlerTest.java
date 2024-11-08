@@ -12,6 +12,7 @@ import com.sap.cds.Result;
 import com.sap.cds.reflect.CdsEntity;
 import com.sap.cds.reflect.CdsModel;
 import com.sap.cds.sdm.handler.TokenHandler;
+import com.sap.cds.sdm.model.CmisDocument;
 import com.sap.cds.sdm.model.SDMCredentials;
 import com.sap.cds.sdm.persistence.DBQuery;
 import com.sap.cds.sdm.service.SDMService;
@@ -82,17 +83,6 @@ public class SDMUpdateAttachmentsHandlerTest {
   }
 
   @Test
-  public void testProcessBeforeCatchesIOException() throws IOException {
-    List<CdsData> data = new ArrayList<>();
-    when(context.getMessages()).thenReturn(messages);
-    doThrow(new IOException())
-        .when(handler)
-        .updateName(any(CdsUpdateEventContext.class), anyList());
-    handler.processBefore(context, data);
-    verify(messages, times(1)).error("Error renaming attachment");
-  }
-
-  @Test
   public void testRenameWithDuplicateFilenames() throws IOException {
     List<CdsData> data = new ArrayList<>();
     Set<String> duplicateFilenames = new HashSet<>(Arrays.asList("file1.txt", "file2.txt"));
@@ -132,7 +122,7 @@ public class SDMUpdateAttachmentsHandlerTest {
 
     handler.updateName(context, data);
     verify(sdmService, never())
-        .renameAttachments(anyString(), any(SDMCredentials.class), anyString(), anyString());
+        .renameAttachments(anyString(), any(SDMCredentials.class), any(CmisDocument.class));
   }
 
   @Test
@@ -177,7 +167,7 @@ public class SDMUpdateAttachmentsHandlerTest {
         .thenReturn("file123.txt"); // Mock a different file name in SDM to trigger renaming
 
     when(sdmService.renameAttachments(
-            anyString(), any(SDMCredentials.class), anyString(), anyString()))
+            anyString(), any(SDMCredentials.class), any(CmisDocument.class)))
         .thenReturn(409); // Mock conflict response code
 
     // Mock the returned messages
@@ -236,7 +226,7 @@ public class SDMUpdateAttachmentsHandlerTest {
         .thenReturn("file123.txt"); // Mock a different file name in SDM to trigger renaming
 
     when(sdmService.renameAttachments(
-            anyString(), any(SDMCredentials.class), anyString(), anyString()))
+            anyString(), any(SDMCredentials.class), any(CmisDocument.class)))
         .thenReturn(200); // Mock conflict response code
 
     // Execute the method under test
@@ -274,7 +264,7 @@ public class SDMUpdateAttachmentsHandlerTest {
 
     handler.updateName(context, data);
     verify(sdmService, never())
-        .renameAttachments(anyString(), any(SDMCredentials.class), anyString(), anyString());
+        .renameAttachments(anyString(), any(SDMCredentials.class), any(CmisDocument.class));
   }
 
   @Test
@@ -293,7 +283,7 @@ public class SDMUpdateAttachmentsHandlerTest {
     handler.updateName(context, data);
 
     verify(sdmService, never())
-        .renameAttachments(anyString(), any(SDMCredentials.class), anyString(), anyString());
+        .renameAttachments(anyString(), any(SDMCredentials.class), any(CmisDocument.class));
   }
 
   private List<CdsData> prepareMockAttachmentData(String... fileNames) {

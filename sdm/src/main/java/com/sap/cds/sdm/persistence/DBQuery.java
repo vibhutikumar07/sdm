@@ -37,7 +37,7 @@ public class DBQuery {
     if (result.rowCount() == 0) {
       return null;
     }
-    return result.list().get(0).get("fileName").toString();
+    return result.rowCount() == 0 ? null : result.list().get(0).get("fileName").toString();
   }
 
   public static void addAttachmentToDraft(

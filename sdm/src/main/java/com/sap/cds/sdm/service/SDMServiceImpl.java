@@ -117,12 +117,14 @@ public class SDMServiceImpl implements SDMService {
 
   @Override
   public int renameAttachments(
-      String jwtToken, SDMCredentials sdmCredentials, String fileName, String objectId)
+      String jwtToken, SDMCredentials sdmCredentials, CmisDocument cmisDocument)
       throws IOException {
     String repositoryId = SDMConstants.REPOSITORY_ID;
     OkHttpClient client = new OkHttpClient();
     String accessToken = TokenHandler.getDIToken(jwtToken, sdmCredentials);
     String sdmUrl = sdmCredentials.getUrl() + "browser/" + repositoryId + "/root";
+    String fileName = cmisDocument.getFileName();
+    String objectId = cmisDocument.getObjectId();
     RequestBody requestBody =
         new MultipartBody.Builder()
             .setType(MultipartBody.FORM)
@@ -142,7 +144,7 @@ public class SDMServiceImpl implements SDMService {
     try (Response response = client.newCall(request).execute()) {
       return response.code();
     } catch (IOException e) {
-      throw new IOException(SDMConstants.COULD_NOT_RENAME_THE_DOCUMENT, e);
+      throw new ServiceException(SDMConstants.COULD_NOT_RENAME_THE_ATTACHMENT, e);
     }
   }
 
@@ -175,7 +177,7 @@ public class SDMServiceImpl implements SDMService {
         return succinctProperties.getString("cmis:name");
       }
     } catch (IOException e) {
-      throw new IOException(SDMConstants.DOCUMENT_NOT_FOUND, e);
+      throw new ServiceException(SDMConstants.ATTACHMENT_NOT_FOUND, e);
     }
   }
 

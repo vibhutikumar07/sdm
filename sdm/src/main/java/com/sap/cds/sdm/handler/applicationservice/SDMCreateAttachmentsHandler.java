@@ -3,6 +3,7 @@ package com.sap.cds.sdm.handler.applicationservice;
 import com.sap.cds.CdsData;
 import com.sap.cds.sdm.constants.SDMConstants;
 import com.sap.cds.sdm.handler.TokenHandler;
+import com.sap.cds.sdm.model.CmisDocument;
 import com.sap.cds.sdm.model.SDMCredentials;
 import com.sap.cds.sdm.service.SDMService;
 import com.sap.cds.sdm.utilities.SDMUtils;
@@ -32,12 +33,8 @@ public class SDMCreateAttachmentsHandler implements EventHandler {
 
   @Before
   @HandlerOrder(HandlerOrder.EARLY)
-  public void processBefore(CdsCreateEventContext context, List<CdsData> data) {
-    try {
-      updateName(context, data);
-    } catch (IOException e) {
-      context.getMessages().error(SDMConstants.ERROR_RENAMING_ATTACHMENT);
-    }
+  public void processBefore(CdsCreateEventContext context, List<CdsData> data) throws IOException {
+    updateName(context, data);
   }
 
   public void updateName(CdsCreateEventContext context, List<CdsData> data) throws IOException {
@@ -67,9 +64,11 @@ public class SDMCreateAttachmentsHandler implements EventHandler {
             String fileNameInSDM = sdmService.getObject(jwtToken, objectId, sdmCredentials);
 
             if (fileNameInSDM != null && !fileNameInSDM.equals(filenameInRequest)) {
+              CmisDocument cmisDocument = new CmisDocument();
+              cmisDocument.setFileName(filenameInRequest);
+              cmisDocument.setObjectId(objectId);
               int responseCode =
-                  sdmService.renameAttachments(
-                      jwtToken, sdmCredentials, filenameInRequest, objectId);
+                  sdmService.renameAttachments(jwtToken, sdmCredentials, cmisDocument);
               if (responseCode == 409) {
                 duplicateFileNameList.add(filenameInRequest);
                 attachment.replace("fileName", fileNameInSDM);

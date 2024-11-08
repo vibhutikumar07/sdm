@@ -962,9 +962,10 @@ public class SDMServiceImplTest {
       mockWebServer.enqueue(new MockResponse().setResponseCode(200));
 
       String jwtToken = "jwt_token";
-      String fileName = "newFileName";
-      String objectId = "objectId";
       String mockUrl = mockWebServer.url("/").toString();
+      CmisDocument cmisDocument = new CmisDocument();
+      cmisDocument.setFileName("newFileName");
+      cmisDocument.setObjectId("objectId");
 
       SDMCredentials mockSdmCredentials = mock(SDMCredentials.class);
       when(mockSdmCredentials.getUrl()).thenReturn(mockUrl);
@@ -972,7 +973,7 @@ public class SDMServiceImplTest {
       SDMServiceImpl sdmServiceImpl = new SDMServiceImpl();
 
       int responseCode =
-          sdmServiceImpl.renameAttachments(jwtToken, mockSdmCredentials, fileName, objectId);
+          sdmServiceImpl.renameAttachments(jwtToken, mockSdmCredentials, cmisDocument);
 
       // Verify the response code
       assertEquals(200, responseCode);

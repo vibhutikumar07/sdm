@@ -42,8 +42,7 @@ public interface SDMService {
       throws IOException;
 
   public int renameAttachments(
-      String jwtToken, SDMCredentials sdmCredentials, String fileName, String objectId)
-      throws IOException;
+      String jwtToken, SDMCredentials sdmCredentials, CmisDocument cmisDocument) throws IOException;
 
   public String getObject(String jwtToken, String objectId, SDMCredentials sdmCredentials)
       throws IOException;

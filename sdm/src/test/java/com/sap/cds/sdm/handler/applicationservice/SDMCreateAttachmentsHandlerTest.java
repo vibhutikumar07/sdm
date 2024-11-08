@@ -8,6 +8,7 @@ import static org.mockito.Mockito.*;
 
 import com.sap.cds.CdsData;
 import com.sap.cds.sdm.handler.TokenHandler;
+import com.sap.cds.sdm.model.CmisDocument;
 import com.sap.cds.sdm.model.SDMCredentials;
 import com.sap.cds.sdm.service.SDMService;
 import com.sap.cds.sdm.service.SDMServiceImpl;
@@ -72,19 +73,6 @@ public class SDMCreateAttachmentsHandlerTest {
   }
 
   @Test
-  public void testProcessBeforeWithException() throws IOException {
-    List<CdsData> data = new ArrayList<>();
-    when(context.getMessages()).thenReturn(messages);
-    doThrow(new IOException())
-        .when(handler)
-        .updateName(any(CdsCreateEventContext.class), anyList());
-
-    handler.processBefore(context, data);
-
-    verify(context.getMessages(), times(1)).error("Error renaming attachment");
-  }
-
-  @Test
   public void testRenameWithDuplicateFilenames() throws IOException {
     List<CdsData> data = new ArrayList<>();
     Set<String> duplicateFilenames = new HashSet<>(Arrays.asList("file1.txt", "file2.txt"));
@@ -119,7 +107,7 @@ public class SDMCreateAttachmentsHandlerTest {
     handler.updateName(context, data);
 
     verify(sdmService, never())
-        .renameAttachments(anyString(), any(SDMCredentials.class), anyString(), anyString());
+        .renameAttachments(anyString(), any(SDMCredentials.class), any(CmisDocument.class));
   }
 
   @Test
@@ -149,7 +137,7 @@ public class SDMCreateAttachmentsHandlerTest {
     handler.updateName(context, data);
 
     verify(sdmService, never())
-        .renameAttachments(anyString(), any(SDMCredentials.class), anyString(), anyString());
+        .renameAttachments(anyString(), any(SDMCredentials.class), any(CmisDocument.class));
   }
 
   @Test
@@ -179,7 +167,7 @@ public class SDMCreateAttachmentsHandlerTest {
     handler.updateName(context, data);
 
     verify(sdmService, never())
-        .renameAttachments(anyString(), any(SDMCredentials.class), anyString(), anyString());
+        .renameAttachments(anyString(), any(SDMCredentials.class), any(CmisDocument.class));
   }
 
   @Test
@@ -211,7 +199,7 @@ public class SDMCreateAttachmentsHandlerTest {
     when(sdmService.getObject(any(), any(), any()))
         .thenReturn("file-sdm.txt"); // Mock a different file name in SDM to trigger renaming
     when(sdmService.renameAttachments(
-            anyString(), any(SDMCredentials.class), anyString(), anyString()))
+            anyString(), any(SDMCredentials.class), any(CmisDocument.class)))
         .thenReturn(409); // Mock conflict response code
 
     // Mock the returned messages
@@ -257,7 +245,7 @@ public class SDMCreateAttachmentsHandlerTest {
     when(sdmService.getObject(any(), any(), any()))
         .thenReturn("file-sdm.txt"); // Mock a different file name in SDM to trigger renaming
     when(sdmService.renameAttachments(
-            anyString(), any(SDMCredentials.class), anyString(), anyString()))
+            anyString(), any(SDMCredentials.class), any(CmisDocument.class)))
         .thenReturn(200); // Mock conflict response code
 
     // Mock the returned messages

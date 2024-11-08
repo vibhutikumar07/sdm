@@ -1,8 +1,6 @@
 package com.sap.cds.sdm.configuration;
 
-import com.sap.cds.feature.attachments.handler.applicationservice.processor.readhelper.modifier.BeforeReadItemsModifier;
 import com.sap.cds.feature.attachments.service.AttachmentService;
-import com.sap.cds.feature.attachments.utilities.LoggingMarker;
 import com.sap.cds.sdm.caching.CacheConfig;
 import com.sap.cds.sdm.handler.applicationservice.SDMCreateAttachmentsHandler;
 import com.sap.cds.sdm.handler.applicationservice.SDMReadAttachmentsHandler;
@@ -17,7 +15,6 @@ import com.sap.cds.services.runtime.CdsRuntimeConfiguration;
 import com.sap.cds.services.runtime.CdsRuntimeConfigurer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
 
 /**
  * The class {@link Registration} is a configuration class that registers the services and event
@@ -26,7 +23,6 @@ import org.slf4j.Marker;
 public class Registration implements CdsRuntimeConfiguration {
 
   private static final Logger logger = LoggerFactory.getLogger(Registration.class);
-  private static final Marker marker = LoggingMarker.ATTACHMENT_SERVICE_REGISTRATION.getMarker();
 
   @Override
   public void services(CdsRuntimeConfigurer configurer) {
@@ -35,7 +31,7 @@ public class Registration implements CdsRuntimeConfiguration {
 
   @Override
   public void eventHandlers(CdsRuntimeConfigurer configurer) {
-    logger.info(marker, "Registering event handler for attachment service");
+    logger.info("Registering event handler for attachment service");
     CacheConfig.initializeCache();
     var persistenceService =
         configurer
@@ -56,13 +52,12 @@ public class Registration implements CdsRuntimeConfiguration {
   }
 
   private AttachmentService buildAttachmentService() {
-    logger.info(marker, "Registering SDM attachment service");
+    logger.info("Registering SDM attachment service");
     return new SDMAttachmentsService();
   }
 
   protected EventHandler buildReadHandler(
       AttachmentService attachmentService, PersistenceService persistenceService) {
-    return new SDMReadAttachmentsHandler(
-        attachmentService, BeforeReadItemsModifier::new, persistenceService);
+    return new SDMReadAttachmentsHandler(attachmentService, persistenceService);
   }
 }
