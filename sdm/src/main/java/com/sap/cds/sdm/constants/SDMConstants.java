@@ -9,6 +9,12 @@ public class SDMConstants {
   public static final String BEARER_TOKEN = "Bearer ";
 
   public static final String TENANT_ID = "X-zid";
+  public static final String DUPLICATE_FILE_IN_DRAFT_ERROR_MESSAGE =
+      "The file(s) %s have been added multiple times. Please rename and try again.";
+  public static final String FILES_RENAME_WARNING_MESSAGE =
+      "The following files could not be renamed as they already exist:\n%s\n";
+  public static final String COULD_NOT_RENAME_THE_ATTACHMENT = "Could not rename the attachment";
+  public static final String ATTACHMENT_NOT_FOUND = "Attachment not found";
   public static final String DUPLICATE_FILES_ERROR = "%s already exists.";
   public static final String GENERIC_ERROR = "Could not %s the document.";
   public static final String VERSIONED_REPO_ERROR =
