@@ -99,7 +99,7 @@ public class SDMAttachmentsServiceHandlerTest {
 
     when(sdmService.checkRepositoryType(anyString())).thenReturn("Versioned");
     when(mockContext.getMessages()).thenReturn(mockMessages);
-    when(mockMessages.error("Upload not supported for versioned repositories"))
+    when(mockMessages.error("Upload not supported for versioned repositories."))
         .thenReturn(mockMessage);
     when(mockContext.getData()).thenReturn(mockMediaData);
     when(mockContext.getModel()).thenReturn(mockModel);
@@ -113,7 +113,7 @@ public class SDMAttachmentsServiceHandlerTest {
             });
 
     // Verify the exception message
-    assertEquals("Upload not supported for versioned repositories", thrown.getMessage());
+    assertEquals("Upload not supported for versioned repositories.", thrown.getMessage());
   }
 
   @Test
@@ -359,7 +359,7 @@ public class SDMAttachmentsServiceHandlerTest {
 
       // Verify the exception message
       assertEquals(
-          "sample.pdf contains potential malware and cannot be uploaded", thrown.getMessage());
+          "sample.pdf contains potential malware and cannot be uploaded.", thrown.getMessage());
     }
   }
 
@@ -575,14 +575,14 @@ public class SDMAttachmentsServiceHandlerTest {
           .when(sdmService)
           .readDocument(anyString(), anyString(), any(SDMCredentials.class), eq(mockReadContext));
 
-      IOException exception =
+      ServiceException exception =
           assertThrows(
-              IOException.class,
+              ServiceException.class,
               () -> {
                 handlerSpy.readAttachment(mockReadContext);
               });
 
-      assertEquals("Failed to read document from SDM service", exception.getMessage());
+      assertEquals("Failed to read document.", exception.getMessage());
     }
   }
 
