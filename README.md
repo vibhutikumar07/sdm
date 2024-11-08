@@ -29,6 +29,11 @@ This plugin can be consumed by the CAP application deployed on BTP to store thei
 * [MTAR builder](https://www.npmjs.com/package/mbt) (`npm install -g mbt`)
 * [Cloud Foundry CLI](https://docs.cloudfoundry.org/cf-cli/install-go-cli.html), Install cf-cli and run command `cf install-plugin multiapps`.
 
+> [!Note]
+> Reading attachment behaviour depends on the version of cds-services version which is used by the CAP application.
+For versions < 3.4.0, clicking on attachment will download the file to the computer.
+For versions >= 3.4.0, clicking on attachment will open the file in new tab on browser, if browser supports the file type. A reference to adding this can be found in the [deploy branch](https://github.com/cap-java/sdm/blob/691c329f4c3c17ae390cfcb2db1ef02650585aee/cap-notebook/demoapp/pom.xml#L20)
+
 ## Deploying and testing the application
 
 1. Log in to Cloud Foundry space:
