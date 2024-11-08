@@ -5,8 +5,7 @@ public class SDMConstants {
     // Doesn't do anything
   }
 
-  // public static final String REPOSITORY_ID = System.getenv("REPOSITORY_ID");
-  public static final String REPOSITORY_ID = "da0d8a9f-34da-4d6b-b52d-5cac7dc5d139";
+  public static final String REPOSITORY_ID = System.getenv("REPOSITORY_ID");
   public static final String BEARER_TOKEN = "Bearer ";
 
   public static final String TENANT_ID = "X-zid";
