@@ -13,17 +13,19 @@ annotate Attachments with @UI: {
         TypeNamePlural: '{i18n>attachments}',
     },
     LineItem  : [
-        {Value: fileName, @HTML5.CssDefaults: {width: '20%'}},
-         {Value: content, @HTML5.CssDefaults: {width: '20%'}},
+        {Value: fileName, @HTML5.CssDefaults: {width: '15%'}},
+         {Value: content, @HTML5.CssDefaults: {width: '25%'}},
           {Value: createdAt, @HTML5.CssDefaults: {width: '20%'}},
           {Value: createdBy, @HTML5.CssDefaults: {width: '20%'}},
           {Value: note, @HTML5.CssDefaults: {width: '20%'}}
     ]
 } {
-    note       @(title: '{i18n>attachment_note}');
-   modifiedAt @(odata.etag: null);
-   content
-       @Core.ContentDisposition: { Filename: fileName, Type: 'inline' }
+    note       @(title: '{i18n>Note}');
+       fileName  @(title: '{i18n>Filename}');
+      modifiedAt @(odata.etag: null);
+      content
+          @Core.ContentDisposition: { Filename: fileName, Type: 'inline' }
+           @(title: '{i18n>Attachment}');
 }
 annotate Attachments with @Common: {SideEffects #ContentChanged: {
     SourceProperties: [content],
