@@ -13,8 +13,8 @@ annotate Attachments with @UI: {
         TypeNamePlural: '{i18n>attachments}',
     },
     LineItem  : [
-        {Value: fileName, @HTML5.CssDefaults: {width: '15%'}},
-         {Value: content, @HTML5.CssDefaults: {width: '25%'}},
+        {Value: fileName, @HTML5.CssDefaults: {width: '20%'}},
+         {Value: content, @HTML5.CssDefaults: {width: '20%'}},
           {Value: createdAt, @HTML5.CssDefaults: {width: '20%'}},
           {Value: createdBy, @HTML5.CssDefaults: {width: '20%'}},
           {Value: note, @HTML5.CssDefaults: {width: '20%'}}
