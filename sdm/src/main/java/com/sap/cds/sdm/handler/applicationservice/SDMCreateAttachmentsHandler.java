@@ -7,6 +7,7 @@ import com.sap.cds.sdm.model.CmisDocument;
 import com.sap.cds.sdm.model.SDMCredentials;
 import com.sap.cds.sdm.service.SDMService;
 import com.sap.cds.sdm.utilities.SDMUtils;
+import com.sap.cds.services.ServiceException;
 import com.sap.cds.services.authentication.AuthenticationInfo;
 import com.sap.cds.services.authentication.JwtTokenAuthenticationInfo;
 import com.sap.cds.services.cds.ApplicationService;
@@ -38,6 +39,15 @@ public class SDMCreateAttachmentsHandler implements EventHandler {
   }
 
   public void updateName(CdsCreateEventContext context, List<CdsData> data) throws IOException {
+    List<String> fileNameWithRestrictedCharacters = SDMUtils.isFileNameContainsRestrictedCharaters(data);
+    if(!fileNameWithRestrictedCharacters.isEmpty()) {
+      context
+          .getMessages()
+          .error(
+              String.format(
+                  SDMConstants.getNameConstraintError(fileNameWithRestrictedCharacters)));
+    }
+    System.out.println("Name constraint check complete");
     Set<String> duplicateFilenames = SDMUtils.isFileNameDuplicateInDrafts(data);
     if (!duplicateFilenames.isEmpty()) {
       context

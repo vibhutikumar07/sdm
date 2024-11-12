@@ -1,6 +1,8 @@
 package com.sap.cds.sdm.utilities;
 
 import com.sap.cds.CdsData;
+
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -34,7 +36,25 @@ public class SDMUtils {
     return duplicateFilenames;
   }
 
-  public static Boolean GetRestrictedCharactersInName(String cmisName) {
+  public static List<String> isFileNameContainsRestrictedCharaters(List<CdsData> data) {
+    List<String> restrictedFilenames = new ArrayList();
+    for (Map<String, Object> entity : data) {
+      List<Map<String, Object>> attachments = (List<Map<String, Object>>) entity.get("attachments");
+      if (attachments != null) {
+        Iterator<Map<String, Object>> iterator = attachments.iterator();
+        while (iterator.hasNext()) {
+          Map<String, Object> attachment = iterator.next();
+          String filenameInRequest = (String) attachment.get("fileName");
+          if (getRestrictedCharactersInName(filenameInRequest)) {
+            restrictedFilenames.add(filenameInRequest);
+          }
+        }
+      }
+    }
+    return restrictedFilenames;
+  }
+
+  public static Boolean getRestrictedCharactersInName(String cmisName) {
     String regex = "[\\[\\]/<>\\\\|\\?\\*:;,\"#$%^~&\\+\\{\\}!]";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(cmisName);

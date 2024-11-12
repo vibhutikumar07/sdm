@@ -68,7 +68,7 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
         String fileid = (String) attachmentIds.get("ID");
         String errorMessageDI = "";
 
-        Boolean nameConstraint = SDMUtils.GetRestrictedCharactersInName(filename);
+        Boolean nameConstraint = SDMUtils.getRestrictedCharactersInName(filename);
         if(nameConstraint){
           throw new ServiceException(SDMConstants.getNameConstraintError(filename));
         }
