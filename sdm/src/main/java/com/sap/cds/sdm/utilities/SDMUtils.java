@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 public class SDMUtils {
 
@@ -30,5 +32,12 @@ public class SDMUtils {
       }
     }
     return duplicateFilenames;
+  }
+
+  public static Boolean GetRestrictedCharactersInName(String cmisName) {
+    String regex = "[\\[\\]/<>\\\\|\\?\\*:;,\"#$%^~&\\+\\{\\}!]";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(cmisName);
+        return matcher.find();
   }
 }
