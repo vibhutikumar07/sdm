@@ -71,9 +71,9 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
 
         Boolean nameConstraint = SDMUtils.getRestrictedCharactersInName(filename);
         if (nameConstraint) {
-        List<String> filenames = Collections.singletonList(filename);
-        throw new ServiceException(SDMConstants.getNameConstraintError(filenames));
-    }
+          List<String> filenames = Collections.singletonList(filename);
+          throw new ServiceException(SDMConstants.getNameConstraintError(filenames));
+        }
         System.out.println("Name constraint check complete");
         Boolean duplicate = duplicateCheck(filename, fileid, result);
         if (Boolean.TRUE.equals(duplicate)) {

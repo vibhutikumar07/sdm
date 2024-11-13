@@ -39,9 +39,10 @@ public class SDMConstants {
   }
 
   public static String getNameConstraintError(List<String> fileNames) {
-        String bulletPoints = fileNames.stream()
-                                        .map(file -> "• " + file)
-                                        .collect(Collectors.joining("\n"));
-        return "Enter a valid file name for:\n" + bulletPoints + "\nThe following characters are not supported: [, ], /, <, >, , |, ?, *, :, ;, \\\", #, $, %, ^, ~, &, +, {, }, !\"";
+    String bulletPoints =
+        fileNames.stream().map(file -> "• " + file).collect(Collectors.joining("\n"));
+    return "Enter a valid file name for:\n"
+        + bulletPoints
+        + "\nThe following characters are not supported: [, ], /, <, >, , |, ?, *, :, ;, \\\", #, $, %, ^, ~, &, +, {, }, !\"";
   }
 }

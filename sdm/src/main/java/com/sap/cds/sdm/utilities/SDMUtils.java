@@ -1,15 +1,14 @@
 package com.sap.cds.sdm.utilities;
 
 import com.sap.cds.CdsData;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class SDMUtils {
 
@@ -56,8 +55,8 @@ public class SDMUtils {
 
   public static Boolean getRestrictedCharactersInName(String cmisName) {
     String regex = "[\\[\\]/<>\\\\|\\?\\*:;,\"#$%^~&\\+\\{\\}!]";
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(cmisName);
-        return matcher.find();
+    Pattern pattern = Pattern.compile(regex);
+    Matcher matcher = pattern.matcher(cmisName);
+    return matcher.find();
   }
 }

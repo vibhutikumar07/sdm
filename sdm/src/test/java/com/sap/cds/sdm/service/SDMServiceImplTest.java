@@ -456,7 +456,7 @@ public class SDMServiceImplTest {
       mockWebServer.enqueue(
           new MockResponse()
               .setBody(mockResponseBody)
-              .setResponseCode(400) // Assuming 400 Bad Request or a similar client error code
+              .setResponseCode(409) // Assuming 400 Bad Request or a similar client error code
               .addHeader("Content-Type", "application/json"));
 
       CmisDocument cmisDocument = new CmisDocument();

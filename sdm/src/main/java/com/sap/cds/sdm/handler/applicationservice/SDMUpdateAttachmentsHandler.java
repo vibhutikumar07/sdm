@@ -47,13 +47,13 @@ public class SDMUpdateAttachmentsHandler implements EventHandler {
   }
 
   public void updateName(CdsUpdateEventContext context, List<CdsData> data) throws IOException {
-    List<String> fileNameWithRestrictedCharacters = SDMUtils.isFileNameContainsRestrictedCharaters(data);
-    if(!fileNameWithRestrictedCharacters.isEmpty()) {
+    List<String> fileNameWithRestrictedCharacters =
+        SDMUtils.isFileNameContainsRestrictedCharaters(data);
+    if (!fileNameWithRestrictedCharacters.isEmpty()) {
       context
           .getMessages()
           .error(
-              String.format(
-                  SDMConstants.getNameConstraintError(fileNameWithRestrictedCharacters)));
+              String.format(SDMConstants.getNameConstraintError(fileNameWithRestrictedCharacters)));
     }
     System.out.println("Name constraint check complete");
     Set<String> duplicateFilenames = SDMUtils.isFileNameDuplicateInDrafts(data);
