@@ -63,7 +63,7 @@ runs:
         -Dgpg.keyname="$GPG_PUB_KEY"
         -Drevision="${{ inputs.revision }}"
         deploy
-      working-directory: ./deploy-oss
+      working-directory: deploy-oss
       shell: bash
       env:
         MAVEN_CENTRAL_USER: ${{ inputs.user }}
@@ -84,7 +84,7 @@ runs:
         -DrepositoryDirectory=./temp_local_repo
         -DstagingProfileId="$MAVEN_CENTRAL_PROFILE_ID"
         -Drevision="${{ inputs.revision }}"
-      working-directory: ./deploy-oss
+      working-directory: deploy-oss
       shell: bash  
       env:
         MAVEN_CENTRAL_USER: ${{ inputs.user }}
