@@ -28,6 +28,7 @@ import com.sap.cds.services.handler.annotations.ServiceName;
 import com.sap.cds.services.persistence.PersistenceService;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -69,9 +70,10 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
         String errorMessageDI = "";
 
         Boolean nameConstraint = SDMUtils.getRestrictedCharactersInName(filename);
-        if(nameConstraint){
-          throw new ServiceException(SDMConstants.getNameConstraintError(filename));
-        }
+        if (nameConstraint) {
+        List<String> filenames = Collections.singletonList(filename);
+        throw new ServiceException(SDMConstants.getNameConstraintError(filenames));
+    }
         System.out.println("Name constraint check complete");
         Boolean duplicate = duplicateCheck(filename, fileid, result);
         if (Boolean.TRUE.equals(duplicate)) {
