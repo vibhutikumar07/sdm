@@ -58,7 +58,10 @@ jobs:
 
       - name: Validate Artifacts
         run: |
+          echo "Current directory..."
+          pwd
           cd sdm
+          echo "Current directory..."
           echo "Validating generated artifacts..."
           echo "Listing contents of the target directory:"
           ls -al target/
