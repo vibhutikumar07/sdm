@@ -1,4 +1,4 @@
-name: Deploy to Artifactory
+name: Deploy to Artifactory on pre-released
 
 env:
   JAVA_VERSION: '17'
