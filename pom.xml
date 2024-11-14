@@ -207,5 +207,11 @@
             <url>https://common.repositories.cloud.sap/artifactory/cap-sdm-java</url>
         </repository>
     </distributionManagement>
+         
+    <scm>
+        <url>https://github.com/cap-java/sdm</url>
+        <connection>scm:git:git@github.com:cap-java/sdm.git</connection>
+        <developerConnection>scm:git:git@github.com:cap-java/sdm.git</developerConnection>
+    </scm>
 
 </project>
