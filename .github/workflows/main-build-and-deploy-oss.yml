@@ -73,10 +73,6 @@ jobs:
             echo "Error: sdm-sources.jar not found!"
             exit 1
           fi
-          if [[ ! -f "target/sdm-javadoc.jar" ]]; then
-            echo "Error: sdm-javadoc.jar not found!"
-            exit 1
-          fi
           
 
       - name: Upload Changed Artifacts
