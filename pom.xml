@@ -15,6 +15,13 @@
         <url>https://www.sap.com</url>
     </organization>
 
+    <developers>
+        <developer>
+            <organization>SAP SE</organization>
+            <organizationUrl>https://www.sap.com</organizationUrl>
+        </developer>
+    </developers>
+
     <properties>
         <revision>1.0.0-SNAPSHOT</revision>
         <java.version>17</java.version>
@@ -36,6 +43,7 @@
     <packaging>pom</packaging>
 
     <name>CDS Feature for SAP Document Management Service - Root</name>
+    <description>This artifact is a CAP Java plugin that provides out-of-the box attachments storage and handling by using an aspect Attachments in SAP Document Management Service.</description>
     <url>https://cap.cloud.sap/docs/plugins/#attachments</url>
 
     <modules>
