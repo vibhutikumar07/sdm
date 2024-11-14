@@ -21,7 +21,7 @@ inputs:
     description: "The passphrase for pgp"
     required: true
   revision:
-    description: "The revision of cds-feature-attachments"
+    description: "The revision of sdm"
     required: true
 
 runs:
