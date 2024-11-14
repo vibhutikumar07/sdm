@@ -20,7 +20,7 @@ jobs:
           echo "Branch: ${{ github.ref }}"
           echo "Working Directory: $(pwd)"
           echo "Contents of Working Directory:"
-          ls -al
+          ls -lart
         shell: bash
       - name: Checkout
         uses: actions/checkout@v4
