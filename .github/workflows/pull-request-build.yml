@@ -1,4 +1,4 @@
-name: Pull Request Voter
+name: Pull Request Builder
 
 env:
   MAVEN_VERSION: '3.6.3'
