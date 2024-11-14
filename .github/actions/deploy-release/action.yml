@@ -66,6 +66,10 @@ runs:
           -Dgpg.keyname="$GPG_PUB_KEY" \
           -Drevision="${{ inputs.revision }}" \
           deploy
+        echo "Contents of Target Directory After Deploy:"
+        ls -al ./deploy-oss/target/
+        echo "Contents of temp_local_repo:"
+        ls -al ./deploy-oss/temp_local_repo
       working-directory: ./deploy-oss
       shell: bash
       env:
