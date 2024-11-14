@@ -133,6 +133,24 @@
         <finalName>${project.artifactId}</finalName>
         <plugins>
 
+             <plugin>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <skip>${skipDuringDeploy}</skip>
+                    <failOnError>true</failOnError>
+                    <doclint>all,-missing</doclint>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <excludePackageNames>com.sap.sdm.generated.*</excludePackageNames>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
