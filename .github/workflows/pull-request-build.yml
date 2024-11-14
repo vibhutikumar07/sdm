@@ -5,7 +5,7 @@ env:
 
 on:
   pull_request:
-    branches: [ "maven_artifactory" ]
+    branches: [ "develop" ]
 
   workflow_dispatch:
 
