@@ -56,6 +56,25 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           maven-version: ${{ env.MAVEN_VERSION }}
 
+      - name: Validate Artifacts
+        run: |
+          echo "Building the project and generating artifacts..."
+          mvn clean package
+          echo "Listing contents of the target directory:"
+          ls -al target/
+          if [[ ! -f "target/sdm.jar" ]]; then
+            echo "Error: sdm.jar not found!"
+            exit 1
+          fi
+          if [[ ! -f "target/sdm-sources.jar" ]]; then
+            echo "Error: sdm-sources.jar not found!"
+            exit 1
+          fi
+          if [[ ! -f "target/sdm-javadoc.jar" ]]; then
+            echo "Error: sdm-javadoc.jar not found!"
+            exit 1
+          fi
+
       - name: Upload Changed Artifacts
         uses: actions/upload-artifact@v4
         with:
