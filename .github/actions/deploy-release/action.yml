@@ -51,8 +51,6 @@ runs:
 
     - name: "Deploy Locally"
       run: >
-        pwd
-        ls -lart
         mvn
         --batch-mode
         --no-transfer-progress
