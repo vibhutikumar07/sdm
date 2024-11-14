@@ -58,6 +58,7 @@ jobs:
 
       - name: Validate Artifacts
         run: |
+          cd sdm
           echo "Validating generated artifacts..."
           echo "Listing contents of the target directory:"
           ls -al target/
