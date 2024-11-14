@@ -1,4 +1,4 @@
-name: Main build and deploy
+name: Main build and snapshot deploy
 
 env:
   JAVA_VERSION: '17'
