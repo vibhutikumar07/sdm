@@ -33,7 +33,7 @@ runs:
         mvn clean install
       shell: bash
 
-    - name: Piper Maven build
-      uses: SAP/project-piper-action@main
-      with:
-        step-name: mavenBuild
+    # - name: Piper Maven build
+    #   uses: SAP/project-piper-action@main
+    #   with:
+    #     step-name: mavenBuild
