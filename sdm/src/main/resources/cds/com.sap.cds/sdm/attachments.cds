@@ -20,10 +20,12 @@ annotate Attachments with @UI: {
           {Value: note, @HTML5.CssDefaults: {width: '20%'}}
     ]
 } {
-    note       @(title: '{i18n>attachment_note}');
-   modifiedAt @(odata.etag: null);
-   content
-       @Core.ContentDisposition: { Filename: fileName, Type: 'inline' }
+    note       @(title: '{i18n>Note}');
+       fileName  @(title: '{i18n>Filename}');
+      modifiedAt @(odata.etag: null);
+      content
+          @Core.ContentDisposition: { Filename: fileName, Type: 'inline' }
+           @(title: '{i18n>Attachment}');
 }
 annotate Attachments with @Common: {SideEffects #ContentChanged: {
     SourceProperties: [content],
