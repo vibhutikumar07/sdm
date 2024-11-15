@@ -18,6 +18,7 @@ import com.sap.cds.sdm.model.CmisDocument;
 import com.sap.cds.sdm.model.SDMCredentials;
 import com.sap.cds.sdm.persistence.DBQuery;
 import com.sap.cds.sdm.service.SDMService;
+import com.sap.cds.services.ServiceException;
 import com.sap.cds.services.authentication.AuthenticationInfo;
 import com.sap.cds.services.authentication.JwtTokenAuthenticationInfo;
 import com.sap.cds.services.handler.EventHandler;
@@ -50,7 +51,7 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
     String repocheck = sdmService.checkRepositoryType(repositoryId);
     CmisDocument cmisDocument = new CmisDocument();
     if ("Versioned".equals(repocheck)) {
-      context.getMessages().error("Upload not supported for versioned repositories");
+      throw new ServiceException(SDMConstants.VERSIONED_REPO_ERROR);
     } else {
       Map<String, Object> attachmentIds = context.getAttachmentIds();
       String upID = (String) attachmentIds.get("up__ID");
@@ -62,15 +63,13 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
       if (!result.list().isEmpty()) {
         MediaData data = context.getData();
 
-        String filename = (String) data.get("fileName");
+        String filename = data.getFileName();
         String fileid = (String) attachmentIds.get("ID");
+        String errorMessageDI = "";
 
         Boolean duplicate = duplicateCheck(filename, fileid, result);
         if (Boolean.TRUE.equals(duplicate)) {
-          deleteAttachmentFromDraft(attachmentDraftEntity.get(), persistenceService, fileid);
-          context
-              .getMessages()
-              .warn("This attachment already exists. Please remove it and try again");
+          throw new ServiceException(SDMConstants.getDuplicateFilesError(filename));
         } else {
           AuthenticationInfo authInfo = context.getAuthenticationInfo();
           JwtTokenAuthenticationInfo jwtTokenInfo = authInfo.as(JwtTokenAuthenticationInfo.class);
@@ -90,29 +89,16 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
           JSONObject createResult =
               sdmService.createDocument(cmisDocument, jwtToken, sdmCredentials);
 
-          Boolean errorFlag = false;
-          StringBuilder error = new StringBuilder();
           if (createResult.get("status") == "duplicate") {
-            deleteAttachmentFromDraft(attachmentDraftEntity.get(), persistenceService, fileid);
-            error.append("The following files already exist and cannot be uploaded:\n");
-            error.append("• ").append(createResult.get("name")).append("\n");
-            errorFlag = true;
+            throw new ServiceException(SDMConstants.getDuplicateFilesError(filename));
           } else if (createResult.get("status") == "virus") {
-            deleteAttachmentFromDraft(attachmentDraftEntity.get(), persistenceService, fileid);
-            error.append("The following files contain potential malware and cannot be uploaded:\n");
-            error.append("• ").append(createResult.get("name")).append("\n");
-            errorFlag = true;
+            throw new ServiceException(SDMConstants.getVirusFilesError(filename));
           } else if (createResult.get("status") == "fail") {
-            deleteAttachmentFromDraft(attachmentDraftEntity.get(), persistenceService, fileid);
-            error.append("The following files cannot be uploaded:\n");
-            error.append("• ").append(createResult.get("name")).append("\n");
-            errorFlag = true;
+            errorMessageDI = createResult.get("message").toString();
+            throw new ServiceException(errorMessageDI);
           } else {
             cmisDocument.setObjectId(createResult.get("url").toString());
             addAttachmentToDraft(attachmentDraftEntity.get(), persistenceService, cmisDocument);
-          }
-          if (Boolean.TRUE.equals(errorFlag)) {
-            context.getMessages().error(error.toString());
           }
         }
       }
@@ -163,11 +149,6 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
 
   @On(event = AttachmentService.EVENT_READ_ATTACHMENT)
   public void readAttachment(AttachmentReadEventContext context) throws IOException {
-    String repositoryId = SDMConstants.REPOSITORY_ID;
-    String repocheck = sdmService.checkRepositoryType(repositoryId);
-    if ("Versioned".equals(repocheck)) {
-      context.getMessages().error("Upload not supported for versioned repositories");
-    }
     AuthenticationInfo authInfo = context.getAuthenticationInfo();
     JwtTokenAuthenticationInfo jwtTokenInfo = authInfo.as(JwtTokenAuthenticationInfo.class);
     String jwtToken = jwtTokenInfo.getToken();
@@ -177,7 +158,7 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
     try {
       sdmService.readDocument(objectId, jwtToken, sdmCredentials, context);
     } catch (Exception e) {
-      throw new IOException("Failed to read document from SDM service", e);
+      throw new ServiceException(SDMConstants.NOT_FOUND_ERROR);
     }
     context.setCompleted();
   }

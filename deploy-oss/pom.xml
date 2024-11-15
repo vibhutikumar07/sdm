@@ -31,6 +31,7 @@
                             <packaging>jar</packaging>
                             <file>../sdm/target/sdm.jar</file>
                             <sources>../sdm/target/sdm-sources.jar</sources>
+                            <javadoc>../sdm/target/sdm-javadoc.jar</javadoc>
                             <pomFile>../sdm/.flattened-pom.xml</pomFile>
                             <version>${revision}</version>
                         </configuration>
@@ -68,6 +69,7 @@
                             <packaging>jar</packaging>
                             <file>../sdm/target/sdm.jar</file>
                             <sources>../sdm/target/sdm-sources.jar</sources>
+                            <javadoc>../sdm/target/sdm-javadoc.jar</javadoc>
                             <pomFile>../sdm/.flattened-pom.xml</pomFile>
                             <version>${revision}</version>
                         </configuration>
