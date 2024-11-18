@@ -621,7 +621,7 @@ public class SDMServiceImplTest {
     PersistenceService persistenceService = mock(PersistenceService.class);
     Result result = mock(Result.class);
     Map<String, Object> attachment = new HashMap<>();
-    attachment.put("folderId", "folder123");
+    attachment.put("folderId", "newFolderId123");
     attachment.put("repositoryId", "repoId");
     List<Map> resultList = Arrays.asList((Map) attachment);
 
