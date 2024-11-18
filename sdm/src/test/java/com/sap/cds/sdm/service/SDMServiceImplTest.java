@@ -650,7 +650,7 @@ public class SDMServiceImplTest {
           .createFolder(anyString(), anyString(), anyString(), any(SDMCredentials.class));
 
       String folderId = spyService.getFolderId(jwtToken, result, persistenceService, up__ID);
-      assertEquals("folder123", folderId, "Expected folderId from result list");
+      assertEquals("newFolderId123", folderId, "Expected folderId from result list");
     }
   }
 

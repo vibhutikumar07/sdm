@@ -87,12 +87,12 @@
             <version>5.10.2</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
+        <!-- <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
             <version>5.10.2</version>
             <scope>test</scope>
-        </dependency>
+        </dependency> -->
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
@@ -187,6 +187,21 @@
                             <rules>
                                 <banDuplicatePomDependencyVersions/>
                             </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.2.0</version> <!-- Use the latest version -->
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>analyze</goal>
+                        </goals>
+                        <configuration>
+                            <analyzeTestScopedDependencies>true</analyzeTestScopedDependencies>
                         </configuration>
                     </execution>
                 </executions>
