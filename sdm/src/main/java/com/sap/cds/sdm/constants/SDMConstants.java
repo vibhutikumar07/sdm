@@ -5,7 +5,7 @@ public class SDMConstants {
     // Doesn't do anything
   }
 
-  public static final String REPOSITORY_ID = "RASHMI-REPO";
+  public static final String REPOSITORY_ID = System.getenv("REPOSITORY_ID");
   public static final String BEARER_TOKEN = "Bearer ";
   public static final int TIMEOUT = 900;
 
