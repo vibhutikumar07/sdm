@@ -51,7 +51,7 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
     String repocheck = sdmService.checkRepositoryType(repositoryId);
     CmisDocument cmisDocument = new CmisDocument();
     if ("Versioned".equals(repocheck)) {
-      throw new ServiceException("Upload not supported for versioned repositories");
+      throw new ServiceException(SDMConstants.VERSIONED_REPO_ERROR);
     } else {
       Map<String, Object> attachmentIds = context.getAttachmentIds();
       String upID = (String) attachmentIds.get("up__ID");
@@ -63,14 +63,14 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
       if (!result.list().isEmpty()) {
         MediaData data = context.getData();
 
-        String filename = (String) data.get("fileName");
+        String filename = data.getFileName();
         String fileid = (String) attachmentIds.get("ID");
         String mimeType = (String) data.get("mimeType");
+        String errorMessageDI = "";
 
         Boolean duplicate = duplicateCheck(filename, fileid, result);
         if (Boolean.TRUE.equals(duplicate)) {
-          throw new ServiceException(
-              "This attachment already exists. Please remove it and try again");
+          throw new ServiceException(SDMConstants.getDuplicateFilesError(filename));
         } else {
           AuthenticationInfo authInfo = context.getAuthenticationInfo();
           JwtTokenAuthenticationInfo jwtTokenInfo = authInfo.as(JwtTokenAuthenticationInfo.class);
@@ -92,12 +92,12 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
               sdmService.createDocument(cmisDocument, jwtToken, sdmCredentials);
 
           if (createResult.get("status") == "duplicate") {
-            throw new ServiceException("The following file already exists and cannot be uploaded");
+            throw new ServiceException(SDMConstants.getDuplicateFilesError(filename));
           } else if (createResult.get("status") == "virus") {
-            throw new ServiceException(
-                "The following file contains potential malware and cannot be uploaded");
+            throw new ServiceException(SDMConstants.getVirusFilesError(filename));
           } else if (createResult.get("status") == "fail") {
-            throw new ServiceException("The following file cannot be uploaded");
+            errorMessageDI = createResult.get("message").toString();
+            throw new ServiceException(errorMessageDI);
           } else {
             cmisDocument.setObjectId(createResult.get("objectId").toString());
             addAttachmentToDraft(attachmentDraftEntity.get(), persistenceService, cmisDocument);
@@ -160,7 +160,7 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
     try {
       sdmService.readDocument(objectId, jwtToken, sdmCredentials, context);
     } catch (Exception e) {
-      throw new IOException("Failed to read document from SDM service", e);
+      throw new ServiceException(SDMConstants.NOT_FOUND_ERROR);
     }
     context.setCompleted();
   }

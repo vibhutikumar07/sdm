@@ -9,8 +9,8 @@ extend aspect Attachments with {
 annotate Attachments with @UI: {
     HeaderInfo: {
         $Type         : 'UI.HeaderInfoType',
-        TypeName      : '{i18n>attachment}',
-        TypeNamePlural: '{i18n>attachments}',
+        TypeName      : '{i18n>Attachment}',
+        TypeNamePlural: '{i18n>Attachments}',
     },
     LineItem  : [
         {Value: fileName, @HTML5.CssDefaults: {width: '20%'}},
@@ -23,7 +23,7 @@ annotate Attachments with @UI: {
     note       @(title: '{i18n>Note}');
     fileName  @(title: '{i18n>Filename}');
     modifiedAt @(odata.etag: null);
-   content
+    content
        @Core.ContentDisposition: { Filename: fileName, Type: 'inline' }
         @(title: '{i18n>Attachment}');
        folderId @UI.Hidden;
@@ -31,7 +31,6 @@ annotate Attachments with @UI: {
     objectId  @UI.Hidden ;
     mimeType @UI.Hidden;
     status @UI.Hidden;
-
 }
 annotate Attachments with @Common: {SideEffects #ContentChanged: {
     SourceProperties: [content],

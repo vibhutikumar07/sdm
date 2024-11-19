@@ -99,7 +99,7 @@ public class SDMAttachmentsServiceHandlerTest {
 
     when(sdmService.checkRepositoryType(anyString())).thenReturn("Versioned");
     when(mockContext.getMessages()).thenReturn(mockMessages);
-    when(mockMessages.error("Upload not supported for versioned repositories"))
+    when(mockMessages.error("Upload not supported for versioned repositories."))
         .thenReturn(mockMessage);
     when(mockContext.getData()).thenReturn(mockMediaData);
     when(mockContext.getModel()).thenReturn(mockModel);
@@ -113,7 +113,7 @@ public class SDMAttachmentsServiceHandlerTest {
             });
 
     // Verify the exception message
-    assertEquals("Upload not supported for versioned repositories", thrown.getMessage());
+    assertEquals("Upload not supported for versioned repositories.", thrown.getMessage());
   }
 
   @Test
@@ -163,8 +163,7 @@ public class SDMAttachmentsServiceHandlerTest {
               });
 
       // Verify the exception message
-      assertEquals(
-          "This attachment already exists. Please remove it and try again", thrown.getMessage());
+      assertEquals("sample.pdf already exists.", thrown.getMessage());
     }
   }
 
@@ -274,7 +273,7 @@ public class SDMAttachmentsServiceHandlerTest {
                 handlerSpy.createAttachment(mockContext);
               });
 
-      assertEquals("The following file already exists and cannot be uploaded", thrown.getMessage());
+      assertEquals("sample.pdf already exists.", thrown.getMessage());
 
       // Add any additional verifications if needed
     }
@@ -360,8 +359,7 @@ public class SDMAttachmentsServiceHandlerTest {
 
       // Verify the exception message
       assertEquals(
-          "The following file contains potential malware and cannot be uploaded",
-          thrown.getMessage());
+          "sample.pdf contains potential malware and cannot be uploaded.", thrown.getMessage());
     }
   }
 
@@ -384,6 +382,7 @@ public class SDMAttachmentsServiceHandlerTest {
     InputStream contentStream = new ByteArrayInputStream(byteArray);
     JSONObject mockCreateResult = new JSONObject();
     mockCreateResult.put("status", "fail");
+    mockCreateResult.put("message", "Failed due to a DI error");
     mockCreateResult.put("name", "sample.pdf");
 
     when(mockMediaData.getFileName()).thenReturn("sample.pdf");
@@ -429,7 +428,7 @@ public class SDMAttachmentsServiceHandlerTest {
               });
 
       // Verify the exception message
-      assertEquals("The following file cannot be uploaded", thrown.getMessage());
+      assertEquals("Failed due to a DI error", thrown.getMessage());
     }
   }
 
@@ -576,14 +575,14 @@ public class SDMAttachmentsServiceHandlerTest {
           .when(sdmService)
           .readDocument(anyString(), anyString(), any(SDMCredentials.class), eq(mockReadContext));
 
-      IOException exception =
+      ServiceException exception =
           assertThrows(
-              IOException.class,
+              ServiceException.class,
               () -> {
                 handlerSpy.readAttachment(mockReadContext);
               });
 
-      assertEquals("Failed to read document from SDM service", exception.getMessage());
+      assertEquals("Failed to read document.", exception.getMessage());
     }
   }
 

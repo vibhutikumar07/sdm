@@ -75,7 +75,7 @@ public class SDMServiceImpl implements SDMService {
         throw new ServiceException("Error in setting timeout", e.getMessage());
       }
     } catch (IOException e) {
-      throw new ServiceException("Error in getting response from SDM ", e.getMessage());
+      throw new ServiceException(SDMConstants.getGenericError("upload"));
     }
     return new JSONObject(finalResponse);
   }
@@ -88,11 +88,11 @@ public class SDMServiceImpl implements SDMService {
     String name = cmisDocument.getFileName();
     String id = cmisDocument.getAttachmentId();
     String objectId = "";
+    String error = "";
     try {
       String responseString = EntityUtils.toString(response.getEntity());
       JSONObject jsonResponse = new JSONObject(responseString);
       int responseCode = response.getStatusLine().getStatusCode();
-
       if (responseCode == 201 || responseCode == 200) {
         JSONObject succinctProperties = jsonResponse.getJSONObject("succinctProperties");
         status = "success";
@@ -105,17 +105,85 @@ public class SDMServiceImpl implements SDMService {
           status = "virus";
         } else {
           status = "fail";
+          error = message;
         }
       }
       // Construct the final response
       finalResponse.put("name", name);
       finalResponse.put("id", id);
       finalResponse.put("status", status);
+      finalResponse.put("message", error);
       if (!objectId.isEmpty()) {
         finalResponse.put("objectId", objectId);
       }
     } catch (IOException e) {
-      throw new ServiceException("Error in creating document in SDM ", e.getMessage());
+      throw new ServiceException(SDMConstants.getGenericError("upload"));
+    }
+  }
+
+  @Override
+  public int renameAttachments(
+      String jwtToken, SDMCredentials sdmCredentials, CmisDocument cmisDocument)
+      throws IOException {
+    String repositoryId = SDMConstants.REPOSITORY_ID;
+    OkHttpClient client = new OkHttpClient();
+    String accessToken = TokenHandler.getDIToken(jwtToken, sdmCredentials);
+    String sdmUrl = sdmCredentials.getUrl() + "browser/" + repositoryId + "/root";
+    String fileName = cmisDocument.getFileName();
+    String objectId = cmisDocument.getObjectId();
+    RequestBody requestBody =
+        new MultipartBody.Builder()
+            .setType(MultipartBody.FORM)
+            .addFormDataPart("cmisaction", "update")
+            .addFormDataPart("propertyId[0]", "cmis:name")
+            .addFormDataPart("propertyValue[0]", fileName)
+            .addFormDataPart("objectId", objectId)
+            .build();
+
+    Request request =
+        new Request.Builder()
+            .url(sdmUrl)
+            .addHeader("Authorization", SDMConstants.BEARER_TOKEN + accessToken)
+            .post(requestBody)
+            .build();
+
+    try (Response response = client.newCall(request).execute()) {
+      return response.code();
+    } catch (IOException e) {
+      throw new ServiceException(SDMConstants.COULD_NOT_RENAME_THE_ATTACHMENT, e);
+    }
+  }
+
+  @Override
+  public String getObject(String jwtToken, String objectId, SDMCredentials sdmCredentials)
+      throws IOException {
+    OkHttpClient client = new OkHttpClient();
+    String accessToken = TokenHandler.getDIToken(jwtToken, sdmCredentials);
+    String sdmUrl =
+        sdmCredentials.getUrl()
+            + "browser/"
+            + SDMConstants.REPOSITORY_ID
+            + "/root?cmisselector=object&objectId="
+            + objectId
+            + "&succinct=true";
+    Request request =
+        new Request.Builder()
+            .url(sdmUrl)
+            .addHeader("Authorization", SDMConstants.BEARER_TOKEN + accessToken)
+            .get()
+            .build();
+
+    try (Response response = client.newCall(request).execute()) {
+      if (!response.isSuccessful()) {
+        return null;
+      } else {
+        String object = response.body().string();
+        JSONObject jsonObject = new JSONObject(object);
+        JSONObject succinctProperties = jsonObject.getJSONObject("succinctProperties");
+        return succinctProperties.getString("cmis:name");
+      }
+    } catch (IOException e) {
+      throw new ServiceException(SDMConstants.ATTACHMENT_NOT_FOUND, e);
     }
   }
 
@@ -250,10 +318,11 @@ public class SDMServiceImpl implements SDMService {
             .build();
 
     try (Response response = client.newCall(request).execute()) {
-      if (!response.isSuccessful()) throw new ServiceException("Could not upload the Attachment");
+      if (!response.isSuccessful())
+        throw new ServiceException(SDMConstants.getGenericError("upload"));
       return response.body().string();
     } catch (IOException e) {
-      throw new ServiceException("Could not upload");
+      throw new ServiceException(SDMConstants.getGenericError("upload"));
     }
   }
 
@@ -295,12 +364,12 @@ public class SDMServiceImpl implements SDMService {
 
     try (Response response = client.newCall(request).execute()) {
       if (!response.isSuccessful()) {
-        throw new ServiceException("Failed to get repository info");
+        throw new ServiceException(SDMConstants.REPOSITORY_ERROR);
       }
       String responseBody = response.body().string();
       return new JSONObject(responseBody);
     } catch (IOException e) {
-      throw new ServiceException("Failed to get repository info");
+      throw new ServiceException(SDMConstants.REPOSITORY_ERROR);
     }
   }
 
@@ -346,7 +415,7 @@ public class SDMServiceImpl implements SDMService {
     try (Response response = client.newCall(request).execute()) {
       return response.code();
     } catch (IOException e) {
-      throw new ServiceException("Could not delete the document");
+      throw new ServiceException(SDMConstants.getGenericError("delete"));
     }
   }
 }
