@@ -23,7 +23,6 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
@@ -36,8 +35,6 @@ public class SDMServiceImpl implements SDMService {
       CmisDocument cmisDocument, String jwtToken, SDMCredentials sdmCredentials)
       throws IOException {
     String accessToken;
-    int TIMEOUT = 900; // Timeout in seconds
-    getCurrentTime();
     Map<String, String> finalResponse = new HashMap<>();
     accessToken = TokenHandler.getDIToken(jwtToken, sdmCredentials);
 
@@ -47,29 +44,21 @@ public class SDMServiceImpl implements SDMService {
         HttpClients.custom()
             .setDefaultRequestConfig(
                 RequestConfig.custom()
-                    .setConnectTimeout(TIMEOUT * 1000)
-                    .setSocketTimeout(TIMEOUT * 1000)
-                    .setConnectionRequestTimeout(TIMEOUT * 1000)
+                    .setConnectTimeout(SDMConstants.TIMEOUT * 1000)
+                    .setSocketTimeout(SDMConstants.TIMEOUT * 1000)
+                    .setConnectionRequestTimeout(SDMConstants.TIMEOUT * 1000)
                     .build())
             .build()) {
 
       HttpPost uploadFile = new HttpPost(sdmUrl);
       MultipartEntityBuilder builder = MultipartEntityBuilder.create();
       uploadFile.setHeader("Authorization", "Bearer " + accessToken);
-      InputStream contentStream = cmisDocument.getContent();
-      InputStreamBody inputStreamBody =
-          new InputStreamBody(
-              contentStream,
-              ContentType.create(cmisDocument.getMimeType()),
-              cmisDocument.getFileName());
-      builder.addPart("filename", inputStreamBody);
       // Add file to the form
-      //    builder.addBinaryBody(
-      //        "filename",
-      //        cmisDocument.getContent(),
-      //        ContentType.create(cmisDocument.getMimeType()),
-      //        cmisDocument.getFileName());
-      getCurrentTime();
+      builder.addBinaryBody(
+          "filename",
+          cmisDocument.getContent(),
+          ContentType.create(cmisDocument.getMimeType()),
+          cmisDocument.getFileName());
       // Add additional form fields
       builder.addTextBody("cmisaction", "createDocument", ContentType.TEXT_PLAIN);
       builder.addTextBody("objectId", cmisDocument.getFolderId(), ContentType.TEXT_PLAIN);
@@ -78,21 +67,14 @@ public class SDMServiceImpl implements SDMService {
       builder.addTextBody("propertyId[1]", "cmis:objectTypeId", ContentType.TEXT_PLAIN);
       builder.addTextBody("propertyValue[1]", "cmis:document", ContentType.TEXT_PLAIN);
       builder.addTextBody("succinct", "true", ContentType.TEXT_PLAIN);
-      // Add more fields as needed
-
       HttpEntity multipart = builder.build();
       uploadFile.setEntity(multipart);
       try (CloseableHttpResponse response = httpClient.execute(uploadFile)) {
-        getCurrentTime();
         formResponse(cmisDocument, finalResponse, response);
-        getCurrentTime();
       } catch (IOException e) {
-        getCurrentTime();
-        e.printStackTrace();
         throw new ServiceException("Error in setting timeout", e.getMessage());
       }
     } catch (IOException e) {
-      getCurrentTime();
       throw new ServiceException("Error in getting response from SDM ", e.getMessage());
     }
     return new JSONObject(finalResponse);
@@ -111,7 +93,7 @@ public class SDMServiceImpl implements SDMService {
       JSONObject jsonResponse = new JSONObject(responseString);
       int responseCode = response.getStatusLine().getStatusCode();
 
-      if (responseCode == 201) {
+      if (responseCode == 201 || responseCode == 200) {
         JSONObject succinctProperties = jsonResponse.getJSONObject("succinctProperties");
         status = "success";
         objectId = succinctProperties.getString("cmis:objectId");
@@ -130,7 +112,7 @@ public class SDMServiceImpl implements SDMService {
       finalResponse.put("id", id);
       finalResponse.put("status", status);
       if (!objectId.isEmpty()) {
-        finalResponse.put("url", objectId);
+        finalResponse.put("objectId", objectId);
       }
     } catch (IOException e) {
       throw new ServiceException("Error in creating document in SDM ", e.getMessage());
@@ -268,7 +250,7 @@ public class SDMServiceImpl implements SDMService {
             .build();
 
     try (Response response = client.newCall(request).execute()) {
-      if (!response.isSuccessful()) throw new ServiceException("Could not upload");
+      if (!response.isSuccessful()) throw new ServiceException("Could not upload the Attachment");
       return response.body().string();
     } catch (IOException e) {
       throw new ServiceException("Could not upload");
@@ -366,11 +348,5 @@ public class SDMServiceImpl implements SDMService {
     } catch (IOException e) {
       throw new ServiceException("Could not delete the document");
     }
-  }
-
-  private static void getCurrentTime() {
-    long currentTimeMillis = System.currentTimeMillis();
-    long currentTimeSeconds = currentTimeMillis / 1000;
-    System.out.println("In sdmservice impl Current time in seconds: " + currentTimeSeconds);
   }
 }

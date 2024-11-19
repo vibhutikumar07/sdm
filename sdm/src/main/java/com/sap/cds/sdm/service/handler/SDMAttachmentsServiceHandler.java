@@ -47,7 +47,6 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
   @On(event = AttachmentService.EVENT_CREATE_ATTACHMENT)
   public void createAttachment(AttachmentCreateEventContext context) throws IOException {
     String subdomain = "";
-    getCurrentTime();
     String repositoryId = SDMConstants.REPOSITORY_ID;
     String repocheck = sdmService.checkRepositoryType(repositoryId);
     CmisDocument cmisDocument = new CmisDocument();
@@ -74,15 +73,12 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
               "This attachment already exists. Please remove it and try again");
         } else {
           AuthenticationInfo authInfo = context.getAuthenticationInfo();
-          getCurrentTime();
           JwtTokenAuthenticationInfo jwtTokenInfo = authInfo.as(JwtTokenAuthenticationInfo.class);
           String jwtToken = jwtTokenInfo.getToken();
           JsonObject tokenDetails = TokenHandler.getTokenFields(jwtToken);
           JsonObject tenantDetails = tokenDetails.get("ext_attr").getAsJsonObject();
           subdomain = tenantDetails.get("zdn").getAsString();
-          getCurrentTime();
           String folderId = sdmService.getFolderId(jwtToken, result, persistenceService, upID);
-          getCurrentTime();
           cmisDocument.setFileName(filename);
           cmisDocument.setAttachmentId(fileid);
           InputStream contentStream = (InputStream) data.get("content");
@@ -92,10 +88,8 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
           cmisDocument.setFolderId(folderId);
           cmisDocument.setMimeType(mimeType);
           SDMCredentials sdmCredentials = TokenHandler.getSDMCredentials();
-          getCurrentTime();
           JSONObject createResult =
               sdmService.createDocument(cmisDocument, jwtToken, sdmCredentials);
-          getCurrentTime();
 
           if (createResult.get("status") == "duplicate") {
             throw new ServiceException("The following file already exists and cannot be uploaded");
@@ -105,7 +99,7 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
           } else if (createResult.get("status") == "fail") {
             throw new ServiceException("The following file cannot be uploaded");
           } else {
-            cmisDocument.setObjectId(createResult.get("url").toString());
+            cmisDocument.setObjectId(createResult.get("objectId").toString());
             addAttachmentToDraft(attachmentDraftEntity.get(), persistenceService, cmisDocument);
           }
         }
@@ -198,11 +192,5 @@ public class SDMAttachmentsServiceHandler implements EventHandler {
       }
     }
     return false;
-  }
-
-  private static void getCurrentTime() {
-    long currentTimeMillis = System.currentTimeMillis();
-    long currentTimeSeconds = currentTimeMillis / 1000;
-    System.out.println("Current time in seconds: " + currentTimeSeconds);
   }
 }

@@ -35,7 +35,7 @@ public class DBQuery {
       CmisDocument cmisDocument) {
     String repositoryId = SDMConstants.REPOSITORY_ID;
     Map<String, Object> updatedFields = new HashMap<>();
-    updatedFields.put("url", cmisDocument.getObjectId());
+    updatedFields.put("objectId", cmisDocument.getObjectId());
     updatedFields.put("repositoryId", repositoryId);
     updatedFields.put("folderId", cmisDocument.getFolderId());
     updatedFields.put("status", "Clean");
@@ -80,7 +80,7 @@ public class DBQuery {
       cmisDocument.setRepositoryId(row.get("repositoryId").toString());
       cmisDocument.setFileName(row.get("fileName").toString());
       cmisDocument.setAttachmentId(row.get("ID").toString());
-      cmisDocument.setObjectId(row.get("url").toString());
+      cmisDocument.setObjectId(row.get("objectId").toString());
       cmisDocuments.add(cmisDocument);
     }
     return cmisDocuments;
