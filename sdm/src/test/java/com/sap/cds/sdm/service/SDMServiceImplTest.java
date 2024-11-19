@@ -281,7 +281,7 @@ public class SDMServiceImplTest {
               () -> {
                 sdmServiceImpl.createFolder(parentId, jwtToken, repositoryId, sdmCredentials);
               });
-      assertEquals("Could not upload the Attachment", exception.getMessage());
+      assertEquals("Could not upload the document.", exception.getMessage());
 
     } finally {
       mockWebServer.shutdown();
