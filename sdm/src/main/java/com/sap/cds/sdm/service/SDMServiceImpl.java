@@ -23,6 +23,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
@@ -53,12 +54,12 @@ public class SDMServiceImpl implements SDMService {
       HttpPost uploadFile = new HttpPost(sdmUrl);
       MultipartEntityBuilder builder = MultipartEntityBuilder.create();
       uploadFile.setHeader("Authorization", "Bearer " + accessToken);
-      // Add file to the form
-      builder.addBinaryBody(
-          "filename",
-          cmisDocument.getContent(),
-          ContentType.create(cmisDocument.getMimeType()),
-          cmisDocument.getFileName());
+      InputStream contentStream = cmisDocument.getContent();
+      InputStreamBody inputStreamBody =
+          new InputStreamBody(
+              contentStream,
+              ContentType.create(cmisDocument.getMimeType()),
+              cmisDocument.getFileName());
       // Add additional form fields
       builder.addTextBody("cmisaction", "createDocument", ContentType.TEXT_PLAIN);
       builder.addTextBody("objectId", cmisDocument.getFolderId(), ContentType.TEXT_PLAIN);
