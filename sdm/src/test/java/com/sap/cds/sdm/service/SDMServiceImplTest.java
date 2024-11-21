@@ -621,7 +621,7 @@ public class SDMServiceImplTest {
     PersistenceService persistenceService = mock(PersistenceService.class);
     Result result = mock(Result.class);
     Map<String, Object> attachment = new HashMap<>();
-    attachment.put("folderId", "folder123");
+    attachment.put("folderId", "newFolderId123");
     attachment.put("repositoryId", "repoId");
     List<Map> resultList = Arrays.asList((Map) attachment);
 
@@ -650,7 +650,7 @@ public class SDMServiceImplTest {
           .createFolder(anyString(), anyString(), anyString(), any(SDMCredentials.class));
 
       String folderId = spyService.getFolderId(jwtToken, result, persistenceService, up__ID);
-      assertEquals("folder123", folderId, "Expected folderId from result list");
+      assertEquals("newFolderId123", folderId, "Expected folderId from result list");
     }
   }
 
