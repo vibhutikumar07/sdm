@@ -82,7 +82,7 @@ public class DBQuery {
     List<CmisDocument> cmisDocuments = new ArrayList<>();
     CqnSelect q =
         Select.from(attachmentEntity)
-            .columns("fileName", "IsActiveEntity", "ID", "folderId", "repositoryId", "url")
+            .columns("fileName", "IsActiveEntity", "ID", "folderId", "repositoryId", "objectId")
             .where(doc -> doc.get("folderId").eq(folderId));
     Result result = persistenceService.run(q);
     for (Row row : result.list()) {
