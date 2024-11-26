@@ -107,10 +107,11 @@ public class SDMServiceImpl implements SDMService {
         objectId = succinctProperties.getString("cmis:objectId");
       } else {
         String message = jsonResponse.getString("message");
-        if (responseCode == 409) {
-          status = "duplicate";
-        } else if ("Malware Service Exception: Virus found in the file!".equals(message)) {
+        if (responseCode == 409
+            && "Malware Service Exception: Virus found in the file!".equals(message)) {
           status = "virus";
+        } else if (responseCode == 409) {
+          status = "duplicate";
         } else {
           status = "fail";
           error = message;
