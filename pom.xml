@@ -15,6 +15,13 @@
         <url>https://www.sap.com</url>
     </organization>
 
+    <developers>
+        <developer>
+            <organization>SAP SE</organization>
+            <organizationUrl>https://www.sap.com</organizationUrl>
+        </developer>
+    </developers>
+
     <properties>
         <revision>1.0.0-SNAPSHOT</revision>
         <java.version>17</java.version>
@@ -36,6 +43,7 @@
     <packaging>pom</packaging>
 
     <name>CDS Feature for SAP Document Management Service - Root</name>
+    <description>This artifact is a is cds-plugin that provides an easy CAP-level integration with SAP Document Management Service. This package supports handling of attachments(documents) by using an aspect Attachments in SAP Document Management Service.</description>
     <url>https://cap.cloud.sap/docs/plugins/#attachments</url>
 
     <modules>
@@ -214,7 +222,23 @@
 
         </plugins>
     </build>
-
-
+    <distributionManagement>
+        <snapshotRepository>
+            <id>artifactory</id>
+            <name>Artifactory_DMZ-snapshots</name>
+            <url>https://common.repositories.cloud.sap/artifactory/cap-sdm-java</url>
+        </snapshotRepository>
+        <repository>
+            <id>artifactory</id>
+            <name>Artifactory_DMZ</name>
+            <url>https://common.repositories.cloud.sap/artifactory/cap-sdm-java</url>
+        </repository>
+    </distributionManagement>
+         
+    <scm>
+        <url>https://github.com/cap-java/sdm</url>
+        <connection>scm:git:git@github.com:cap-java/sdm.git</connection>
+        <developerConnection>scm:git:git@github.com:cap-java/sdm.git</developerConnection>
+    </scm>
 
 </project>
