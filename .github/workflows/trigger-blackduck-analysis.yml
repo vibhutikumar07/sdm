@@ -2,7 +2,7 @@ name: Trigger Blackduck Analysis
 
 on:
   release:
-    types: [ "released", "prereleased"  ]
+    types: [  "prereleased"  ]
 
 jobs:
   trigger-blackduck:
