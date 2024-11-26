@@ -5,14 +5,17 @@ env:
   MAVEN_VERSION: '3.6.3'
 
 on:
-  release:
-    types: [ "released" ]
+  workflow_run:
+    workflows: ["Trigger Blackduck Analysis"]
+    types:
+      - completed
 
 jobs:
 
   update-version:
     runs-on: ubuntu-latest
     #needs: blackduck
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}  # Proceed only if the Blackduck analysis succeeds
     steps:
 
       - name: Show Branch and Working Directory Info
