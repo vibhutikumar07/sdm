@@ -1,0 +1,16 @@
+name: Trigger Blackduck Analysis
+
+on:
+  release:
+    types: [ "released", "prereleased"  ]
+
+jobs:
+  trigger-blackduck:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Blackduck Analysis
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: Blackduck analysis  # Name of the Blackduck analysis workflow
+          token: ${{ secrets.GITHUB_TOKEN }}
