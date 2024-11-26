@@ -371,6 +371,7 @@ public class SDMServiceImplTest {
       cmisDocument.setParentId("parentId");
       cmisDocument.setRepositoryId("repositoryId");
       cmisDocument.setFolderId("folderId");
+      cmisDocument.setMimeType("application/pdf");
 
       String jwtToken = "jwtToken";
       String mockUrl = mockWebServer.url("/").toString();
@@ -388,8 +389,8 @@ public class SDMServiceImplTest {
       JSONObject expectedResponse = new JSONObject();
       expectedResponse.put("name", "sample.pdf");
       expectedResponse.put("id", "attachmentId");
+      expectedResponse.put("objectId", "objectId");
       expectedResponse.put("message", "");
-      expectedResponse.put("url", "objectId");
       expectedResponse.put("status", "success");
       assertEquals(expectedResponse.toString(), actualResponse.toString());
     } finally {
@@ -420,6 +421,7 @@ public class SDMServiceImplTest {
       cmisDocument.setParentId("parentId");
       cmisDocument.setRepositoryId("repositoryId");
       cmisDocument.setFolderId("folderId");
+      cmisDocument.setMimeType("application/pdf");
 
       String jwtToken = "jwtToken";
       String mockUrl = mockWebServer.url("/").toString();
@@ -456,7 +458,7 @@ public class SDMServiceImplTest {
       mockWebServer.enqueue(
           new MockResponse()
               .setBody(mockResponseBody)
-              .setResponseCode(400) // Assuming 400 Bad Request or a similar client error code
+              .setResponseCode(409)
               .addHeader("Content-Type", "application/json"));
 
       CmisDocument cmisDocument = new CmisDocument();
@@ -469,6 +471,7 @@ public class SDMServiceImplTest {
       cmisDocument.setParentId("parentId");
       cmisDocument.setRepositoryId("repositoryId");
       cmisDocument.setFolderId("folderId");
+      cmisDocument.setMimeType("application/pdf");
 
       String jwtToken = "jwtToken";
       String mockUrl = mockWebServer.url("/").toString();
@@ -518,6 +521,7 @@ public class SDMServiceImplTest {
       cmisDocument.setParentId("parentId");
       cmisDocument.setRepositoryId("repositoryId");
       cmisDocument.setFolderId("folderId");
+      cmisDocument.setMimeType("application/pdf");
 
       String jwtToken = "jwtToken";
       String mockUrl = mockWebServer.url("/").toString();
@@ -563,7 +567,7 @@ public class SDMServiceImplTest {
       cmisDocument.setParentId("parentId");
       cmisDocument.setRepositoryId("repositoryId");
       cmisDocument.setFolderId("folderId");
-
+      cmisDocument.setMimeType("application/pdf");
       String jwtToken = "jwtToken";
       String mockUrl = mockWebServer.url("/").toString();
       SDMCredentials sdmCredentials = new SDMCredentials();
@@ -580,7 +584,7 @@ public class SDMServiceImplTest {
         fail("Expected ServiceException to be thrown");
       } catch (ServiceException e) {
         // Expected exception to be thrown
-        assertEquals("Could not upload the document.", e.getMessage());
+        assertEquals("Error in setting timeout", e.getMessage());
       }
 
     } finally {
