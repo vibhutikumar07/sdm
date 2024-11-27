@@ -56,8 +56,7 @@ public class AttachmentsSDMTest {
 
     Response response = client.newCall(request).execute();
     token = new ObjectMapper().readTree(response.body().string()).get("access_token").asText();
-    token =
-        "sample token";
+    token = "sample token";
     response.close();
     Map<String, String> config = new HashMap<>();
     config.put("Authorization", "Bearer " + token);

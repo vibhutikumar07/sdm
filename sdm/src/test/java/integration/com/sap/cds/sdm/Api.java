@@ -16,8 +16,7 @@ public class Api {
   public Api(Map<String, String> config) {
     this.config = new HashMap<>(config);
     this.httpClient = new OkHttpClient();
-    this.token =
-        "sample token";
+    this.token = "sample token";
   }
 
   public String createEntityDraft(
