@@ -126,7 +126,7 @@ public class SDMServiceImplTest {
             () -> {
               SDMService.getRepositoryInfo(token, sdmCredentials);
             });
-    assertEquals("Failed to get repository info", exception.getMessage());
+    assertEquals("Failed to get repository info.", exception.getMessage());
 
     mockWebServer.shutdown();
   }
@@ -283,7 +283,7 @@ public class SDMServiceImplTest {
               () -> {
                 sdmServiceImpl.createFolder(parentId, jwtToken, repositoryId, sdmCredentials);
               });
-      assertEquals("Could not upload", exception.getMessage());
+      assertEquals("Could not upload the document.", exception.getMessage());
 
     } finally {
       mockWebServer.shutdown();
@@ -373,6 +373,7 @@ public class SDMServiceImplTest {
       cmisDocument.setParentId("parentId");
       cmisDocument.setRepositoryId("repositoryId");
       cmisDocument.setFolderId("folderId");
+      cmisDocument.setMimeType("application/pdf");
 
       String jwtToken = "jwtToken";
       String mockUrl = mockWebServer.url("/").toString();
@@ -390,7 +391,8 @@ public class SDMServiceImplTest {
       JSONObject expectedResponse = new JSONObject();
       expectedResponse.put("name", "sample.pdf");
       expectedResponse.put("id", "attachmentId");
-      expectedResponse.put("url", "objectId");
+      expectedResponse.put("objectId", "objectId");
+      expectedResponse.put("message", "");
       expectedResponse.put("status", "success");
       assertEquals(expectedResponse.toString(), actualResponse.toString());
     } finally {
@@ -421,6 +423,7 @@ public class SDMServiceImplTest {
       cmisDocument.setParentId("parentId");
       cmisDocument.setRepositoryId("repositoryId");
       cmisDocument.setFolderId("folderId");
+      cmisDocument.setMimeType("application/pdf");
 
       String jwtToken = "jwtToken";
       String mockUrl = mockWebServer.url("/").toString();
@@ -438,6 +441,7 @@ public class SDMServiceImplTest {
       JSONObject expectedResponse = new JSONObject();
       expectedResponse.put("name", "sample.pdf");
       expectedResponse.put("id", "attachmentId");
+      expectedResponse.put("message", "");
       expectedResponse.put("status", "duplicate");
       assertEquals(expectedResponse.toString(), actualResponse.toString());
     } finally {
@@ -456,7 +460,7 @@ public class SDMServiceImplTest {
       mockWebServer.enqueue(
           new MockResponse()
               .setBody(mockResponseBody)
-              .setResponseCode(400) // Assuming 400 Bad Request or a similar client error code
+              .setResponseCode(409)
               .addHeader("Content-Type", "application/json"));
 
       CmisDocument cmisDocument = new CmisDocument();
@@ -469,6 +473,7 @@ public class SDMServiceImplTest {
       cmisDocument.setParentId("parentId");
       cmisDocument.setRepositoryId("repositoryId");
       cmisDocument.setFolderId("folderId");
+      cmisDocument.setMimeType("application/pdf");
 
       String jwtToken = "jwtToken";
       String mockUrl = mockWebServer.url("/").toString();
@@ -486,6 +491,7 @@ public class SDMServiceImplTest {
       JSONObject expectedResponse = new JSONObject();
       expectedResponse.put("name", "sample.pdf");
       expectedResponse.put("id", "attachmentId");
+      expectedResponse.put("message", "");
       expectedResponse.put("status", "virus");
       assertEquals(expectedResponse.toString(), actualResponse.toString());
     } finally {
@@ -517,6 +523,7 @@ public class SDMServiceImplTest {
       cmisDocument.setParentId("parentId");
       cmisDocument.setRepositoryId("repositoryId");
       cmisDocument.setFolderId("folderId");
+      cmisDocument.setMimeType("application/pdf");
 
       String jwtToken = "jwtToken";
       String mockUrl = mockWebServer.url("/").toString();
@@ -534,6 +541,7 @@ public class SDMServiceImplTest {
       JSONObject expectedResponse = new JSONObject();
       expectedResponse.put("name", "sample.pdf");
       expectedResponse.put("id", "attachmentId");
+      expectedResponse.put("message", "An unexpected error occurred");
       expectedResponse.put("status", "fail");
       assertEquals(expectedResponse.toString(), actualResponse.toString());
     } finally {
@@ -561,7 +569,7 @@ public class SDMServiceImplTest {
       cmisDocument.setParentId("parentId");
       cmisDocument.setRepositoryId("repositoryId");
       cmisDocument.setFolderId("folderId");
-
+      cmisDocument.setMimeType("application/pdf");
       String jwtToken = "jwtToken";
       String mockUrl = mockWebServer.url("/").toString();
       SDMCredentials sdmCredentials = new SDMCredentials();
@@ -578,7 +586,7 @@ public class SDMServiceImplTest {
         fail("Expected ServiceException to be thrown");
       } catch (ServiceException e) {
         // Expected exception to be thrown
-        assertEquals("Could not upload", e.getMessage());
+        assertEquals("Error in setting timeout", e.getMessage());
       }
 
     } finally {
@@ -619,7 +627,7 @@ public class SDMServiceImplTest {
     PersistenceService persistenceService = mock(PersistenceService.class);
     Result result = mock(Result.class);
     Map<String, Object> attachment = new HashMap<>();
-    attachment.put("folderId", "folder123");
+    attachment.put("folderId", "newFolderId123");
     attachment.put("repositoryId", "repoId");
     List<Map> resultList = Arrays.asList((Map) attachment);
 
@@ -635,8 +643,20 @@ public class SDMServiceImplTest {
       tokenHandlerMockedStatic
           .when(() -> TokenHandler.getDIToken(jwtToken, sdmCredentials))
           .thenReturn("mockAccessToken");
-      String folderId = sdmServiceImpl.getFolderId(jwtToken, result, persistenceService, up__ID);
-      assertEquals("folder123", folderId, "Expected folderId from result list");
+      tokenHandlerMockedStatic.when(TokenHandler::getSDMCredentials).thenReturn(sdmCredentials);
+      // Mock the method `getFolderIdByPath`
+      SDMServiceImpl spyService = spy(sdmServiceImpl);
+      doReturn(null)
+          .when(spyService)
+          .getFolderIdByPath(anyString(), anyString(), anyString(), any(SDMCredentials.class));
+
+      // Mock the method `createFolder`
+      doReturn("{\"succinctProperties\":{\"cmis:objectId\":\"newFolderId123\"}}")
+          .when(spyService)
+          .createFolder(anyString(), anyString(), anyString(), any(SDMCredentials.class));
+
+      String folderId = spyService.getFolderId(jwtToken, result, persistenceService, up__ID);
+      assertEquals("newFolderId123", folderId, "Expected folderId from result list");
     }
   }
 
@@ -714,7 +734,7 @@ public class SDMServiceImplTest {
       tokenHandlerMockedStatic.when(TokenHandler::getSDMCredentials).thenReturn(sdmCredentials);
       tokenHandlerMockedStatic
           .when(() -> TokenHandler.getDITokenUsingAuthorities(sdmCredentials, userEmail, subdomain))
-          .thenThrow(new IOException("Could not delete the document"));
+          .thenThrow(new IOException("Could not delete the document."));
 
       // Since the exception is thrown before OkHttpClient is used, no need to mock httpClient
       // behavior.
@@ -729,7 +749,7 @@ public class SDMServiceImplTest {
               });
 
       // Verify the exception message
-      assertEquals("Could not delete the document", thrown.getMessage());
+      assertEquals("Could not delete the document.", thrown.getMessage());
     }
   }
 
@@ -937,6 +957,92 @@ public class SDMServiceImplTest {
                 sdmServiceImpl.readDocument(objectId, jwtToken, sdmCredentials, mockContext);
               });
       assertEquals("Failed to set document stream in context", exception.getMessage());
+    } finally {
+      mockWebServer.shutdown();
+    }
+  }
+
+  @Test
+  public void testRenameAttachments_Success() throws IOException {
+    MockWebServer mockWebServer = new MockWebServer();
+    mockWebServer.start();
+
+    try (MockedStatic<TokenHandler> tokenHandlerMockedStatic = mockStatic(TokenHandler.class)) {
+      // Enqueue a successful response
+      mockWebServer.enqueue(new MockResponse().setResponseCode(200));
+
+      String jwtToken = "jwt_token";
+      String mockUrl = mockWebServer.url("/").toString();
+      CmisDocument cmisDocument = new CmisDocument();
+      cmisDocument.setFileName("newFileName");
+      cmisDocument.setObjectId("objectId");
+
+      SDMCredentials mockSdmCredentials = mock(SDMCredentials.class);
+      when(mockSdmCredentials.getUrl()).thenReturn(mockUrl);
+      when(TokenHandler.getDIToken(jwtToken, mockSdmCredentials)).thenReturn("mockAccessToken");
+      SDMServiceImpl sdmServiceImpl = new SDMServiceImpl();
+
+      int responseCode =
+          sdmServiceImpl.renameAttachments(jwtToken, mockSdmCredentials, cmisDocument);
+
+      // Verify the response code
+      assertEquals(200, responseCode);
+    } finally {
+      mockWebServer.shutdown();
+    }
+  }
+
+  @Test
+  public void testGetObject_Success() throws IOException {
+    MockWebServer mockWebServer = new MockWebServer();
+    mockWebServer.start();
+    try (MockedStatic<TokenHandler> tokenHandlerMockedStatic =
+        Mockito.mockStatic(TokenHandler.class)) {
+      String mockResponseBody = "{\"succinctProperties\": {\"cmis:name\": \"desiredObjectName\"}}";
+      mockWebServer.enqueue(
+          new MockResponse()
+              .setResponseCode(200)
+              .setBody(mockResponseBody)
+              .addHeader("Content-Type", "application/json"));
+      String jwtToken = "jwt_token";
+      String objectId = "objectId";
+      String mockUrl = mockWebServer.url("/").toString();
+
+      SDMServiceImpl sdmServiceImpl = Mockito.spy(new SDMServiceImpl());
+      SDMCredentials mockSdmCredentials = Mockito.mock(SDMCredentials.class);
+      Mockito.when(mockSdmCredentials.getUrl()).thenReturn(mockUrl);
+      Mockito.when(TokenHandler.getDIToken(jwtToken, mockSdmCredentials))
+          .thenReturn("mockAccessToken");
+
+      String objectName = sdmServiceImpl.getObject(jwtToken, objectId, mockSdmCredentials);
+      assertEquals("desiredObjectName", objectName);
+
+    } finally {
+      mockWebServer.shutdown();
+    }
+  }
+
+  @Test
+  public void testGetObject_Failure() throws IOException {
+    MockWebServer mockWebServer = new MockWebServer();
+    mockWebServer.start();
+    try (MockedStatic<TokenHandler> tokenHandlerMockedStatic =
+        Mockito.mockStatic(TokenHandler.class)) {
+      mockWebServer.enqueue(
+          new MockResponse().setResponseCode(500).addHeader("Content-Type", "application/json"));
+      String jwtToken = "jwt_token";
+      String objectId = "objectId";
+      String mockUrl = mockWebServer.url("/").toString();
+
+      SDMServiceImpl sdmServiceImpl = Mockito.spy(new SDMServiceImpl());
+      SDMCredentials mockSdmCredentials = Mockito.mock(SDMCredentials.class);
+      Mockito.when(mockSdmCredentials.getUrl()).thenReturn(mockUrl);
+      Mockito.when(TokenHandler.getDIToken(jwtToken, mockSdmCredentials))
+          .thenReturn("mockAccessToken");
+
+      String objectName = sdmServiceImpl.getObject(jwtToken, objectId, mockSdmCredentials);
+      assertNull(objectName);
+
     } finally {
       mockWebServer.shutdown();
     }
