@@ -142,6 +142,12 @@
           <groupId>com.sap.cds</groupId>
            <artifactId>cds-feature-attachments</artifactId>
           <version>${attachments_version}</version>
+          <exclusions>
+            <exclusion>
+                <groupId>jakarta.jms</groupId>
+                <artifactId>jakarta.jms-api</artifactId>
+            </exclusion>
+          </exclusions>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
