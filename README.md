@@ -107,33 +107,33 @@ If you want to use the development version of SDM CAP plugin follow the below st
    mvn clean install
 ```
 
-2. Checkout to the branch **deploy**:
+3. Checkout to the branch **deploy**:
 
 ```sh
    git checkout deploy
 ```
 
-3. Navigate to the demoapp folder:
+4. Navigate to the demoapp folder:
 
 ```sh
    cd cap-notebook/demoapp
 ```
 
-4. Modify the [xsappname](https://github.com/cap-java/sdm/blob/4180e501ecd792770174aa4972b06aff54ac139d/cap-notebook/demoapp/xs-security.json#L1) value in the **xs-security.json**
+5. Modify the [xsappname](https://github.com/cap-java/sdm/blob/4180e501ecd792770174aa4972b06aff54ac139d/cap-notebook/demoapp/xs-security.json#L1) value in the **xs-security.json**
 
-5. Modify the [xsappname](https://github.com/cap-java/sdm/blob/4180e501ecd792770174aa4972b06aff54ac139d/cap-notebook/demoapp/mta.yaml#L82), [REPOSITORY_ID](https://github.com/cap-java/sdm/blob/4180e501ecd792770174aa4972b06aff54ac139d/cap-notebook/demoapp/mta.yaml#L21) and SDM instance name in the [srv module](https://github.com/cap-java/sdm/blob/4180e501ecd792770174aa4972b06aff54ac139d/cap-notebook/demoapp/mta.yaml#L31) and the [resources section](https://github.com/cap-java/sdm/blob/4180e501ecd792770174aa4972b06aff54ac139d/cap-notebook/demoapp/mta.yaml#L98) values in the **mta.yaml**
+6. Modify the [xsappname](https://github.com/cap-java/sdm/blob/4180e501ecd792770174aa4972b06aff54ac139d/cap-notebook/demoapp/mta.yaml#L82), [REPOSITORY_ID](https://github.com/cap-java/sdm/blob/4180e501ecd792770174aa4972b06aff54ac139d/cap-notebook/demoapp/mta.yaml#L21) and SDM instance name in the [srv module](https://github.com/cap-java/sdm/blob/4180e501ecd792770174aa4972b06aff54ac139d/cap-notebook/demoapp/mta.yaml#L31) and the [resources section](https://github.com/cap-java/sdm/blob/4180e501ecd792770174aa4972b06aff54ac139d/cap-notebook/demoapp/mta.yaml#L98) values in the **mta.yaml**
 
-6. Build the application:
+7. Build the application:
 
 ```sh
    mbt build
 ```
-7. Log in to Cloud Foundry space:
+8. Log in to Cloud Foundry space:
 
 ```sh
    cf login -a <CF-API> -o <ORG-NAME> -s <SPACE-NAME>
 ```
-8. Deploy the application:
+9. Deploy the application:
 
 ```sh
    cf deploy mta_archives/*.mtar
