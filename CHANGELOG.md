@@ -16,4 +16,4 @@ Initial release that provides the following features
 - Rename attachment : Provides the capability to rename attachments.
 - Virus scanning : Provides the capability to support virus scan for virus scan enabled repositories.
 - Draft functionality : Provides the capability of working with draft attachments.
-- Repository-specific attachment display: Enables viewing attachments available in the repository linked to the deployed application.
+- Display attachments specific to repository: Lists attachments contained in the repository that is configured with the CAP application.
