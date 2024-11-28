@@ -9,12 +9,17 @@ This plugin can be consumed by the CAP application deployed on BTP to store thei
 ## Key features
 
 - Create attachment : Provides the capability to upload new attachments.
+- Read attachment : Provides the capability to upload new attachments.
+- Delete attachment : Provides the capability to upload new attachments.
+- Rename attachment : Provides the capability to upload new attachments.
 - Virus scanning : Provides the capability to support virus scan for virus scan enabled repositories.
 - Draft functionality : Provides the capability of working with draft attachments.
+- Display attachments specific to repository: Lists attachments contained in the repository that is configured with the CAP application.
 
 ## Table of Contents
 
 - [Pre-Requisites](#pre-requisites)
+- [Setup](#setup)
 - [Deploying and testing the application](#deploying-and-testing-the-application)
 - [Use @cap-java/sdm plugin](#use-cap-javasdm-plugin)
 - [Known Restrictions](#known-restrictions)
@@ -40,6 +45,99 @@ This plugin can be consumed by the CAP application deployed on BTP to store thei
 > - For cds-services version < 3.4.0, clicking on attachment will download the file to the computer
 >
 > A reference to adding this can be found [here](https://github.com/cap-java/sdm/blob/691c329f4c3c17ae390cfcb2db1ef02650585aee/cap-notebook/demoapp/pom.xml#L20)
+
+## Setup
+
+In this guide, we use the [Bookshop reference sample app](https://github.com/cap-java/sdm/tree/deploy) in the deploy branch of this repository, to integrate SDM CAP plugin.
+
+### Using the released version
+If you want to use the released version of SDM CAP plugin follow the below steps:
+
+1. Delete the sdm and sdm-root folders from your local .m2 repository
+
+2. Clone the sdm repository:
+
+```sh
+   git clone https://github.com/cap-java/sdm
+```
+
+3. Checkout to the branch **deploy**:
+
+```sh
+   git checkout deploy
+```
+
+4. Navigate to the demoapp folder:
+
+```sh
+   cd cap-notebook/demoapp
+```
+
+5. Modify the [xsappname](https://github.com/cap-java/sdm/blob/4180e501ecd792770174aa4972b06aff54ac139d/cap-notebook/demoapp/xs-security.json#L1) value in the **xs-security.json**
+
+6. Modify the [xsappname](https://github.com/cap-java/sdm/blob/4180e501ecd792770174aa4972b06aff54ac139d/cap-notebook/demoapp/mta.yaml#L82), [REPOSITORY_ID](https://github.com/cap-java/sdm/blob/4180e501ecd792770174aa4972b06aff54ac139d/cap-notebook/demoapp/mta.yaml#L21) and SDM instance name in the [srv module](https://github.com/cap-java/sdm/blob/4180e501ecd792770174aa4972b06aff54ac139d/cap-notebook/demoapp/mta.yaml#L31) and the [resources section](https://github.com/cap-java/sdm/blob/4180e501ecd792770174aa4972b06aff54ac139d/cap-notebook/demoapp/mta.yaml#L98) values in the **mta.yaml**
+
+7. Build the application:
+
+```sh
+   mbt build
+```
+8. Log in to Cloud Foundry space:
+
+```sh
+   cf login -a <CF-API> -o <ORG-NAME> -s <SPACE-NAME>
+```
+9. Deploy the application:
+
+```sh
+   cf deploy mta_archives/*.mtar
+```
+
+### Using the development version
+If you want to use the development version of SDM CAP plugin follow the below steps:
+
+1. Clone the sdm repository:
+
+```sh
+   git clone https://github.com/cap-java/sdm
+```
+2. Install the plugin in the root folder:
+
+```sh
+   mvn clean install
+```
+
+2. Checkout to the branch **deploy**:
+
+```sh
+   git checkout deploy
+```
+
+3. Navigate to the demoapp folder:
+
+```sh
+   cd cap-notebook/demoapp
+```
+
+4. Modify the [xsappname](https://github.com/cap-java/sdm/blob/4180e501ecd792770174aa4972b06aff54ac139d/cap-notebook/demoapp/xs-security.json#L1) value in the **xs-security.json**
+
+5. Modify the [xsappname](https://github.com/cap-java/sdm/blob/4180e501ecd792770174aa4972b06aff54ac139d/cap-notebook/demoapp/mta.yaml#L82), [REPOSITORY_ID](https://github.com/cap-java/sdm/blob/4180e501ecd792770174aa4972b06aff54ac139d/cap-notebook/demoapp/mta.yaml#L21) and SDM instance name in the [srv module](https://github.com/cap-java/sdm/blob/4180e501ecd792770174aa4972b06aff54ac139d/cap-notebook/demoapp/mta.yaml#L31) and the [resources section](https://github.com/cap-java/sdm/blob/4180e501ecd792770174aa4972b06aff54ac139d/cap-notebook/demoapp/mta.yaml#L98) values in the **mta.yaml**
+
+6. Build the application:
+
+```sh
+   mbt build
+```
+7. Log in to Cloud Foundry space:
+
+```sh
+   cf login -a <CF-API> -o <ORG-NAME> -s <SPACE-NAME>
+```
+8. Deploy the application:
+
+```sh
+   cf deploy mta_archives/*.mtar
+```
 
 ## Deploying and testing the application
 
