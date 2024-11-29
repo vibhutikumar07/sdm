@@ -48,7 +48,7 @@ This plugin can be consumed by the CAP application deployed on BTP to store thei
 
 ## Setup
 
-In this guide, we use the [Bookshop reference sample app](https://github.com/cap-java/sdm/tree/deploy) in the deploy branch of this repository, to integrate SDM CAP plugin.
+In this guide, we use the Bookshop reference sample app in the [deploy branch](https://github.com/cap-java/sdm/tree/deploy) of this repository, to integrate SDM CAP plugin.
 
 ### Using the released version
 If you want to use the released version of SDM CAP plugin follow the below steps:
