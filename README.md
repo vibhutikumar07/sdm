@@ -19,7 +19,7 @@ This plugin can be consumed by the CAP application deployed on BTP to store thei
 - [Pre-Requisites](#pre-requisites)
 - [Setup](#setup)
 - [Deploying and testing the application](#deploying-and-testing-the-application)
-- [Use @cap-java/sdm plugin](#use-cap-javasdm-plugin)
+- [Use com.sap.cds:sdm dependency](#use-the-comsapcdssdm-dependency)
 - [Known Restrictions](#known-restrictions)
 - [Support, Feedback, Contributing](#support-feedback-contributing)
 - [Code of Conduct](#code-of-conduct)
@@ -134,7 +134,7 @@ The plugin is now added to your local .m2 repository, giving it priority over th
    cf deploy mta_archives/*.mtar
 ```
 
-## Use the **com.sap.cds:sdm** dependency
+## Use the com.sap.cds:sdm dependency
 Follow these steps if you want to integrate the SDM CAP Plugin with your own CAP application. 
 
 1. To use sdm plugin in your CAP application, create an element with an `Attachments` type. Following the [best practice of separation of concerns](https://cap.cloud.sap/docs/guides/domain-modeling#separation-of-concerns), create a separate file _srv/attachment-extension.cds_ and extend your entity with attachments. Refer the following example from a sample Bookshop app:
