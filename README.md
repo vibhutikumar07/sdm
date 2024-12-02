@@ -29,10 +29,11 @@ This plugin can be consumed by the CAP application deployed on BTP to store thei
 * Java 17 or higher
 * [MTAR builder](https://www.npmjs.com/package/mbt) (`npm install -g mbt`)
 * [Cloud Foundry CLI](https://docs.cloudfoundry.org/cf-cli/install-go-cli.html), Install cf-cli and run command `cf install-plugin multiapps`.
+* UI5 version 1.131.0 or higher
 
 > **cds-services**
 >
-> The behaviour of clicking attachment and opening it varies based on the version of cds-services used by the CAP application. 
+> The behaviour of clicking attachment and previewing it varies based on the version of cds-services used by the CAP application. 
 >
 > - For cds-services version >= 3.4.0, clicking on attachment will
 >   - open the file in new browser tab, if browser supports the file type.
@@ -185,7 +186,7 @@ Follow these steps if you want to integrate the SDM CAP Plugin with your own CAP
    <dependency>
       <groupId>com.sap.cds</groupId>
       <artifactId>sdm</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
+      <version>RELEASE</version>
    </dependency>
    ```
 
