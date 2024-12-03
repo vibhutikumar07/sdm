@@ -35,7 +35,9 @@ jobs:
       - name: Build and package
         run: |
           cd sdm
-          mvn clean package
+          pwd
+          ls -lart
+          #mvn clean package
           cp target/*.jar ../incidents-app/libs/
           cd ../incidents-app
           mvn clean package
