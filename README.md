@@ -91,7 +91,7 @@ Now the application will pick the released version of the plugin from the centra
 ```
 
 ### Using the development version
-To use a development version of the SDM CAP plugin, follow these steps. This is useful if you want to test changes made in a separate branch or use a version not yet released on the central Maven repository.
+To use a development version of the SDM CAP plugin, follow these steps. This is useful if you want to test changes made in a separate branch of this github repository or use a version not yet released on the central Maven repository.
 
 1. Clone the sdm repository:
 
@@ -138,7 +138,17 @@ The plugin is now added to your local .m2 repository, giving it priority over th
 ## Use the com.sap.cds:sdm dependency
 Follow these steps if you want to integrate the SDM CAP Plugin with your own CAP application. 
 
-1. To use sdm plugin in your CAP application, create an element with an `Attachments` type. Following the [best practice of separation of concerns](https://cap.cloud.sap/docs/guides/domain-modeling#separation-of-concerns), create a separate file _srv/attachment-extension.cds_ and extend your entity with attachments. Refer the following example from a sample Bookshop app:
+1. Add the following dependency in pom.xml in the srv folder
+   
+   ```sh
+   <dependency>
+      <groupId>com.sap.cds</groupId>
+      <artifactId>sdm</artifactId>
+      <version>RELEASE</version>
+   </dependency>
+   ```
+   
+2. To use sdm plugin in your CAP application, create an element with an `Attachments` type. Following the [best practice of separation of concerns](https://cap.cloud.sap/docs/guides/domain-modeling#separation-of-concerns), create a separate file _srv/attachment-extension.cds_ and extend your entity with attachments. Refer the following example from a sample Bookshop app:
 
    ```
    using {my.bookshop.Books } from '../db/books';
@@ -149,7 +159,7 @@ Follow these steps if you want to integrate the SDM CAP Plugin with your own CAP
    }
    ```
 
-2. Create a SAP Document Management Integration Option [Service instance and key](https://help.sap.com/docs/document-management-service/sap-document-management-service/creating-service-instance-and-service-key). Bind your CAP application to this SDM instance. Add the details of this instance to the resources section in the `mta.yaml` of your CAP application. Refer the following example from a sample Bookshop app.
+3. Create a SAP Document Management Integration Option [Service instance and key](https://help.sap.com/docs/document-management-service/sap-document-management-service/creating-service-instance-and-service-key). Bind your CAP application to this SDM instance. Add the details of this instance to the resources section in the `mta.yaml` of your CAP application. Refer the following example from a sample Bookshop app.
 
    ```
    modules:
@@ -167,7 +177,7 @@ Follow these steps if you want to integrate the SDM CAP Plugin with your own CAP
          service-plan: standard
    ```
 
-3. Using the created SDM instance's credentials from key [onboard a repository](https://help.sap.com/docs/document-management-service/sap-document-management-service/onboarding-repository). In mta.yaml, under properties of the srv module add the repository id. Refer the following example from a sample Bookshop app. Currently only non versioned repositories are supported. 
+4. Using the created SDM instance's credentials from key [onboard a repository](https://help.sap.com/docs/document-management-service/sap-document-management-service/onboarding-repository). In mta.yaml, under properties of the srv module add the repository id. Refer the following example from a sample Bookshop app. Currently only non versioned repositories are supported. 
 
     ```
     modules:
@@ -180,26 +190,7 @@ Follow these steps if you want to integrate the SDM CAP Plugin with your own CAP
          - name: sdm-di-instance
     ```
 
-4. Add the following pom dependency in the _srv_ folder
-   
-   ```sh
-   <dependency>
-      <groupId>com.sap.cds</groupId>
-      <artifactId>sdm</artifactId>
-      <version>RELEASE</version>
-   </dependency>
-   ```
-
-5. In the _app/index.html_ file you will find this line 
-   ```sh
-      <script id="sap-ui-bootstrap" src="https://sapui5.hana.ondemand.com/resources/sap-ui-core.js"
-   ```
-   Replace the src url with this instead
-   ```sh
-      "https://sapui5nightly.int.sap.eu2.hana.ondemand.com/resources/sap-ui-core.js"
-   ```
-
-6. Add the following facet in _fiori-service.cds_ in the _app_ folder
+5. Add the following facet in _fiori-service.cds_ in the _app_ folder
    ```sh
       {
          $Type : 'UI.ReferenceFacet',
