@@ -1,0 +1,52 @@
+name: Deploy to Cloud Foundry JAVA 17
+on:
+  pull_request:
+    #types: [closed]
+    branches:
+      - develop
+  workflow_dispatch:
+
+permissions:
+  pull-requests: read
+jobs:
+  deploy:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:        
+      - name: Set up Java 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: 17
+          distribution: 'temurin'
+
+      - name: Login to Cloud Foundry
+        run: |
+          wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | sudo apt-key add -
+          echo "deb https://packages.cloudfoundry.org/debian stable main" | sudo tee /etc/apt/sources.list.d/cloudfoundry-cli.list
+          sudo apt-get update
+          sudo apt-get install cf8-cli
+          cf login -a ${{ secrets.CF_API }} -u ${{ secrets.CF_USER }} -p ${{ secrets.CF_PASSWORD }} -o ${{ secrets.CF_ORG }} -s ${{ secrets.CF_SPACE }}
+          
+      - name: Clone and prepare projects
+        run: |
+          git clone --single-branch --branch develop https://github.com/cap-js/sdm.git
+          git clone --single-branch --branch sdmIncidents https://github.com/cap-js/incidents-app.git
+
+      - name: Build and package
+        run: |
+          cd sdm
+          mvn clean package
+          cp target/*.jar ../incidents-app/libs/
+          cd ../incidents-app
+          mvn clean package
+
+      - name: Deploy to Cloud Foundry
+        run: |
+          cd incidents-app
+          wget -P /tmp https://github.com/SAP/cloud-mta-build-tool/releases/download/v1.2.28/cloud-mta-build-tool_1.2.28_Linux_amd64.tar.gz
+          tar -xvzf /tmp/cloud-mta-build-tool_1.2.28_Linux_amd64.tar.gz
+          sudo mv mbt /usr/local/bin/
+          mbt build
+          cf install-plugin multiapps -f
+          cf deploy mta_archives/sdmincidents_1.0.0.mtar -f
+ 
