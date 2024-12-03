@@ -30,7 +30,6 @@ jobs:
       - name: Clone and prepare projects
         run: |
           git clone --single-branch --branch develop https://github.com/cap-java/sdm.git
-          #git clone --single-branch --branch sdmIncidents https://github.com/cap-js/incidents-app.git
 
       - name: Build and package
         run: |
@@ -41,9 +40,6 @@ jobs:
           mvn clean install
           echo "Listing the content after build"
           ls -lart
-          #cp target/*.jar ../incidents-app/libs/
-          #cd ../incidents-app
-          #mvn clean package
 
       - name: Deploy to Cloud Foundry
         run: |
