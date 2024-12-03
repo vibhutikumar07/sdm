@@ -1,9 +1,9 @@
 name: Deploy to Cloud Foundry JAVA 17
 on:
+  push:
+    branches: ["develop", "Release*","cfdeploy"]
   pull_request:
-    #types: [closed]
-    branches:
-      - develop
+    branches: ["develop", "Release*", "cfdeploy"]
   workflow_dispatch:
 
 permissions:
