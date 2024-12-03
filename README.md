@@ -1,7 +1,7 @@
 [![REUSE status](https://api.reuse.software/badge/github.com/cap-java/sdm)](https://api.reuse.software/info/github.com/cap-java/sdm)
 
 # CAP plugin for SAP Document Management Service
-The **com.sap.cds:sdm** dependency is a [CAP Java plugin](https://cap.cloud.sap/docs/java/building-plugins) that provides an easy CAP-level integration with [SAP Document Management Service](https://discovery-center.cloud.sap/serviceCatalog/document-management-service-integration-option). This package supports handling of attachments(documents) by using an aspect Attachments in SAP Document Management Service.  
+The `com.sap.cds:sdm` dependency is a [CAP Java plugin](https://cap.cloud.sap/docs/java/building-plugins) that provides an easy CAP-level integration with [SAP Document Management Service](https://discovery-center.cloud.sap/serviceCatalog/document-management-service-integration-option). This package supports handling of attachments(documents) by using an aspect Attachments in SAP Document Management Service.  
 This plugin can be consumed by the CAP application deployed on BTP to store their documents in the form of attachments in Document Management Repository.
 
 ## Key features
@@ -19,7 +19,7 @@ This plugin can be consumed by the CAP application deployed on BTP to store thei
 - [Pre-Requisites](#pre-requisites)
 - [Setup](#setup)
 - [Deploying and testing the application](#deploying-and-testing-the-application)
-- [Use com.sap.cds:sdm dependency](#use-the-comsapcdssdm-dependency)
+- [Use com.sap.cds:sdm dependency](#use-comsapcdssdm-dependency)
 - [Known Restrictions](#known-restrictions)
 - [Support, Feedback, Contributing](#support-feedback-contributing)
 - [Code of Conduct](#code-of-conduct)
@@ -28,7 +28,7 @@ This plugin can be consumed by the CAP application deployed on BTP to store thei
 ## Pre-Requisites
 * Java 17 or higher
 * [MTAR builder](https://www.npmjs.com/package/mbt) (`npm install -g mbt`)
-* [Cloud Foundry CLI](https://docs.cloudfoundry.org/cf-cli/install-go-cli.html), Install cf-cli and run command `cf install-plugin multiapps`.
+* [Cloud Foundry CLI](https://docs.cloudfoundry.org/cf-cli/install-go-cli.html), Install cf-cli and run command `cf install-plugin multiapps`
 * UI5 version 1.131.0 or higher
 
 > **cds-services**
@@ -135,7 +135,7 @@ The plugin is now added to your local .m2 repository, giving it priority over th
    cf deploy mta_archives/*.mtar
 ```
 
-## Use the com.sap.cds:sdm dependency
+## Use com.sap.cds:sdm dependency
 Follow these steps if you want to integrate the SDM CAP Plugin with your own CAP application. 
 
 1. Add the following dependency in pom.xml in the srv folder
@@ -190,7 +190,7 @@ Follow these steps if you want to integrate the SDM CAP Plugin with your own CAP
          - name: sdm-di-instance
     ```
 
-5. Add the following facet in _fiori-service.cds_ in the _app_ folder
+5. Add the following facet in _fiori-service.cds_ in the _app_ folder. Refer the following [example](https://github.com/cap-java/sdm/blob/16c1b17d521a141ef1b1adfbed1e06c5bf7a980f/cap-notebook/demoapp/app/admin-books/fiori-service.cds#L24) from a sample Bookshop app.
    ```sh
       {
          $Type : 'UI.ReferenceFacet',
@@ -221,7 +221,25 @@ Follow these steps if you want to integrate the SDM CAP Plugin with your own CAP
 
 4. Go to your BTP subaccount and launch your application.
 
-5. The `Attachments` type will generate an out-of-the-box Attachments table.
+5. The `Attachments` type has generated an out-of-the-box Attachments table (see highlighted box) at the bottom of the Object page:
+
+   <img width="1300" alt="Attachments Table" style="border-radius:0.5rem;" src="resources/attachments.png">
+
+6. **Upload a file** by going into Edit mode by using the **Upload** button on the Attachments table. The file is then stored in SAP Document Management Integration Option. We demonstrate this by uploading a TXT file:
+
+   <img width="1300" alt="Upload an attachment" style="border-radius:0.5rem;" src="resources/create.gif">
+
+7. **Open a file** by clicking on the attachment. We demonstrate this by opening the previously uploaded TXT file:
+
+   <img width="1300" alt="Delete an attachment" style="border-radius:0.5rem;" src="resources/read.gif">
+
+8. **Rename a file** by going into Edit mode and setting a new name for the file in the filename field. Then click the **Save** button to have that file renamed in SAP Document Management Integration Option. We demonstrate this by renaming the previously uploaded TXT file: 
+
+   <img width="1300" alt="Delete an attachment" style="border-radius:0.5rem;" src="resources/rename.gif">
+
+9. **Delete a file** by going into Edit mode and selecting the file(s) and by using the **Delete** button on the Attachments table. Then click the **Save** button to have that file deleted from the resource (SAP Document Management Integration Option). We demonstrate this by deleting the previously uploaded TXT file:
+
+   <img width="1300" alt="Delete an attachment" style="border-radius:0.5rem;" src="resources/delete.gif">
 
 ## Known Restrictions
 
